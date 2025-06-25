@@ -10,6 +10,7 @@ import {
   addDoc,
   updateDoc,
   getDoc,
+  deleteDoc,
   serverTimestamp
 } from 'firebase/firestore/lite'
 import { USE_SERVER_TIMESTAMP } from '../constant'
@@ -105,5 +106,10 @@ export class FirestoreWorkflowCardStorage implements IWorkflowCardStorage {
 
   listCards(workflowId: string): (onDataChanges: IWorkflowCardEntry[]) => void {
     throw new Error('Method not implemented.')
+  }
+
+  async deleteCard(workflowId: string, workflowCardId: string): Promise<void> {
+    const ref = REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId)
+    await deleteDoc(ref)
   }
 }

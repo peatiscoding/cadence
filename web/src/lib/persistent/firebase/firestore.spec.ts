@@ -1,6 +1,6 @@
 import type { IWorkflowCardStorage } from '../interface'
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterAll } from 'vitest'
 import { FirestoreWorkflowCardStorage } from './firestore'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 
@@ -13,6 +13,19 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
   beforeEach(() => {
     // Use shared instance for integration tests
     storage = FirestoreWorkflowCardStorage.shared()
+  })
+  const createdCardIds: string[] = []
+
+  afterAll(async () => {
+    // Clean up created cards
+    await Promise.all(
+      createdCardIds.map((cardId) =>
+        storage.deleteCard(testWorkflowId, cardId).catch(() => {
+          // Ignore errors for cards that might already be deleted
+        })
+      )
+    )
+    createdCardIds.length = 0 // Clear the array
   })
 
   describe('createCard', () => {
@@ -33,6 +46,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
       // Act
       const cardId = await storage.createCard(testWorkflowId, 'vitest', creationPayload)
+      createdCardIds.push(cardId) // Track for cleanup
 
       // Assert
       expect(cardId).toBeDefined()
@@ -61,6 +75,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       }
 
       const cardId = await storage.createCard(testWorkflowId, 'test-creator', minimalPayload)
+      createdCardIds.push(cardId) // Track for cleanup
       expect(cardId).toBeDefined()
 
       const retrievedCard = await storage.getCard(testWorkflowId, cardId)
@@ -89,6 +104,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       }
 
       const cardId = await storage.createCard(testWorkflowId, testAuthor, complexPayload)
+      createdCardIds.push(cardId) // Track for cleanup
       const retrievedCard = await storage.getCard(testWorkflowId, cardId)
 
       expect(retrievedCard.fieldData).toEqual(complexPayload.fieldData) // Current implementation returns empty object
@@ -318,6 +334,221 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
     })
   })
 
+  describe('deleteCard', () => {
+    let testCardId: string
+    const cardPayload = {
+      title: 'Card to Delete',
+      description: 'This card will be deleted',
+      owner: 'delete-test-user',
+      status: 'todo',
+      type: 'task',
+      value: 50,
+      fieldData: {
+        priority: 'low',
+        category: 'test'
+      }
+    }
+
+    beforeEach(async () => {
+      // Create a test card for deletion tests
+      testCardId = await storage.createCard(testWorkflowId, 'test-creator', cardPayload)
+    })
+
+    it('should delete an existing card successfully', async () => {
+      // Verify the card exists before deletion
+      const cardBeforeDeletion = await storage.getCard(testWorkflowId, testCardId)
+      expect(cardBeforeDeletion.title).toBe(cardPayload.title)
+
+      // Act - Delete the card
+      await storage.deleteCard(testWorkflowId, testCardId)
+
+      // Assert - Card should no longer exist
+      await expect(storage.getCard(testWorkflowId, testCardId)).rejects.toThrow(
+        `Unable to retrieve card ${testWorkflowId}/${testCardId}`
+      )
+    })
+
+    it('should handle deletion of non-existent card gracefully', async () => {
+      // Arrange
+      const nonExistentCardId = 'non-existent-card-id'
+
+      // Act & Assert - Should not throw error for non-existent cards
+      await expect(storage.deleteCard(testWorkflowId, nonExistentCardId)).resolves.not.toThrow()
+    })
+
+    it('should handle deletion from non-existent workflow', async () => {
+      // Arrange
+      const nonExistentWorkflowId = 'non-existent-workflow'
+
+      // Act & Assert - Should not throw error
+      await expect(storage.deleteCard(nonExistentWorkflowId, testCardId)).resolves.not.toThrow()
+    })
+
+    it('should delete card with complex field data', async () => {
+      // Create a card with complex data
+      const complexPayload = {
+        title: 'Complex Card for Deletion',
+        description: 'Card with nested data structures',
+        owner: 'complex-owner',
+        status: 'in-progress',
+        type: 'feature',
+        value: 1000,
+        fieldData: {
+          tags: ['complex', 'nested'],
+          metadata: {
+            estimatedHours: 80,
+            dependencies: ['card-x', 'card-y'],
+            assignees: ['dev1', 'dev2', 'dev3']
+          },
+          history: [
+            { action: 'created', timestamp: Date.now() },
+            { action: 'updated', timestamp: Date.now() + 1000 }
+          ]
+        }
+      }
+
+      const complexCardId = await storage.createCard(
+        testWorkflowId,
+        'complex-creator',
+        complexPayload
+      )
+
+      // Verify complex card exists
+      const complexCard = await storage.getCard(testWorkflowId, complexCardId)
+      expect(complexCard.fieldData.metadata.estimatedHours).toBe(80)
+
+      // Delete the complex card
+      await storage.deleteCard(testWorkflowId, complexCardId)
+
+      // Verify it's deleted
+      await expect(storage.getCard(testWorkflowId, complexCardId)).rejects.toThrow()
+    })
+
+    it('should allow deletion of recently updated card', async () => {
+      // Update the card first
+      const updatePayload = {
+        title: 'Updated Before Deletion',
+        status: 'in-progress',
+        value: 999
+      }
+      await storage.updateCard(testWorkflowId, testCardId, 'updater', updatePayload)
+
+      // Verify the update worked
+      const updatedCard = await storage.getCard(testWorkflowId, testCardId)
+      expect(updatedCard.title).toBe(updatePayload.title)
+
+      // Delete the updated card
+      await storage.deleteCard(testWorkflowId, testCardId)
+
+      // Verify it's deleted
+      await expect(storage.getCard(testWorkflowId, testCardId)).rejects.toThrow()
+    })
+
+    it('should handle multiple deletions in sequence', async () => {
+      // Create multiple cards
+      const cardsToDelete = ['Card 1', 'Card 2', 'Card 3'].map((title) => ({
+        title,
+        description: `Description for ${title}`,
+        owner: 'multi-delete-owner',
+        status: 'todo',
+        type: 'task',
+        value: 100
+      }))
+
+      const cardIds = await Promise.all(
+        cardsToDelete.map((card) => storage.createCard(testWorkflowId, 'multi-creator', card))
+      )
+
+      // Verify all cards exist
+      const retrievedCards = await Promise.all(
+        cardIds.map((id) => storage.getCard(testWorkflowId, id))
+      )
+      expect(retrievedCards).toHaveLength(3)
+
+      // Delete all cards sequentially
+      for (const cardId of cardIds) {
+        await storage.deleteCard(testWorkflowId, cardId)
+      }
+
+      // Verify all cards are deleted
+      for (const cardId of cardIds) {
+        await expect(storage.getCard(testWorkflowId, cardId)).rejects.toThrow()
+      }
+    })
+
+    it('should handle concurrent deletions', async () => {
+      // Create multiple cards for concurrent deletion
+      const concurrentCards = ['Concurrent 1', 'Concurrent 2', 'Concurrent 3', 'Concurrent 4'].map(
+        (title) => ({
+          title,
+          description: `Concurrent deletion test for ${title}`,
+          owner: 'concurrent-owner',
+          status: 'todo',
+          type: 'task',
+          value: 150
+        })
+      )
+
+      const concurrentCardIds = await Promise.all(
+        concurrentCards.map((card) =>
+          storage.createCard(testWorkflowId, 'concurrent-creator', card)
+        )
+      )
+
+      // Delete all cards concurrently
+      await Promise.all(
+        concurrentCardIds.map((cardId) => storage.deleteCard(testWorkflowId, cardId))
+      )
+
+      // Verify all cards are deleted
+      const verificationPromises = concurrentCardIds.map((cardId) =>
+        expect(storage.getCard(testWorkflowId, cardId)).rejects.toThrow()
+      )
+
+      await Promise.all(verificationPromises)
+    })
+
+    it('should not affect other cards when deleting one card', async () => {
+      // Create additional cards
+      const otherCard1Id = await storage.createCard(testWorkflowId, 'other-creator', {
+        title: 'Other Card 1',
+        description: 'This should remain',
+        owner: 'other-owner',
+        status: 'todo',
+        type: 'task',
+        value: 200
+      })
+
+      const otherCard2Id = await storage.createCard(testWorkflowId, 'other-creator', {
+        title: 'Other Card 2',
+        description: 'This should also remain',
+        owner: 'other-owner',
+        status: 'done',
+        type: 'bug',
+        value: 300
+      })
+
+      // Delete only the test card
+      await storage.deleteCard(testWorkflowId, testCardId)
+
+      // Verify test card is deleted
+      await expect(storage.getCard(testWorkflowId, testCardId)).rejects.toThrow()
+
+      // Verify other cards still exist
+      const otherCard1 = await storage.getCard(testWorkflowId, otherCard1Id)
+      const otherCard2 = await storage.getCard(testWorkflowId, otherCard2Id)
+
+      expect(otherCard1.title).toBe('Other Card 1')
+      expect(otherCard2.title).toBe('Other Card 2')
+      expect(otherCard1.value).toBe(200)
+      expect(otherCard2.value).toBe(300)
+
+      // Clean up the other cards
+      await storage.deleteCard(testWorkflowId, otherCard1Id)
+      await storage.deleteCard(testWorkflowId, otherCard2Id)
+    })
+  })
+
   describe('end-to-end workflow', () => {
     it('should create multiple cards and retrieve them', async () => {
       // Create multiple cards
@@ -375,6 +606,67 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
         expect(retrievedCard.value).toBe(originalCard.value)
         expect(retrievedCard.workflowId).toBe(testWorkflowId)
       })
+
+      // Clean up test cards
+      await Promise.all(cardIds.map((cardId) => storage.deleteCard(testWorkflowId, cardId)))
+
+      // Verify cleanup worked
+      for (const cardId of cardIds) {
+        await expect(storage.getCard(testWorkflowId, cardId)).rejects.toThrow()
+      }
+    })
+
+    it('should demonstrate full CRUD operations lifecycle', async () => {
+      // CREATE
+      const createPayload = {
+        title: 'CRUD Test Card',
+        description: 'Testing full lifecycle',
+        owner: 'crud-tester',
+        status: 'todo',
+        type: 'task',
+        value: 400,
+        fieldData: {
+          priority: 'medium',
+          tags: ['lifecycle', 'test']
+        }
+      }
+
+      const cardId = await storage.createCard(testWorkflowId, 'crud-author', createPayload)
+      expect(cardId).toBeDefined()
+
+      // READ
+      const createdCard = await storage.getCard(testWorkflowId, cardId)
+      expect(createdCard.title).toBe(createPayload.title)
+      expect(createdCard.value).toBe(createPayload.value)
+
+      // UPDATE
+      const updatePayload = {
+        title: 'Updated CRUD Card',
+        status: 'in-progress',
+        value: 600,
+        fieldData: {
+          priority: 'high',
+          tags: ['lifecycle', 'test', 'updated'],
+          comments: ['Updated during test']
+        }
+      }
+
+      await storage.updateCard(testWorkflowId, cardId, 'crud-updater', updatePayload)
+
+      const updatedCard = await storage.getCard(testWorkflowId, cardId)
+      expect(updatedCard.title).toBe(updatePayload.title)
+      expect(updatedCard.status).toBe(updatePayload.status)
+      expect(updatedCard.value).toBe(updatePayload.value)
+      expect(updatedCard.fieldData.priority).toBe('high')
+      expect(updatedCard.fieldData.tags).toContain('updated')
+
+      // DELETE
+      await storage.deleteCard(testWorkflowId, cardId)
+
+      // Verify deletion
+      await expect(storage.getCard(testWorkflowId, cardId)).rejects.toThrow(
+        `Unable to retrieve card ${testWorkflowId}/${cardId}`
+      )
     })
   })
 })

@@ -30,4 +30,9 @@ export interface IWorkflowCardStorage {
    * Create a live-listing reference
    */
   listCards(workflowId: string): (onDataChanges: IWorkflowCardEntry[]) => void
+
+  /**
+   * Delete card
+   */
+  deleteCard(workflowId: string, workflowCardId: string): Promise<void>
 }
