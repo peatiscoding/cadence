@@ -4,6 +4,8 @@ import type {
   IWorkflowCardEntryCreation,
   IWorkflowCardEntryModification
 } from './interface'
+import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { Configuration, Status } from '$lib/schema'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { WorkflowFactory } from './factory'
 import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
@@ -30,7 +32,76 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     }
 
     // Create WorkflowEngine using factory
-    vi.mocked(mockConfigStore.loadConfig).mockReturnValueOnce(Promise.resolve({} as any))
+    const mockConfig: Configuration = {
+      name: 'Test Workflow',
+      fields: [],
+      statuses: [
+        {
+          slug: 'draft',
+          title: 'Draft',
+          terminal: false,
+          ui: { color: 'gray' },
+          precondition: { from: [], required: [], users: [] },
+          transition: [],
+          finally: []
+        },
+        {
+          slug: 'todo',
+          title: 'Todo',
+          terminal: false,
+          ui: { color: 'blue' },
+          precondition: { from: [], required: [], users: [] },
+          transition: [],
+          finally: []
+        },
+        {
+          slug: 'in-progress',
+          title: 'In Progress',
+          terminal: false,
+          ui: { color: 'yellow' },
+          precondition: { from: [], required: [], users: [] },
+          transition: [],
+          finally: []
+        },
+        {
+          slug: 'review',
+          title: 'Review',
+          terminal: false,
+          ui: { color: 'orange' },
+          precondition: { from: [], required: [], users: [] },
+          transition: [],
+          finally: []
+        },
+        {
+          slug: 'done',
+          title: 'Done',
+          terminal: true,
+          ui: { color: 'green' },
+          precondition: { from: [], required: [], users: [] },
+          transition: [],
+          finally: []
+        },
+        {
+          slug: 'cancelled',
+          title: 'Cancelled',
+          terminal: true,
+          ui: { color: 'red' },
+          precondition: { from: [], required: [], users: [] },
+          transition: [],
+          finally: []
+        },
+        {
+          slug: 'completed',
+          title: 'Completed',
+          terminal: true,
+          ui: { color: 'green' },
+          precondition: { from: [], required: [], users: [] },
+          transition: [],
+          finally: []
+        }
+      ]
+    }
+    vi.mocked(mockConfigStore.loadConfig).mockReturnValue(Promise.resolve(mockConfig))
     const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
     engine = factory.getWorkflowEngine(testWorkflowId)
   })
@@ -258,6 +329,24 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         }
       }
 
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: testCardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: {},
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
@@ -276,6 +365,24 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const newStatus = 'done'
       const emptyPayload: IWorkflowCardEntryModification = {}
 
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: testCardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: {},
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
@@ -295,6 +402,24 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         fieldData: { transitionNote: 'Status changed during test' }
       }
 
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: testCardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: {},
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       for (const status of statuses) {
@@ -324,6 +449,24 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         statusSince: 'should-also-be-overwritten'
       }
 
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: testCardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: {},
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
@@ -339,10 +482,28 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
     it('should propagate storage transit errors', async () => {
       // Arrange
-      const newStatus = 'error-status'
+      const newStatus = 'in-progress'
       const payload: IWorkflowCardEntryModification = {}
       const transitError = new Error('Transit operation failed')
 
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: testCardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: {},
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
       vi.mocked(mockStorage.updateCard).mockRejectedValue(transitError)
 
       // Act & Assert
@@ -437,6 +598,23 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const transitPayload: IWorkflowCardEntryModification = {
         fieldData: { startedWork: true }
       }
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: cardId,
+        workflowId: testWorkflowId,
+        title: 'Lifecycle Test Card',
+        description: 'Testing complete lifecycle',
+        fieldData: {},
+        value: 300,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
       await engine.attemptToTransitCard(testUserId, cardId, newStatus, transitPayload)
       expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, cardId, testUserId, {
         ...transitPayload,
@@ -474,6 +652,23 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
       // User 2 creates and transits their card
       const card2Id = await engine.makeNewCard(user2, card2Payload)
+      const mockCard2: IWorkflowCardEntry = {
+        workflowCardId: card2Id,
+        workflowId: testWorkflowId,
+        title: 'User 2 Card',
+        description: 'Card created by user 2',
+        fieldData: {},
+        value: 200,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard2)
       await engine.attemptToTransitCard(user2, card2Id, 'completed', {
         fieldData: { completedBy: user2 }
       })
@@ -504,6 +699,24 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const statusSequence = ['todo', 'in-progress', 'review', 'done']
 
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
+
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: cardId,
+        workflowId: testWorkflowId,
+        title: 'Rapid Transit Card',
+        description: 'Testing rapid transitions',
+        fieldData: {},
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
 
       // Perform rapid status transitions
       for (let i = 0; i < statusSequence.length; i++) {
@@ -560,6 +773,259 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       engines.forEach((engine) => {
         expect(engine).toBeDefined()
       })
+    })
+  })
+
+  describe('Precondition validation with actual config', () => {
+    let mockConfig: Configuration
+
+    beforeEach(() => {
+      mockConfig = {
+        name: 'Test Workflow',
+        fields: [
+          { slug: 'priority', title: 'Priority', schema: { kind: 'text' } },
+          { slug: 'assignee', title: 'Assignee', schema: { kind: 'text' } }
+        ],
+        statuses: [
+          {
+            slug: 'draft',
+            title: 'Draft',
+            terminal: false,
+            ui: { color: 'gray' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'in-progress',
+            title: 'In Progress',
+            terminal: false,
+            ui: { color: 'blue' },
+            precondition: {
+              from: ['draft', 'todo'],
+              required: ['assignee'],
+              users: ['dev1', 'dev2']
+            },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'review',
+            title: 'Review',
+            terminal: false,
+            ui: { color: 'orange' },
+            precondition: {
+              from: ['in-progress'],
+              required: ['assignee', 'priority', 'description'],
+              users: ['dev1', 'dev2', 'reviewer1']
+            },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      vi.mocked(mockConfigStore.loadConfig).mockResolvedValue(mockConfig)
+    })
+
+    it('should throw error when user not authorized', async () => {
+      const cardId = 'test-card'
+      const unauthorizedUser = 'unauthorized-user'
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: cardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: { assignee: 'dev1' },
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
+
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      await expect(
+        engine.attemptToTransitCard(unauthorizedUser, cardId, 'in-progress', {})
+      ).rejects.toThrow("User 'unauthorized-user' is not authorized to perform this transition")
+    })
+
+    it('should throw error when required field missing', async () => {
+      const cardId = 'test-card'
+      const authorizedUser = 'dev1'
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: cardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: {}, // Missing required 'assignee' field
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
+
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      await expect(
+        engine.attemptToTransitCard(authorizedUser, cardId, 'in-progress', {})
+      ).rejects.toThrow("Required field 'assignee' is missing or empty")
+    })
+
+    it('should throw error when multiple required fields are missing', async () => {
+      const cardId = 'test-card'
+      const authorizedUser = 'dev1'
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: cardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: {}, // Missing all required fields: assignee, priority, description
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'in-progress',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
+
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      await expect(
+        engine.attemptToTransitCard(authorizedUser, cardId, 'review', {})
+      ).rejects.toThrow("Required fields 'assignee', 'priority', 'description' are missing or empty")
+    })
+
+    it('should throw error when some required fields are missing', async () => {
+      const cardId = 'test-card'
+      const authorizedUser = 'reviewer1'
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: cardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: { 
+          assignee: 'dev1' // Missing priority and description fields
+        },
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'in-progress',
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
+
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      await expect(
+        engine.attemptToTransitCard(authorizedUser, cardId, 'review', {})
+      ).rejects.toThrow("Required fields 'priority', 'description' are missing or empty")
+    })
+
+    it('should throw error when transition from invalid status', async () => {
+      const cardId = 'test-card'
+      const authorizedUser = 'dev1'
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: cardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: { assignee: 'dev1' },
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'completed', // Invalid 'from' status
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
+
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      await expect(
+        engine.attemptToTransitCard(authorizedUser, cardId, 'in-progress', {})
+      ).rejects.toThrow("Cannot transition from status 'completed' to this status")
+    })
+
+    it('should successfully transit when all preconditions are met', async () => {
+      const cardId = 'test-card'
+      const authorizedUser = 'dev1'
+      const mockCard: IWorkflowCardEntry = {
+        workflowCardId: cardId,
+        workflowId: testWorkflowId,
+        title: 'Test Card',
+        description: 'Test',
+        fieldData: { assignee: 'dev1' },
+        value: 100,
+        type: 'task',
+        owner: 'owner1',
+        status: 'draft', // Valid 'from' status
+        statusSince: Date.now(),
+        createdBy: 'creator',
+        createdAt: Date.now(),
+        updatedBy: 'updater',
+        updatedAt: Date.now()
+      }
+
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
+      vi.mocked(mockStorage.updateCard).mockResolvedValue()
+
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      await expect(
+        engine.attemptToTransitCard(authorizedUser, cardId, 'in-progress', {})
+      ).resolves.not.toThrow()
+
+      expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, cardId, authorizedUser, {
+        status: 'in-progress',
+        statusSince: USE_SERVER_TIMESTAMP
+      })
+    })
+
+    it('should throw error for unknown status', async () => {
+      const cardId = 'test-card'
+      const authorizedUser = 'dev1'
+
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      await expect(
+        engine.attemptToTransitCard(authorizedUser, cardId, 'unknown-status', {})
+      ).rejects.toThrow('Unknown new status: unknown-status')
     })
   })
 })

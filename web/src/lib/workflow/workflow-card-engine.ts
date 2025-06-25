@@ -4,9 +4,50 @@ import type {
   IWorkflowCardEntryCreation,
   IWorkflowCardEntryModification
 } from './interface'
+import type { IWorkflowCardEntry } from '$lib/models/interface'
 
 import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
-import type { Configuration } from '$lib/schema'
+import type { Configuration, Status } from '$lib/schema'
+
+const _helpers = {
+  validateUserPrecondition(condition: Status['precondition'], user: string): void {
+    if (condition.users.length > 0 && !condition.users.includes(user)) {
+      throw new Error(`User '${user}' is not authorized to perform this transition`)
+    }
+  },
+
+  validateRequiredFieldsPrecondition(
+    condition: Status['precondition'],
+    card: IWorkflowCardEntry
+  ): void {
+    const missingFields: string[] = []
+
+    for (const requiredField of condition.required) {
+      if (
+        !card.fieldData ||
+        !(requiredField in card.fieldData) ||
+        card.fieldData[requiredField] == null
+      ) {
+        missingFields.push(requiredField)
+      }
+    }
+
+    if (missingFields.length > 0) {
+      const fieldList = missingFields.map((field) => `'${field}'`).join(', ')
+      const errorMessage =
+        missingFields.length === 1
+          ? `Required field ${fieldList} is missing or empty`
+          : `Required fields ${fieldList} are missing or empty`
+      throw new Error(errorMessage)
+    }
+  },
+
+  validateFromStatusPrecondition(condition: Status['precondition'], currentStatus: string): void {
+    if (condition.from.length > 0 && !condition.from.includes(currentStatus)) {
+      throw new Error(`Cannot transition from status '${currentStatus}' to this status`)
+    }
+  }
+}
 
 export class WorkflowCardEngine implements IWorkflowCardEngine {
   public constructor(
@@ -52,13 +93,20 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     if (!newStatusConfig) {
       throw new Error(`Unknown new status: ${toStatus}`)
     }
+
+    // Get current card to validate preconditions
+    const currentCard = await this.storage.getCard(this.workflowId, workflowCardId)
+
     // Validate its precondition
     const precondition = newStatusConfig.precondition
-    // TODO: Validate precondition.users
-    // TODO: Validate precondition.required
-    // TODO: Validate precondition.from
+    _helpers.validateUserPrecondition(precondition, userSsoId)
+    _helpers.validateRequiredFieldsPrecondition(precondition, currentCard)
+    _helpers.validateFromStatusPrecondition(precondition, currentCard.status)
 
     // TODO: Run status configuration actions (hooks)
+    // - ASK if actions must validate its input first?
+
+    // All condition is now validated. Let's write the changes
     await this.storage.updateCard(this.workflowId, workflowCardId, userSsoId, {
       ...payload,
       status: toStatus,
