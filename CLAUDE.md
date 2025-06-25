@@ -13,7 +13,8 @@ Cadence is a configurable project management tool with Firebase/Firestore backen
 - `cd web && npm run build` - Build for production  
 - `cd web && npm run preview` - Preview production build
 - `cd web && npm run test` - Run all tests
-- `cd web && npm run test:unit` - Run unit tests with Vitest
+- `cd web && npm run test:unit` - Run unit tests with Vitest (interactive mode)
+- `cd web && npm run test:unit -- --run` - Run unit tests once
 - `cd web && npm run check` - Type check with svelte-check
 - `cd web && npm run lint` - Check code formatting with Prettier
 - `cd web && npm run format` - Format code with Prettier
@@ -49,10 +50,10 @@ The application revolves around **Cards** that move through configurable **Workf
 ```
 
 ### Testing Setup
-- Vitest with browser testing using Playwright
-- Separate client/server test configurations
-- Tests for Svelte components use `.svelte.test.ts` extension
-- Server-side tests use `.test.ts` extension
+- Vitest with dual test environments: browser (Playwright) and Node.js
+- Client tests: `.svelte.test.ts` files run in browser environment for component testing
+- Server tests: `.test.ts` files run in Node.js environment
+- Test configuration splits client and server tests automatically
 
 ## Key Technologies
 - Frontend: Svelte 5, SvelteKit, TailwindCSS v4, TypeScript
