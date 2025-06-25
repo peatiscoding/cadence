@@ -6,16 +6,19 @@ import type {
 } from './interface'
 
 export class WorkflowCardEngine implements IWorkflowCardEngine {
-  public constructor(protected readonly storage: IWorkflowCardStorage) {
+  public constructor(
+    public readonly workflowId: string,
+    /* Workflow Configuration File */
+    protected readonly storage: IWorkflowCardStorage
+  ) {
     //
   }
 
-  makeNewCard(
+  async makeNewCard(
     userSsoId: string,
-    workflowCardId: string,
     creationPayload: IWorkflowCardEntryCreation
   ): Promise<string> {
-    throw new Error('Method not implemented.')
+    return this.storage.createCard(this.workflowId, userSsoId, creationPayload)
   }
 
   attemptToTransitCard(
@@ -25,5 +28,9 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     payload: IWorkflowCardEntryModification
   ): Promise<void> {
     throw new Error('Method not implemented.')
+  }
+
+  async deleteCard(userSsoId: string, workflowCardId: string): Promise<void> {
+    await this.storage.deleteCard(this.workflowId, workflowCardId)
   }
 }

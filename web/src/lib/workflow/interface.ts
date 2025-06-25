@@ -14,11 +14,7 @@ export type IWorkflowCardEntryModification = Omit<
 >
 
 export interface IWorkflowCardEngine {
-  makeNewCard(
-    userSsoId: string,
-    workflowCardId: string,
-    creationPayload: IWorkflowCardEntryCreation
-  ): Promise<string>
+  makeNewCard(userSsoId: string, creationPayload: IWorkflowCardEntryCreation): Promise<string>
 
   attemptToTransitCard(
     userSsoId: string,
@@ -26,4 +22,6 @@ export interface IWorkflowCardEngine {
     toStatus: string,
     payload: IWorkflowCardEntryModification
   ): Promise<void>
+
+  deleteCard(userSsoId: string, workflowCardId: string): Promise<void>
 }
