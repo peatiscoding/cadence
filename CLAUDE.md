@@ -1,0 +1,61 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Cadence is a configurable project management tool with Firebase/Firestore backend and Svelte frontend. The system uses file-based workflow configurations to create customizable Kanban-style boards with cards that move through defined statuses.
+
+## Development Commands
+
+### Web Frontend (SvelteKit)
+- `cd web && npm run dev` - Start development server
+- `cd web && npm run build` - Build for production  
+- `cd web && npm run preview` - Preview production build
+- `cd web && npm run test` - Run all tests
+- `cd web && npm run test:unit` - Run unit tests with Vitest
+- `cd web && npm run check` - Type check with svelte-check
+- `cd web && npm run lint` - Check code formatting with Prettier
+- `cd web && npm run format` - Format code with Prettier
+
+### Firebase Functions
+- `cd functions && npm run build` - Compile TypeScript
+- `cd functions && npm run serve` - Start Firebase emulators
+- `cd functions && npm run deploy` - Deploy to Firebase
+- `cd functions && npm run logs` - View function logs
+
+## Architecture
+
+### Project Structure
+- `/web` - SvelteKit frontend with TailwindCSS v4
+- `/functions` - Firebase Functions backend (TypeScript)
+- `/prompts` - Project requirements and specifications
+- `firestore.rules` - Firestore security rules
+- `firestore.indexes.json` - Database indexes
+
+### Core Concepts
+The application revolves around **Cards** that move through configurable **Workflows**:
+
+- **Workflows**: JSON configuration files define fields, statuses, transitions, and actions
+- **Cards**: Data entities with custom fields, owners, status tracking, and audit logs
+- **Statuses**: Workflow states with preconditions, transitions, and UI configuration
+- **Field Schemas**: Support number, text, boolean, and URL field types with validation
+
+### Data Model
+```
+/users/<user-id> = User object
+/workflows/<workflow-id>/cards/<card-id> = Card document  
+/workflows/<workflow-id>/logs/<log-id> = Audit logs
+```
+
+### Testing Setup
+- Vitest with browser testing using Playwright
+- Separate client/server test configurations
+- Tests for Svelte components use `.svelte.test.ts` extension
+- Server-side tests use `.test.ts` extension
+
+## Key Technologies
+- Frontend: Svelte 5, SvelteKit, TailwindCSS v4, TypeScript
+- Backend: Firebase Functions, Firestore
+- Testing: Vitest, Playwright
+- Build: Vite
