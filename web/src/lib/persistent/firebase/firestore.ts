@@ -8,6 +8,7 @@ import {
   collection,
   Firestore,
   addDoc,
+  setDoc,
   getDoc,
   serverTimestamp
 } from 'firebase/firestore/lite'
@@ -71,8 +72,7 @@ export class FirestoreWorkflowCardStorage implements IWorkflowCardStorage {
   private constructor(private readonly fs: Firestore) {}
 
   async createCard(workflowId: string, author: string, payload: any): Promise<string> {
-    const ref = REFs.WORKFLOW_CARDS(this.fs, workflowId)
-    const res = await addDoc(ref, {
+    const res = await addDoc(REFs.WORKFLOW_CARDS(this.fs, workflowId), {
       ...payload,
       createdBy: author,
       createdAt: serverTimestamp(),
@@ -82,8 +82,23 @@ export class FirestoreWorkflowCardStorage implements IWorkflowCardStorage {
     return res.id
   }
 
-  updateCard(workflowId: string, workflowCardId: string, payload: any): Promise<void> {
-    throw new Error('Method not implemented.')
+  async updateCard(
+    workflowId: string,
+    workflowCardId: string,
+    author: string,
+    payload: any
+  ): Promise<void> {
+    await setDoc(
+      REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId),
+      {
+        ...payload,
+        updatedBy: author,
+        updatedAt: serverTimestamp()
+      },
+      {
+        merge: true
+      }
+    )
   }
 
   async getCard(workflowId: string, workflowCardId: string): Promise<IWorkflowCardEntry> {
