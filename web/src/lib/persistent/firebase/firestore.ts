@@ -8,29 +8,17 @@ import {
   collection,
   Firestore,
   addDoc,
-  setDoc,
+  updateDoc,
   getDoc,
   serverTimestamp
 } from 'firebase/firestore/lite'
+import { USE_SERVER_TIMESTAMP } from '../constant'
 import { app } from './app'
 
 // Firestore data converter for IWorkflowCardEntry
 const workflowCardConverter: FirestoreDataConverter<IWorkflowCardEntry> = {
   toFirestore(card: IWorkflowCardEntry): any {
-    return {
-      title: card.title,
-      description: card.description,
-      owner: card.owner,
-      status: card.status,
-      statusSince: card.statusSince,
-      type: card.type,
-      value: card.value,
-      createdBy: card.createdBy,
-      createdAt: card.updatedAt,
-      updatedBy: card.updatedBy,
-      updatedAt: card.updatedAt,
-      fieldData: card.fieldData
-    }
+    return card
   },
   fromFirestore(snapshot): IWorkflowCardEntry {
     const data = snapshot.data()
@@ -41,14 +29,14 @@ const workflowCardConverter: FirestoreDataConverter<IWorkflowCardEntry> = {
       description: data.description || '',
       owner: data.owner || '',
       status: data.status || '',
-      statusSince: (data.statusSince?.toDate() || new Date()).getTime(),
       fieldData: data.fieldData || {},
       type: data.type || '',
       value: data.value || 0,
       createdAt: (data.createdAt?.toDate() || new Date()).getTime(),
       createdBy: data.createdBy || '',
       updatedAt: (data.updatedAt?.toDate() || new Date()).getTime(),
-      updatedBy: data.updatedBy || ''
+      updatedBy: data.updatedBy || '',
+      statusSince: ((data.statusSince && data.statusSince.toDate()) || new Date()).getTime()
     }
   }
 }
@@ -74,6 +62,7 @@ export class FirestoreWorkflowCardStorage implements IWorkflowCardStorage {
   async createCard(workflowId: string, author: string, payload: any): Promise<string> {
     const res = await addDoc(REFs.WORKFLOW_CARDS(this.fs, workflowId), {
       ...payload,
+      statusSince: serverTimestamp(),
       createdBy: author,
       createdAt: serverTimestamp(),
       updatedBy: author,
@@ -86,19 +75,20 @@ export class FirestoreWorkflowCardStorage implements IWorkflowCardStorage {
     workflowId: string,
     workflowCardId: string,
     author: string,
-    payload: any
+    payload: Record<string, string | number | typeof USE_SERVER_TIMESTAMP>
   ): Promise<void> {
-    await setDoc(
-      REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId),
-      {
-        ...payload,
-        updatedBy: author,
-        updatedAt: serverTimestamp()
-      },
-      {
-        merge: true
+    const updated: any = {
+      ...payload,
+      updatedBy: author,
+      updatedAt: serverTimestamp()
+    }
+    Object.keys(payload).forEach((k) => {
+      if (updated[k] === USE_SERVER_TIMESTAMP) {
+        updated[k] = serverTimestamp()
       }
-    )
+    })
+
+    await updateDoc(REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId), updated)
   }
 
   async getCard(workflowId: string, workflowCardId: string): Promise<IWorkflowCardEntry> {
