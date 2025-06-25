@@ -34,7 +34,9 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     workflowCardId: string,
     payload: IWorkflowCardEntryModification
   ): Promise<void> {
-    // TODO: Validate if status was slipped in payload?
+    if ((payload as any).status) {
+      throw new Error(`Update status is disallowed`)
+    }
     return this.storage.updateCard(this.workflowId, workflowCardId, userSsoId, payload)
   }
 
@@ -44,8 +46,18 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     toStatus: string,
     payload: IWorkflowCardEntryModification
   ): Promise<void> {
-    // TODO: Validate if requested status is defined within configuration?
-    // TODO: Validate based on workflow's status configurations.
+    const config = await this.config
+    // Validate if requested status is defined within configuration?
+    const newStatusConfig = config.statuses.find((a) => a.slug === toStatus)
+    if (!newStatusConfig) {
+      throw new Error(`Unknown new status: ${toStatus}`)
+    }
+    // Validate its precondition
+    const precondition = newStatusConfig.precondition
+    // TODO: Validate precondition.users
+    // TODO: Validate precondition.required
+    // TODO: Validate precondition.from
+
     // TODO: Run status configuration actions (hooks)
     await this.storage.updateCard(this.workflowId, workflowCardId, userSsoId, {
       ...payload,
