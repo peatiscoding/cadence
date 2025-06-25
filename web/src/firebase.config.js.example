@@ -1,0 +1,10 @@
+// Get this from your console
+export default {
+  apiKey: 'AIzaSyAmzYSpT_EQSPEhJs9it-P1ZuVkPtZduwc',
+  authDomain: 'cadence-a7f68.firebaseapp.com',
+  projectId: 'cadence-a7f68',
+  storageBucket: 'cadence-a7f68.firebasestorage.app',
+  messagingSenderId: '691374016784',
+  appId: '1:691374016784:web:b4f73ac3dbec83b9d27d95',
+  measurementId: 'G-C5XXJ707DD'
+}
