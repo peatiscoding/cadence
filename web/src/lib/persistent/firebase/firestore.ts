@@ -14,7 +14,7 @@ const REFs = {
 }
 
 export class FirestoreWorkflowCardStorage implements IWorkflowCardStorage {
-  public shared(): IWorkflowCardStorage {
+  public static shared(): IWorkflowCardStorage {
     const db = getFirestore(app)
     return new FirestoreWorkflowCardStorage(db)
   }
