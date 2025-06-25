@@ -6,11 +6,12 @@ import type {
 } from './interface'
 
 import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
+import type { Configuration } from '$lib/schema'
 
 export class WorkflowCardEngine implements IWorkflowCardEngine {
   public constructor(
     public readonly workflowId: string,
-    /* Workflow Configuration File */
+    public readonly config: Promise<Configuration>,
     protected readonly storage: IWorkflowCardStorage
   ) {
     //

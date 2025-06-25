@@ -1,4 +1,5 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { Configuration } from '$lib/schema'
 
 /**
  * Storage Interface does not have
@@ -35,4 +36,11 @@ export interface IWorkflowCardStorage {
    * Delete card
    */
   deleteCard(workflowId: string, workflowCardId: string): Promise<void>
+}
+
+export interface IWorkflowConfigurationStorage {
+  /**
+   * Fetch configuration
+   */
+  loadConfig(workflowId: string): Promise<Configuration>
 }

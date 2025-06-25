@@ -56,6 +56,7 @@ The Workflow Configuration's File:
                 "default": string?,
                 "max": number?,
                 "min": number?,
+                "choices": string[]?,
                 "regex": "regex-string" // to validate
             } | {
                 "kind": "bool",
@@ -190,6 +191,20 @@ class Card {
     terminalStatus: string | null
 }
 ```
+#### Card Usecases
+
+1. Lead to Purchase Order
+    - the card may represent the lead. 
+    - the card can then transit from 'draft' -> 'quotation' which represent customer is considering, here we ask user to enter `quotation_ref` is now required before card may transit to this status.
+    - during this status, user can repeatedly update this card with more and more details.
+    - the card can then transit from 'quotation' -> 'confirmed' which represent customer has confirmed, and confirmed with its' `customer_purchase_order_ref` is then required. (Purchase Order issued by customer). The status is considered **Terminal**
+    - the card may transit from 'quotation' -> 'cancelled' which represent customer has called-off the order. `cancel_reason` is then required. The status is considering **Terminal**
+1. Muze Proposal Process
+    - the card may represent the lead.
+    - the card then start from 'draft' -> 'prepare-proposal'
+    - the card then transit from 'prepare-proposal' -> 'confirmed', to confirmed we will required the email consent from customer. This is terminal status. 
+    - the card can transit from any status to 'cancelled', to cancel the lead, 'cancellation reason is required'
+
 
 ### Card Psudo Logic
 

@@ -1,4 +1,4 @@
-import type { IWorkflowCardStorage } from '../interface'
+import type { IWorkflowCardStorage, IWorkflowConfigStorage } from '../interface'
 
 import { describe, it, expect, beforeEach, afterAll } from 'vitest'
 import { FirestoreWorkflowCardStorage } from './firestore'
@@ -7,13 +7,14 @@ import { USE_SERVER_TIMESTAMP } from '../constant'
 // Integration tests for Firebase Firestore storage
 // These tests require Firebase emulator to be running
 describe('FirestoreWorkflowCardStorage Integration Tests', () => {
-  let storage: IWorkflowCardStorage
+  let storage: IWorkflowCardStorage & IWorkflowConfigStorage
   const testWorkflowId = `test-workflow-${Date.now()}`
 
   beforeEach(() => {
     // Use shared instance for integration tests
     storage = FirestoreWorkflowCardStorage.shared()
   })
+
   const createdCardIds: string[] = []
 
   afterAll(async () => {

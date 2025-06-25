@@ -1,8 +1,8 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
-import type { IWorkflowCardStorage } from '../interface'
+import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '../interface'
+import type { Configuration } from '$lib/schema'
 
 import {
-  type FirestoreDataConverter,
   getFirestore,
   doc,
   collection,
@@ -13,46 +13,25 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore/lite'
-import { USE_SERVER_TIMESTAMP } from '../constant'
 import { app } from './app'
-
-// Firestore data converter for IWorkflowCardEntry
-const workflowCardConverter: FirestoreDataConverter<IWorkflowCardEntry> = {
-  toFirestore(card: IWorkflowCardEntry): any {
-    return card
-  },
-  fromFirestore(snapshot): IWorkflowCardEntry {
-    const data = snapshot.data()
-    return {
-      workflowId: '', // Will be set by the calling method
-      workflowCardId: snapshot.id,
-      title: data.title || '',
-      description: data.description || '',
-      owner: data.owner || '',
-      status: data.status || '',
-      fieldData: data.fieldData || {},
-      type: data.type || '',
-      value: data.value || 0,
-      createdAt: (data.createdAt?.toDate() || new Date()).getTime(),
-      createdBy: data.createdBy || '',
-      updatedAt: (data.updatedAt?.toDate() || new Date()).getTime(),
-      updatedBy: data.updatedBy || '',
-      statusSince: ((data.statusSince && data.statusSince.toDate()) || new Date()).getTime()
-    }
-  }
-}
+import { USE_SERVER_TIMESTAMP } from '../constant'
+import { workflowCardConverter } from './workflow-card.converter'
+import { workflowConfigurationConverter } from './workflow-configuration.converter'
 
 const REFs = {
   WORKFLOWS: (fs: Firestore) => collection(fs, `workflows`),
-  WORKFLOW: (fs: Firestore, workflowId: string) => doc(REFs.WORKFLOWS(fs), workflowId),
+  WORKFLOW_CONFIGURATION: (fs: Firestore, workflowId: string) =>
+    doc(REFs.WORKFLOWS(fs), workflowId).withConverter(workflowConfigurationConverter),
   WORKFLOW_CARDS: (fs: Firestore, workflowId: string) =>
-    collection(REFs.WORKFLOW(fs, workflowId), `cards`),
+    collection(REFs.WORKFLOW_CONFIGURATION(fs, workflowId), `cards`),
   WORKFLOW_CARD: (fs: Firestore, workflowId: string, workflowCardId: string) =>
     doc(REFs.WORKFLOW_CARDS(fs, workflowId), workflowCardId).withConverter(workflowCardConverter)
 }
 
-export class FirestoreWorkflowCardStorage implements IWorkflowCardStorage {
-  public static shared(): IWorkflowCardStorage {
+export class FirestoreWorkflowCardStorage
+  implements IWorkflowCardStorage, IWorkflowConfigurationStorage
+{
+  public static shared(): IWorkflowCardStorage & IWorkflowConfigurationStorage {
     const db = getFirestore(app)
     return new FirestoreWorkflowCardStorage(db)
   }
@@ -111,5 +90,16 @@ export class FirestoreWorkflowCardStorage implements IWorkflowCardStorage {
   async deleteCard(workflowId: string, workflowCardId: string): Promise<void> {
     const ref = REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId)
     await deleteDoc(ref)
+  }
+
+  async loadConfig(workflowId: string): Promise<Configuration> {
+    const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
+    const docSnap = await getDoc(ref)
+    if (docSnap.exists()) {
+      const config = docSnap.data()
+      // Set the workflowId which couldn't be set in the converter
+      return config
+    }
+    throw new Error(`Unable to retrieve configuration ${workflowId}`)
   }
 }

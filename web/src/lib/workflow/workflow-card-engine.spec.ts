@@ -1,15 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { IWorkflowCardStorage } from '$lib/persistent/interface'
+import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '$lib/persistent/interface'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
   IWorkflowCardEntryModification
 } from './interface'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { WorkflowFactory } from './factory'
 import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 
 describe('WorkflowCardEngine with Stubbed Storage', () => {
   let mockStorage: IWorkflowCardStorage
+  let mockConfigStore: IWorkflowConfigurationStorage
   let engine: IWorkflowCardEngine
   const testWorkflowId = 'test-workflow-123'
   const testUserId = 'test-user-456'
@@ -24,8 +25,13 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       listCards: vi.fn()
     }
 
+    mockConfigStore = {
+      loadConfig: vi.fn()
+    }
+
     // Create WorkflowEngine using factory
-    const factory = WorkflowFactory.use(mockStorage)
+    vi.mocked(mockConfigStore.loadConfig).mockReturnValueOnce(Promise.resolve({} as any))
+    const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
     engine = factory.getWorkflowEngine(testWorkflowId)
   })
 
@@ -532,7 +538,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const customWorkflowId = 'custom-workflow-abc'
 
       // Act
-      const factory = WorkflowFactory.use(mockStorage)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
       const customEngine = factory.getWorkflowEngine(customWorkflowId)
 
       // Assert
@@ -546,7 +552,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const workflowIds = ['workflow-1', 'workflow-2', 'workflow-3']
 
       // Act
-      const factory = WorkflowFactory.use(mockStorage)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
       const engines = workflowIds.map((id) => factory.getWorkflowEngine(id))
 
       // Assert
@@ -557,4 +563,3 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     })
   })
 })
-
