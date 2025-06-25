@@ -9,12 +9,17 @@ export interface IWorkflowCardStorage {
   /**
    * Create a new Card
    */
-  createCard(workflowId: string, creationPayload: any): Promise<string>
+  createCard(workflowId: string, author: string, creationPayload: any): Promise<string>
 
   /**
    * Update the existing Card Detail
    */
-  updateCard(workflowId: string, workflowCardId: string, payload: any): Promise<void>
+  updateCard(
+    workflowId: string,
+    workflowCardId: string,
+    author: string,
+    payload: any
+  ): Promise<void>
 
   /**
    * Get Single Card

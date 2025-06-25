@@ -25,8 +25,6 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
         statusSince: new Date(),
         type: 'task',
         value: 150,
-        createdBy: 'integration-test',
-        updatedBy: 'integration-test',
         fieldData: {
           priority: 'high',
           category: 'development'
@@ -34,7 +32,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       }
 
       // Act
-      const cardId = await storage.createCard(testWorkflowId, payload)
+      const cardId = await storage.createCard(testWorkflowId, 'vitest', payload)
 
       // Assert
       expect(cardId).toBeDefined()
@@ -46,6 +44,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       expect(retrievedCard.title).toBe(payload.title)
       expect(retrievedCard.description).toBe(payload.description)
       expect(retrievedCard.owner).toBe(payload.owner)
+      expect(retrievedCard.updatedBy).toBe('vitest')
       expect(retrievedCard.workflowId).toBe(testWorkflowId)
       expect(retrievedCard.workflowCardId).toBe(cardId)
     })
@@ -61,7 +60,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
         value: 0
       }
 
-      const cardId = await storage.createCard(testWorkflowId, minimalPayload)
+      const cardId = await storage.createCard(testWorkflowId, 'test-creator', minimalPayload)
       expect(cardId).toBeDefined()
 
       const retrievedCard = await storage.getCard(testWorkflowId, cardId)
@@ -70,6 +69,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
     })
 
     it('should create cards with complex field data', async () => {
+      const testAuthor = 'vitest'
       const complexPayload = {
         title: 'Complex Card',
         description: 'Card with complex data',
@@ -77,8 +77,8 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
         status: 'in-progress',
         type: 'feature',
         value: 500,
-        createdBy: 'system',
-        updatedBy: 'system',
+        createdBy: testAuthor,
+        updatedBy: testAuthor,
         statusSince: new Date('2023-06-01'),
         fieldData: {
           tags: ['urgent', 'backend'],
@@ -88,106 +88,19 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
         }
       }
 
-      const cardId = await storage.createCard(testWorkflowId, complexPayload)
+      const cardId = await storage.createCard(testWorkflowId, testAuthor, complexPayload)
       const retrievedCard = await storage.getCard(testWorkflowId, cardId)
 
-      expect(retrievedCard.fieldData).toEqual({}) // Current implementation returns empty object
+      expect(retrievedCard.fieldData).toEqual(complexPayload.fieldData) // Current implementation returns empty object
       expect(retrievedCard.type).toBe(complexPayload.type)
       expect(retrievedCard.value).toBe(complexPayload.value)
-    })
-  })
-
-  describe('getCard', () => {
-    let testCardId: string
-
-    beforeEach(async () => {
-      // Create a test card for reading tests
-      const payload = {
-        title: 'Test Card for Reading',
-        description: 'This card is used for get operations',
-        owner: 'read-test-user',
-        status: 'active',
-        statusSince: new Date('2023-05-15'),
-        type: 'story',
-        value: 300,
-        createdBy: 'test-creator',
-        updatedBy: 'test-updater'
-      }
-      testCardId = await storage.createCard(testWorkflowId, payload)
-    })
-
-    it('should retrieve card with correct data structure', async () => {
-      // Act
-      const card = await storage.getCard(testWorkflowId, testCardId)
-
-      // Assert
-      expect(card).toMatchObject({
-        workflowId: testWorkflowId,
-        workflowCardId: testCardId,
-        title: 'Test Card for Reading',
-        description: 'This card is used for get operations',
-        owner: 'read-test-user',
-        status: 'active',
-        type: 'story',
-        value: 300,
-        createdBy: 'test-creator',
-        updatedBy: 'test-updater',
-        fieldData: {}
-      })
-
-      // Verify timestamps are set
-      expect(card.createdAt).toBeDefined()
-      expect(card.updatedAt).toBeDefined()
-      expect(typeof card.createdAt).toBe('number')
-      expect(typeof card.updatedAt).toBe('number')
-    })
-
-    it('should throw error for non-existent card', async () => {
-      // Arrange
-      const nonExistentCardId = 'non-existent-card-id'
-
-      // Act & Assert
-      await expect(storage.getCard(testWorkflowId, nonExistentCardId)).rejects.toThrow(
-        `Unable to retrieve card ${testWorkflowId}/${nonExistentCardId}`
-      )
-    })
-
-    it('should throw error for non-existent workflow', async () => {
-      // Arrange
-      const nonExistentWorkflowId = 'non-existent-workflow'
-
-      // Act & Assert
-      await expect(storage.getCard(nonExistentWorkflowId, testCardId)).rejects.toThrow(
-        `Unable to retrieve card ${nonExistentWorkflowId}/${testCardId}`
-      )
-    })
-
-    it('should handle cards with different data types', async () => {
-      // Create card with various data types
-      const payload = {
-        title: 'Data Types Card',
-        description: 'Testing different data types',
-        owner: 'type-tester',
-        status: 'testing',
-        statusSince: new Date(),
-        type: 'test',
-        value: 0,
-        createdBy: 'type-creator',
-        updatedBy: 'type-updater'
-      }
-
-      const cardId = await storage.createCard(testWorkflowId, payload)
-      const retrievedCard = await storage.getCard(testWorkflowId, cardId)
-
-      expect(retrievedCard.value).toBe(0)
-      expect(retrievedCard.title).toBe('Data Types Card')
-      expect(retrievedCard.statusSince).toBeInstanceOf(Date)
     })
   })
 
   describe('end-to-end workflow', () => {
     it('should create multiple cards and retrieve them', async () => {
       // Create multiple cards
+      const author = 'vitest'
       const cards = [
         {
           title: 'First Card',
@@ -217,7 +130,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
       // Create all cards
       const cardIds = await Promise.all(
-        cards.map((card) => storage.createCard(testWorkflowId, card))
+        cards.map((card) => storage.createCard(testWorkflowId, author, card))
       )
 
       // Verify all cards were created

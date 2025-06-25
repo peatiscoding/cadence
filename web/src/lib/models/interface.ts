@@ -8,7 +8,10 @@ export interface IWorkflowCardEntry {
   type: string
   owner: string
   status: string
-  statusSince: Date
+  /**
+   * Epoch since status changed
+   */
+  statusSince: number
   createdBy: string
   createdAt: number
   updatedBy: string
