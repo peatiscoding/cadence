@@ -36,7 +36,9 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
     mockAuthProvider = {
       getCurrentUid: vi.fn().mockResolvedValue(testUserId),
-      logout: vi.fn()
+      login: vi.fn(),
+      logout: vi.fn(),
+      onAuthStateChanged: vi.fn()
     }
 
     // Create WorkflowEngine using factory

@@ -1,6 +1,13 @@
 import type { FirebaseApp } from 'firebase/app'
 import type { IAuthenticationProvider } from '../interface'
-import { type Auth, getAuth, signOut } from 'firebase/auth'
+import {
+  type Auth,
+  getAuth,
+  signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged
+} from 'firebase/auth'
 
 import { app } from '../../firebase-app'
 
@@ -22,7 +29,22 @@ export class FirebaseAuthenticationProvider implements IAuthenticationProvider {
     throw new Error(`UID cannot be retreived`)
   }
 
+  async login(): Promise<void> {
+    const provider = new GoogleAuthProvider()
+    await signInWithPopup(this.auth, provider)
+  }
+
   async logout(): Promise<void> {
     return signOut(this.auth)
+  }
+
+  onAuthStateChanged(callback: (user: { uid: string } | null) => void): () => void {
+    return onAuthStateChanged(this.auth, (user) => {
+      if (user && user.uid) {
+        callback({ uid: user.uid })
+      } else {
+        callback(null)
+      }
+    })
   }
 }
