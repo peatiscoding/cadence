@@ -1,11 +1,13 @@
 import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '$lib/persistent/interface'
+import type { IAuthenticationProvider } from '$lib/authentication/interface'
+import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { Configuration } from '$lib/schema'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
   IWorkflowCardEntryModification
 } from './interface'
-import type { IWorkflowCardEntry } from '$lib/models/interface'
-import type { Configuration, Status } from '$lib/schema'
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { WorkflowFactory } from './factory'
 import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
@@ -13,6 +15,7 @@ import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 describe('WorkflowCardEngine with Stubbed Storage', () => {
   let mockStorage: IWorkflowCardStorage
   let mockConfigStore: IWorkflowConfigurationStorage
+  let mockAuthProvider: IAuthenticationProvider
   let engine: IWorkflowCardEngine
   const testWorkflowId = 'test-workflow-123'
   const testUserId = 'test-user-456'
@@ -29,6 +32,10 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
     mockConfigStore = {
       loadConfig: vi.fn()
+    }
+
+    mockAuthProvider = {
+      getCurrentUid: vi.fn()
     }
 
     // Create WorkflowEngine using factory
@@ -102,7 +109,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       ]
     }
     vi.mocked(mockConfigStore.loadConfig).mockReturnValue(Promise.resolve(mockConfig))
-    const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+    const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
     engine = factory.getWorkflowEngine(testWorkflowId)
   })
 
@@ -751,7 +758,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const customWorkflowId = 'custom-workflow-abc'
 
       // Act
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const customEngine = factory.getWorkflowEngine(customWorkflowId)
 
       // Assert
@@ -765,7 +772,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const workflowIds = ['workflow-1', 'workflow-2', 'workflow-3']
 
       // Act
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engines = workflowIds.map((id) => factory.getWorkflowEngine(id))
 
       // Assert
@@ -850,7 +857,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
 
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
       await expect(
@@ -880,7 +887,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
 
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
       await expect(
@@ -910,12 +917,14 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
 
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
       await expect(
         engine.attemptToTransitCard(authorizedUser, cardId, 'review', {})
-      ).rejects.toThrow("Required fields 'assignee', 'priority', 'description' are missing or empty")
+      ).rejects.toThrow(
+        "Required fields 'assignee', 'priority', 'description' are missing or empty"
+      )
     })
 
     it('should throw error when some required fields are missing', async () => {
@@ -926,7 +935,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         workflowId: testWorkflowId,
         title: 'Test Card',
         description: 'Test',
-        fieldData: { 
+        fieldData: {
           assignee: 'dev1' // Missing priority and description fields
         },
         value: 100,
@@ -942,7 +951,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
 
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
       await expect(
@@ -972,7 +981,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
 
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
       await expect(
@@ -1003,7 +1012,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
       await expect(
@@ -1020,7 +1029,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const cardId = 'test-card'
       const authorizedUser = 'dev1'
 
-      const factory = WorkflowFactory.use(mockStorage, mockConfigStore)
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
       await expect(

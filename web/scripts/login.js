@@ -1,36 +1,29 @@
 #!/usr/bin/env node
 import { initializeApp } from 'firebase/app'
+import { getFunctions, httpsCallable } from 'firebase/functions'
 import { getAuth, signInWithCustomToken } from 'firebase/auth'
 
 import config from '../src/firebase.config.js'
 
+const REGION = 'asia-southeast2'
+const LOGIN_FN = 'loginFn'
+
 const app = initializeApp(config)
+const fns = getFunctions(app, REGION)
+const loginFn = httpsCallable(fns, LOGIN_FN, { timeout: 5_000 })
 const auth = getAuth(app)
 
 async function loginWithCustomToken() {
   try {
-    // Call your deployed login endpoint - replace with your actual function URL
-    const functionUrl = 'https://asia-southeast2-cadence-a7f68.cloudfunctions.net/login'
+    const res = await loginFn({})
+    const data = res.data
 
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-
-    if (!data.success || !data.token) {
+    if (!data || !data.success || !data.result) {
       throw new Error('Failed to get custom token from login endpoint')
     }
 
     // Sign in with the custom token
-    const userCredential = await signInWithCustomToken(auth, data.token)
+    const userCredential = await signInWithCustomToken(auth, data.result)
     const user = userCredential.user
 
     // Get ID token for API calls

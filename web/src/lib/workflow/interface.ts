@@ -21,11 +21,7 @@ export interface IWorkflowCardEngine {
   /**
    * Update Card Detail without status changes
    */
-  updateCardDetail(
-    userSsoId: string,
-    workflowCardId: string,
-    payload: IWorkflowCardEntryModification
-  ): Promise<void>
+  updateCardDetail(workflowCardId: string, payload: IWorkflowCardEntryModification): Promise<void>
 
   /**
    * Attempt to transit card to new status

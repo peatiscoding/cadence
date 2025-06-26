@@ -13,7 +13,7 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore/lite'
-import { app } from './app'
+import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
 import { workflowConfigurationConverter } from './workflow-configuration.converter'

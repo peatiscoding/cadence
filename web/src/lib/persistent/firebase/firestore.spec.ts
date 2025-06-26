@@ -1,14 +1,34 @@
-import type { IWorkflowCardStorage, IWorkflowConfigStorage } from '../interface'
+import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '../interface'
+import { getAuth, signInWithCustomToken, signOut, type Auth } from 'firebase/auth'
+import { getFunctions, httpsCallable } from 'firebase/functions'
 
-import { describe, it, expect, beforeEach, afterAll } from 'vitest'
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest'
 import { FirestoreWorkflowCardStorage } from './firestore'
 import { USE_SERVER_TIMESTAMP } from '../constant'
+import { app } from '../../firebase-app'
 
 // Integration tests for Firebase Firestore storage
 // These tests require Firebase emulator to be running
 describe('FirestoreWorkflowCardStorage Integration Tests', () => {
-  let storage: IWorkflowCardStorage & IWorkflowConfigStorage
+  let storage: IWorkflowCardStorage & IWorkflowConfigurationStorage
   const testWorkflowId = `test-workflow-${Date.now()}`
+  let auth: Auth
+
+  beforeAll(async () => {
+    // Login firebase
+    const fns = getFunctions(undefined, 'asia-southeast2')
+    auth = getAuth()
+    const loginFn = httpsCallable<
+      undefined,
+      { success: true; result: string } | { success: false; reason: Error }
+    >(fns, 'loginFn')
+    const res = await loginFn()
+    if (!res.data.success) {
+      throw new Error('Unable to initiate test, authentication failed', res.data.reason)
+    }
+    // the app is now logged in.
+    await signInWithCustomToken(auth, res.data.result)
+  })
 
   beforeEach(() => {
     // Use shared instance for integration tests
@@ -27,6 +47,8 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       )
     )
     createdCardIds.length = 0 // Clear the array
+    // logout
+    await signOut(auth)
   })
 
   describe('createCard', () => {

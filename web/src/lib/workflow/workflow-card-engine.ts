@@ -1,13 +1,14 @@
 import type { IWorkflowCardStorage } from '$lib/persistent/interface'
+import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { Configuration, Status } from '$lib/schema'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
   IWorkflowCardEntryModification
 } from './interface'
-import type { IWorkflowCardEntry } from '$lib/models/interface'
 
 import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
-import type { Configuration, Status } from '$lib/schema'
+import type { IAuthenticationProvider } from '$lib/authentication/interface'
 
 const _helpers = {
   validateUserPrecondition(condition: Status['precondition'], user: string): void {
@@ -53,6 +54,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
   public constructor(
     public readonly workflowId: string,
     public readonly config: Promise<Configuration>,
+    public readonly auth: IAuthenticationProvider,
     protected readonly storage: IWorkflowCardStorage
   ) {
     //
