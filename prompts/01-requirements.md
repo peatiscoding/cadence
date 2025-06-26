@@ -226,6 +226,10 @@ Firestore
  |  |
  |  +- /<user-id> = User object
  |
+ +- /activities
+ |  |
+ |  +- /<activity-id> = Activity Document
+ |
  +- /workflows
     |
     +- /<workflow-id>
