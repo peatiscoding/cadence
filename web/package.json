@@ -13,6 +13,7 @@
     "format": "prettier --write .",
     "lint": "prettier --check .",
     "test:unit": "vitest",
+    "login": "node ./scripts/login.js",
     "test": "npm run test:unit -- --run"
   },
   "devDependencies": {

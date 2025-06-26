@@ -2,15 +2,17 @@ import { onRequest } from 'firebase-functions/v2/https'
 import * as logger from 'firebase-functions/logger'
 import * as admin from 'firebase-admin'
 
+const AUTH_USER_UID = 'bot'
+
 // Initialize Firebase Admin SDK
 admin.initializeApp()
 
-export const login = onRequest(async (request, response) => {
+export const login = onRequest({ region: 'asia-southeast2' }, async (request, response) => {
   response.set('Access-Control-Allow-Origin', '*')
   response.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   response.set('Access-Control-Allow-Headers', 'Content-Type')
 
-  console.log('Credentials', process.env.GOOGLE_APPLICATION_CREDENTIALS)
+  logger.log('Credentials', process.env.GOOGLE_APPLICATION_CREDENTIALS)
 
   if (request.method === 'OPTIONS') {
     response.status(204).send('')
@@ -23,10 +25,10 @@ export const login = onRequest(async (request, response) => {
   }
 
   try {
-    logger.info('Login endpoint called', { structuredData: true })
+    logger.info(`Login endpoint called`, admin.credential)
 
     // Create custom token for hardcoded user "BOT"
-    const uid = 'BOT'
+    const uid = AUTH_USER_UID
     const customToken = await admin.auth().createCustomToken(uid, {
       role: 'bot',
       type: 'programmatic'
