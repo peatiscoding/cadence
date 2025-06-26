@@ -28,17 +28,13 @@
               ({sampleCards[status.slug]?.length || 0})
             </span>
           </div>
-          {#if status.terminal}
-            <span
-              class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
-            >
-              Terminal
-            </span>
-          {/if}
         </div>
 
         <!-- Status Column Content -->
-        <div class="min-h-96 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+        <div 
+          class="min-h-96 rounded-lg bg-gray-50 p-4 dark:bg-gray-800 {status.terminal ? 'border-2' : ''}"
+          style={status.terminal ? `border-color: ${status.ui.color}` : ''}
+        >
           {#if sampleCards[status.slug]}
             {#each sampleCards[status.slug] as card}
               <div
