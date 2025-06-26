@@ -31,7 +31,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     }
 
     mockConfigStore = {
-      loadConfig: vi.fn()
+      loadConfig: vi.fn(),
+      setConfig: vi.fn()
     }
 
     mockAuthProvider = {
