@@ -4,14 +4,7 @@ import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [
-    tailwindcss({
-      content: ['./src/**/*.{html,js,svelte,ts}'],
-      darkMode: 'class'
-    }),
-    sveltekit(),
-    devtoolsJson()
-  ],
+  plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
   test: {
     projects: [
       {
