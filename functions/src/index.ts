@@ -1,4 +1,4 @@
-import { onRequest } from 'firebase-functions/v2/https'
+import { CallableRequest, CallableResponse, onCall } from 'firebase-functions/v2/https'
 import * as logger from 'firebase-functions/logger'
 import * as admin from 'firebase-admin'
 
@@ -7,46 +7,64 @@ const AUTH_USER_UID = 'bot'
 // Initialize Firebase Admin SDK
 admin.initializeApp()
 
-export const login = onRequest({ region: 'asia-southeast2' }, async (request, response) => {
-  response.set('Access-Control-Allow-Origin', '*')
-  response.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  response.set('Access-Control-Allow-Headers', 'Content-Type')
+interface ExecutionSuccessResult<T> {
+  success: true
+  result: T
+}
 
-  logger.log('Credentials', process.env.GOOGLE_APPLICATION_CREDENTIALS)
+interface ExecutionFailedResult {
+  success: false
+  reason: Error
+}
 
-  if (request.method === 'OPTIONS') {
-    response.status(204).send('')
-    return
+type ExecutionResult<T> = ExecutionFailedResult | ExecutionSuccessResult<T>
+
+/**
+ * Shorthand version
+ */
+const execute = function <ReturnType>(
+  fn: (req: CallableRequest<any>) => Promise<ReturnType>
+): (a: CallableRequest, r?: CallableResponse<ExecutionResult<ReturnType>>) => Promise<any> {
+  return async (req, res) => {
+    try {
+      const out = await fn(req)
+      const wrapped = {
+        success: true,
+        result: out
+      } as const
+      if (res) {
+        await res.sendChunk(wrapped)
+      }
+      return wrapped
+    } catch (error) {
+      const wrapped = {
+        success: false,
+        reason: error as Error
+      } as const
+      if (res) {
+        await res.sendChunk(wrapped)
+      }
+      return wrapped
+    }
   }
+}
 
-  if (request.method !== 'POST') {
-    response.status(405).json({ error: 'Method not allowed' })
-    return
-  }
+export const loginFn = onCall(
+  { region: 'asia-southeast2' },
+  execute(async () => {
+    try {
+      logger.info(`Login endpoint called`, admin.credential)
 
-  try {
-    logger.info(`Login endpoint called`, admin.credential)
-
-    // Create custom token for hardcoded user "BOT"
-    const uid = AUTH_USER_UID
-    const customToken = await admin.auth().createCustomToken(uid, {
-      role: 'bot',
-      type: 'programmatic'
-    })
-
-    logger.info('Custom token created successfully', { uid, structuredData: true })
-
-    response.status(200).json({
-      success: true,
-      token: customToken,
-      uid: uid,
-      message: 'Login successful'
-    })
-  } catch (error) {
-    logger.error('Error creating custom token', error)
-    response.status(500).json({
-      success: false,
-      error: 'Failed to create authentication token'
-    })
-  }
-})
+      // Create custom token for hardcoded user "BOT"
+      const uid = AUTH_USER_UID
+      const customToken = await admin.auth().createCustomToken(uid, {
+        role: 'bot',
+        type: 'programmatic'
+      })
+      return customToken
+    } catch (error) {
+      logger.error('Error creating custom token', error)
+      throw error
+    }
+  })
+)
