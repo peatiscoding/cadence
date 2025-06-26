@@ -1,8 +1,18 @@
+export interface ICurrentSession {
+  uid: string
+  displayName: string
+  avatarUrl: string
+}
+
 export interface IAuthenticationProvider {
   /**
    * Get Current UserId
    */
   getCurrentUid(): Promise<string>
+  /**
+   * Get Current Session
+   */
+  getCurrentSession(): Promise<ICurrentSession>
   /**
    * Login with popup
    */
@@ -14,5 +24,5 @@ export interface IAuthenticationProvider {
   /**
    * Listen to auth state changes
    */
-  onAuthStateChanged(callback: (user: { uid: string } | null) => void): () => void
+  onAuthStateChanged(callback: (user: ICurrentSession | null) => void): () => void
 }

@@ -1,7 +1,8 @@
 import type { FirebaseApp } from 'firebase/app'
-import type { IAuthenticationProvider } from '../interface'
+import type { IAuthenticationProvider, ICurrentSession } from '../interface'
 import {
   type Auth,
+  type User,
   getAuth,
   signOut,
   signInWithPopup,
@@ -10,6 +11,16 @@ import {
 } from 'firebase/auth'
 
 import { app } from '../../firebase-app'
+
+const _helpers = {
+  mapFirebaseUserToSession(user: User): ICurrentSession {
+    return {
+      uid: user.uid,
+      displayName: user.displayName || 'Unknown User',
+      avatarUrl: user.photoURL || ''
+    }
+  }
+}
 
 export class FirebaseAuthenticationProvider implements IAuthenticationProvider {
   public static shared(): IAuthenticationProvider {
@@ -29,6 +40,13 @@ export class FirebaseAuthenticationProvider implements IAuthenticationProvider {
     throw new Error(`UID cannot be retreived`)
   }
 
+  async getCurrentSession(): Promise<ICurrentSession> {
+    if (this.auth.currentUser) {
+      return _helpers.mapFirebaseUserToSession(this.auth.currentUser)
+    }
+    throw new Error(`Session cannot be retrieved`)
+  }
+
   async login(): Promise<void> {
     const provider = new GoogleAuthProvider()
     await signInWithPopup(this.auth, provider)
@@ -38,10 +56,10 @@ export class FirebaseAuthenticationProvider implements IAuthenticationProvider {
     return signOut(this.auth)
   }
 
-  onAuthStateChanged(callback: (user: { uid: string } | null) => void): () => void {
+  onAuthStateChanged(callback: (user: ICurrentSession | null) => void): () => void {
     return onAuthStateChanged(this.auth, (user) => {
       if (user && user.uid) {
-        callback({ uid: user.uid })
+        callback(_helpers.mapFirebaseUserToSession(user))
       } else {
         callback(null)
       }

@@ -1,13 +1,14 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte'
   import { FirebaseAuthenticationProvider } from '$lib/authentication/firebase/firebase-authen'
+  import type { ICurrentSession } from '$lib/authentication/interface'
   import ThemeSwitcher from './ThemeSwitcher.svelte'
   import SpinnerIcon from '$lib/assets/spinner.svg?raw'
   import UserAvatarIcon from '$lib/assets/user-avatar.svg?raw'
   import GoogleLogoIcon from '$lib/assets/google-logo.svg?raw'
 
   let isLoggedIn = $state(false)
-  let userUid = $state('')
+  let currentSession = $state<ICurrentSession | null>(null)
   let isLoading = $state(false)
   let error = $state('')
   let isInitializing = $state(true)
@@ -20,10 +21,10 @@
     // Listen to auth state changes for session persistence
     unsubscribeAuth = authProvider.onAuthStateChanged((user) => {
       if (user) {
-        userUid = user.uid
+        currentSession = user
         isLoggedIn = true
       } else {
-        userUid = ''
+        currentSession = null
         isLoggedIn = false
       }
       isInitializing = false
@@ -137,13 +138,21 @@
               disabled={isLoading}
             >
               <span class="sr-only">Open user menu</span>
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white"
-              >
-                <div class="h-4 w-4">
-                  {@html UserAvatarIcon}
+              {#if currentSession?.avatarUrl}
+                <img
+                  class="h-8 w-8 rounded-full object-cover"
+                  src={currentSession.avatarUrl}
+                  alt={currentSession.displayName}
+                />
+              {:else}
+                <div
+                  class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white"
+                >
+                  <div class="h-4 w-4">
+                    {@html UserAvatarIcon}
+                  </div>
                 </div>
-              </div>
+              {/if}
             </button>
 
             {#if showUserMenu}
@@ -153,10 +162,10 @@
                 <div class="border-b border-gray-100 px-4 py-2 dark:border-gray-600">
                   <p class="text-sm text-gray-500 dark:text-gray-400">Signed in as</p>
                   <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <code
-                      class="rounded bg-gray-100 px-1 text-xs dark:bg-gray-600 dark:text-gray-300"
-                      >{userUid}</code
-                    >
+                    {currentSession?.displayName || 'Unknown User'}
+                  </p>
+                  <p class="truncate text-xs text-gray-400 dark:text-gray-500">
+                    {currentSession?.uid}
                   </p>
                 </div>
                 <button

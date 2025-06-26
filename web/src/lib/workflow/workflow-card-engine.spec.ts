@@ -37,6 +37,11 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
     mockAuthProvider = {
       getCurrentUid: vi.fn().mockResolvedValue(testUserId),
+      getCurrentSession: vi.fn().mockResolvedValue({
+        uid: testUserId,
+        displayName: 'Test User',
+        avatarUrl: 'https://example.com/avatar.jpg'
+      }),
       login: vi.fn(),
       logout: vi.fn(),
       onAuthStateChanged: vi.fn()
