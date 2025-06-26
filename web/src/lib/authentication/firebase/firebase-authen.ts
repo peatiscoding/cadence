@@ -1,6 +1,6 @@
 import type { FirebaseApp } from 'firebase/app'
 import type { IAuthenticationProvider } from '../interface'
-import { type Auth, getAuth } from 'firebase/auth'
+import { type Auth, getAuth, signOut } from 'firebase/auth'
 
 import { app } from '../../firebase-app'
 
@@ -20,5 +20,9 @@ export class FirebaseAuthenticationProvider implements IAuthenticationProvider {
       return this.auth.currentUser.uid
     }
     throw new Error(`UID cannot be retreived`)
+  }
+
+  async logout(): Promise<void> {
+    return signOut(this.auth)
   }
 }
