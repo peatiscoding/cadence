@@ -33,7 +33,7 @@
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
   {#if isInitializing}
     <div class="flex items-center justify-center py-16">
-      <svg class="h-8 w-8 animate-spin text-blue-500" viewBox="0 0 24 24">
+      <svg class="h-8 w-8 animate-spin text-blue-500 dark:text-blue-400" viewBox="0 0 24 24">
         <circle
           class="opacity-25"
           cx="12"
@@ -49,19 +49,21 @@
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
         ></path>
       </svg>
-      <span class="ml-3 text-gray-600">Loading...</span>
+      <span class="ml-3 text-gray-600 dark:text-gray-400">Loading...</span>
     </div>
   {:else if isLoggedIn}
     <!-- Dashboard Content -->
     <div class="space-y-6">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p class="mt-2 text-gray-600">Welcome back! Here's what's happening with your projects.</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">
+          Welcome back! Here's what's happening with your projects.
+        </p>
       </div>
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-lg bg-white p-6 shadow">
+        <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
           <div class="flex items-center">
             <div class="flex-shrink-0">
               <div
@@ -78,13 +80,13 @@
               </div>
             </div>
             <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">Total Projects</p>
-              <p class="text-2xl font-semibold text-gray-900">12</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Projects</p>
+              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">12</p>
             </div>
           </div>
         </div>
 
-        <div class="rounded-lg bg-white p-6 shadow">
+        <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
           <div class="flex items-center">
             <div class="flex-shrink-0">
               <div
@@ -101,13 +103,13 @@
               </div>
             </div>
             <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">Completed Tasks</p>
-              <p class="text-2xl font-semibold text-gray-900">84</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed Tasks</p>
+              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">84</p>
             </div>
           </div>
         </div>
 
-        <div class="rounded-lg bg-white p-6 shadow">
+        <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
           <div class="flex items-center">
             <div class="flex-shrink-0">
               <div
@@ -124,13 +126,13 @@
               </div>
             </div>
             <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">In Progress</p>
-              <p class="text-2xl font-semibold text-gray-900">23</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</p>
+              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">23</p>
             </div>
           </div>
         </div>
 
-        <div class="rounded-lg bg-white p-6 shadow">
+        <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
           <div class="flex items-center">
             <div class="flex-shrink-0">
               <div
@@ -147,17 +149,17 @@
               </div>
             </div>
             <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">Overdue</p>
-              <p class="text-2xl font-semibold text-gray-900">5</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Overdue</p>
+              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">5</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Recent Activity -->
-      <div class="rounded-lg bg-white shadow">
-        <div class="border-b border-gray-200 px-6 py-4">
-          <h2 class="text-lg font-medium text-gray-900">Recent Activity</h2>
+      <div class="rounded-lg bg-white shadow dark:bg-gray-800">
+        <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+          <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Recent Activity</h2>
         </div>
         <div class="p-6">
           <div class="space-y-4">
@@ -174,11 +176,11 @@
                 </div>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-sm text-gray-900">
+                <p class="text-sm text-gray-900 dark:text-gray-100">
                   <span class="font-medium">You</span> created a new task in
                   <span class="font-medium">Website Redesign</span>
                 </p>
-                <p class="text-xs text-gray-500">2 hours ago</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">2 hours ago</p>
               </div>
             </div>
             <div class="flex items-start space-x-3">
@@ -194,10 +196,10 @@
                 </div>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-sm text-gray-900">
+                <p class="text-sm text-gray-900 dark:text-gray-100">
                   Task <span class="font-medium">"Update user interface"</span> was completed
                 </p>
-                <p class="text-xs text-gray-500">4 hours ago</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">4 hours ago</p>
               </div>
             </div>
             <div class="flex items-start space-x-3">
@@ -213,10 +215,10 @@
                 </div>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-sm text-gray-900">
+                <p class="text-sm text-gray-900 dark:text-gray-100">
                   Task <span class="font-medium">"Database migration"</span> is overdue
                 </p>
-                <p class="text-xs text-gray-500">1 day ago</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">1 day ago</p>
               </div>
             </div>
           </div>
@@ -227,8 +229,15 @@
     <!-- Welcome Screen for Non-authenticated Users -->
     <div class="text-center">
       <div class="mx-auto max-w-md">
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-          <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div
+          class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900"
+        >
+          <svg
+            class="h-6 w-6 text-blue-600 dark:text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -237,11 +246,11 @@
             />
           </svg>
         </div>
-        <h2 class="mt-6 text-3xl font-bold text-gray-900">Welcome to Cadence</h2>
-        <p class="mt-4 text-lg text-gray-600">
+        <h2 class="mt-6 text-3xl font-bold text-gray-900 dark:text-gray-100">Welcome to Cadence</h2>
+        <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
           A configurable project management tool designed to adapt to your workflow.
         </p>
-        <p class="mt-2 text-sm text-gray-500">
+        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
           Please sign in to access your dashboard and start managing your projects.
         </p>
       </div>
@@ -249,7 +258,7 @@
       <div class="mt-12">
         <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
           <div class="pt-6">
-            <div class="flow-root rounded-lg bg-white px-6 pb-8 shadow">
+            <div class="flow-root rounded-lg bg-white px-6 pb-8 shadow dark:bg-gray-800">
               <div class="-mt-6">
                 <div>
                   <span
@@ -270,8 +279,12 @@
                     </svg>
                   </span>
                 </div>
-                <h3 class="mt-8 text-lg font-medium tracking-tight text-gray-900">Fast Setup</h3>
-                <p class="mt-5 text-base text-gray-500">
+                <h3
+                  class="mt-8 text-lg font-medium tracking-tight text-gray-900 dark:text-gray-100"
+                >
+                  Fast Setup
+                </h3>
+                <p class="mt-5 text-base text-gray-500 dark:text-gray-400">
                   Get started quickly with pre-configured workflows that adapt to your team's needs.
                 </p>
               </div>
@@ -279,7 +292,7 @@
           </div>
 
           <div class="pt-6">
-            <div class="flow-root rounded-lg bg-white px-6 pb-8 shadow">
+            <div class="flow-root rounded-lg bg-white px-6 pb-8 shadow dark:bg-gray-800">
               <div class="-mt-6">
                 <div>
                   <span
@@ -300,8 +313,12 @@
                     </svg>
                   </span>
                 </div>
-                <h3 class="mt-8 text-lg font-medium tracking-tight text-gray-900">Configurable</h3>
-                <p class="mt-5 text-base text-gray-500">
+                <h3
+                  class="mt-8 text-lg font-medium tracking-tight text-gray-900 dark:text-gray-100"
+                >
+                  Configurable
+                </h3>
+                <p class="mt-5 text-base text-gray-500 dark:text-gray-400">
                   Customize workflows, fields, and transitions to match your unique processes.
                 </p>
               </div>
@@ -309,7 +326,7 @@
           </div>
 
           <div class="pt-6">
-            <div class="flow-root rounded-lg bg-white px-6 pb-8 shadow">
+            <div class="flow-root rounded-lg bg-white px-6 pb-8 shadow dark:bg-gray-800">
               <div class="-mt-6">
                 <div>
                   <span
@@ -330,8 +347,12 @@
                     </svg>
                   </span>
                 </div>
-                <h3 class="mt-8 text-lg font-medium tracking-tight text-gray-900">Analytics</h3>
-                <p class="mt-5 text-base text-gray-500">
+                <h3
+                  class="mt-8 text-lg font-medium tracking-tight text-gray-900 dark:text-gray-100"
+                >
+                  Analytics
+                </h3>
+                <p class="mt-5 text-base text-gray-500 dark:text-gray-400">
                   Track progress and gain insights with comprehensive reporting and analytics.
                 </p>
               </div>

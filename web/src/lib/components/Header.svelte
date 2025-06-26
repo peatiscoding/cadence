@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte'
   import { FirebaseAuthenticationProvider } from '$lib/authentication/firebase/firebase-authen'
+  import ThemeSwitcher from './ThemeSwitcher.svelte'
 
   let isLoggedIn = $state(false)
   let userUid = $state('')
@@ -73,29 +74,32 @@
   }
 </script>
 
-<header class="border-b border-gray-200 bg-white shadow-sm">
+<header class="border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="flex h-16 items-center justify-between">
       <!-- Logo and Navigation -->
       <div class="flex items-center">
         <div class="flex-shrink-0">
-          <h1 class="text-xl font-bold text-gray-900">
-            <span class="font-mono text-blue-600">Cadence</span>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <span class="font-mono text-blue-600 dark:text-blue-400">Cadence</span>
           </h1>
         </div>
         <nav class="hidden md:ml-8 md:flex md:space-x-8">
-          <a href="/" class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+          <a
+            href="/"
+            class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+          >
             Dashboard
           </a>
           <a
             href="/workflows"
-            class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+            class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
           >
             Workflows
           </a>
           <a
             href="/projects"
-            class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+            class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
           >
             Projects
           </a>
@@ -103,16 +107,21 @@
       </div>
 
       <!-- Authentication Section -->
-      <div class="flex items-center">
+      <div class="flex items-center space-x-2">
+        <!-- Theme Switcher -->
+        <ThemeSwitcher />
+
         {#if error}
-          <div class="mr-4 rounded border border-red-400 bg-red-100 px-3 py-1 text-xs text-red-700">
+          <div
+            class="rounded border border-red-400 bg-red-100 px-3 py-1 text-xs text-red-700 dark:border-red-600 dark:bg-red-900 dark:text-red-300"
+          >
             {error}
           </div>
         {/if}
 
         {#if isInitializing}
           <div class="flex items-center">
-            <svg class="h-4 w-4 animate-spin text-gray-400" viewBox="0 0 24 24">
+            <svg class="h-4 w-4 animate-spin text-gray-400 dark:text-gray-500" viewBox="0 0 24 24">
               <circle
                 class="opacity-25"
                 cx="12"
@@ -134,7 +143,7 @@
           <div class="relative">
             <button
               onclick={toggleUserMenu}
-              class="flex items-center rounded-full bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+              class="flex items-center rounded-full bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:bg-gray-800 dark:focus:ring-offset-gray-800"
               disabled={isLoading}
             >
               <span class="sr-only">Open user menu</span>
@@ -153,18 +162,21 @@
 
             {#if showUserMenu}
               <div
-                class="ring-opacity-5 absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none"
+                class="ring-opacity-5 absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none dark:bg-gray-700 dark:ring-gray-600"
               >
-                <div class="border-b border-gray-100 px-4 py-2">
-                  <p class="text-sm text-gray-500">Signed in as</p>
-                  <p class="truncate text-sm font-medium text-gray-900">
-                    <code class="rounded bg-gray-100 px-1 text-xs">{userUid}</code>
+                <div class="border-b border-gray-100 px-4 py-2 dark:border-gray-600">
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Signed in as</p>
+                  <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <code
+                      class="rounded bg-gray-100 px-1 text-xs dark:bg-gray-600 dark:text-gray-300"
+                      >{userUid}</code
+                    >
                   </p>
                 </div>
                 <button
                   onclick={handleLogout}
                   disabled={isLoading}
-                  class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                  class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
                   {isLoading ? 'Signing out...' : 'Sign out'}
                 </button>
@@ -176,7 +188,7 @@
           <button
             onclick={handleLogin}
             disabled={isLoading}
-            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-gray-800"
           >
             {#if isLoading}
               <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24">
