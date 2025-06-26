@@ -1,26 +1,6 @@
 <script lang="ts">
-  import type { Configuration, Status } from '$lib/schema'
-
-  // Sample workflow configuration based on the schema
-  import { sampleWorkflow } from './sample'
-
-  // Sample cards for each status
-  const sampleCards = {
-    open: [
-      { id: '1', title: 'Login form validation error', priority: 'High' },
-      { id: '2', title: 'Page loading too slow', priority: 'Medium' }
-    ],
-    'in-progress': [
-      { id: '3', title: 'Database connection timeout', priority: 'Critical', assignee: 'John Doe' }
-    ],
-    review: [{ id: '4', title: 'UI alignment issues', priority: 'Low', assignee: 'Jane Smith' }],
-    testing: [
-      { id: '5', title: 'Search functionality broken', priority: 'High', assignee: 'Bob Wilson' }
-    ],
-    closed: [
-      { id: '6', title: 'Header responsive design', priority: 'Medium', assignee: 'Alice Johnson' }
-    ]
-  }
+  // TODO: Sample workflow configuration based on the schema, replace me
+  import { sampleWorkflow, sampleCards } from '$lib/sample'
 </script>
 
 <div class="p-6">
@@ -67,19 +47,36 @@
                 <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
                   {card.title}
                 </h3>
+                <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                  {card.description}
+                </p>
                 <div class="flex flex-wrap gap-2 text-sm">
-                  <span
-                    class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                  >
-                    {card.priority}
-                  </span>
-                  {#if card.assignee}
+                  {#if card.fieldData.priority}
+                    <span
+                      class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    >
+                      {card.fieldData.priority}
+                    </span>
+                  {/if}
+                  {#if card.owner}
                     <span
                       class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 dark:bg-gray-900 dark:text-gray-200"
                     >
-                      {card.assignee}
+                      {card.owner.split('@')[0]}
                     </span>
                   {/if}
+                  {#if card.fieldData.estimated_hours}
+                    <span
+                      class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
+                    >
+                      {card.fieldData.estimated_hours}h
+                    </span>
+                  {/if}
+                  <span
+                    class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                  >
+                    {card.type}
+                  </span>
                 </div>
               </div>
             {/each}
