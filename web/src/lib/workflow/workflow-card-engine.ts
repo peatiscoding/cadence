@@ -60,10 +60,8 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     //
   }
 
-  async makeNewCard(
-    userSsoId: string,
-    creationPayload: IWorkflowCardEntryCreation
-  ): Promise<string> {
+  async makeNewCard(creationPayload: IWorkflowCardEntryCreation): Promise<string> {
+    const userSsoId = await this.auth.getCurrentUid()
     // TODO: Validate based on workflow's configuration
     return this.storage.createCard(this.workflowId, userSsoId, {
       ...creationPayload,
@@ -73,22 +71,22 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
   }
 
   async updateCardDetail(
-    userSsoId: string,
     workflowCardId: string,
     payload: IWorkflowCardEntryModification
   ): Promise<void> {
     if ((payload as any).status) {
       throw new Error(`Update status is disallowed`)
     }
+    const userSsoId = await this.auth.getCurrentUid()
     return this.storage.updateCard(this.workflowId, workflowCardId, userSsoId, payload)
   }
 
   async attemptToTransitCard(
-    userSsoId: string,
     workflowCardId: string,
     toStatus: string,
     payload: IWorkflowCardEntryModification
   ): Promise<void> {
+    const userSsoId = await this.auth.getCurrentUid()
     const config = await this.config
     // Validate if requested status is defined within configuration?
     const newStatusConfig = config.statuses.find((a) => a.slug === toStatus)
@@ -117,7 +115,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     // TODO: Run post operations
   }
 
-  async deleteCard(userSsoId: string, workflowCardId: string): Promise<void> {
+  async deleteCard(workflowCardId: string): Promise<void> {
     // TODO: Validate if user can delete the card based on workflow's configuration
     await this.storage.deleteCard(this.workflowId, workflowCardId)
   }

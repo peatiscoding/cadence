@@ -16,7 +16,7 @@ export type IWorkflowCardEntryModification = Partial<
 >
 
 export interface IWorkflowCardEngine {
-  makeNewCard(userSsoId: string, creationPayload: IWorkflowCardEntryCreation): Promise<string>
+  makeNewCard(creationPayload: IWorkflowCardEntryCreation): Promise<string>
 
   /**
    * Update Card Detail without status changes
@@ -27,11 +27,10 @@ export interface IWorkflowCardEngine {
    * Attempt to transit card to new status
    */
   attemptToTransitCard(
-    userSsoId: string,
     workflowCardId: string,
     toStatus: string,
     payload: IWorkflowCardEntryModification
   ): Promise<void>
 
-  deleteCard(userSsoId: string, workflowCardId: string): Promise<void>
+  deleteCard(workflowCardId: string): Promise<void>
 }

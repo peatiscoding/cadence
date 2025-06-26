@@ -35,7 +35,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     }
 
     mockAuthProvider = {
-      getCurrentUid: vi.fn()
+      getCurrentUid: vi.fn().mockResolvedValue(testUserId)
     }
 
     // Create WorkflowEngine using factory
@@ -126,7 +126,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.createCard).mockResolvedValue(expectedCardId)
 
       // Act
-      const result = await engine.makeNewCard(testUserId, creationPayload)
+      const result = await engine.makeNewCard(creationPayload)
 
       // Assert
       expect(result).toBe(expectedCardId)
@@ -149,7 +149,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.createCard).mockResolvedValue(expectedCardId)
 
       // Act
-      const result = await engine.makeNewCard(testUserId, fullCreationPayload)
+      const result = await engine.makeNewCard(fullCreationPayload)
 
       // Assert
       expect(result).toBe(expectedCardId)
@@ -174,7 +174,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.createCard).mockResolvedValue(expectedCardId)
 
       // Act
-      const result = await engine.makeNewCard(testUserId, zeroValuePayload)
+      const result = await engine.makeNewCard(zeroValuePayload)
 
       // Assert
       expect(result).toBe(expectedCardId)
@@ -197,9 +197,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.createCard).mockRejectedValue(storageError)
 
       // Act & Assert
-      await expect(engine.makeNewCard(testUserId, creationPayload)).rejects.toThrow(
-        'Storage connection failed'
-      )
+      await expect(engine.makeNewCard(creationPayload)).rejects.toThrow('Storage connection failed')
     })
   })
 
@@ -223,7 +221,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
-      await engine.updateCardDetail(testUserId, testCardId, updatePayload)
+      await engine.updateCardDetail(testCardId, updatePayload)
 
       // Assert
       expect(mockStorage.updateCard).toHaveBeenCalledWith(
@@ -243,7 +241,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
-      await engine.updateCardDetail(testUserId, testCardId, partialUpdatePayload)
+      await engine.updateCardDetail(testCardId, partialUpdatePayload)
 
       // Assert
       expect(mockStorage.updateCard).toHaveBeenCalledWith(
@@ -263,7 +261,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
-      await engine.updateCardDetail(testUserId, testCardId, emptyFieldDataPayload)
+      await engine.updateCardDetail(testCardId, emptyFieldDataPayload)
 
       // Assert
       expect(mockStorage.updateCard).toHaveBeenCalledWith(
@@ -294,7 +292,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
-      await engine.updateCardDetail(testUserId, testCardId, complexUpdatePayload)
+      await engine.updateCardDetail(testCardId, complexUpdatePayload)
 
       // Assert
       expect(mockStorage.updateCard).toHaveBeenCalledWith(
@@ -315,7 +313,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockRejectedValue(updateError)
 
       // Act & Assert
-      await expect(engine.updateCardDetail(testUserId, testCardId, updatePayload)).rejects.toThrow(
+      await expect(engine.updateCardDetail(testCardId, updatePayload)).rejects.toThrow(
         'Update failed'
       )
     })
@@ -357,7 +355,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
-      await engine.attemptToTransitCard(testUserId, testCardId, newStatus, transitPayload)
+      await engine.attemptToTransitCard(testCardId, newStatus, transitPayload)
 
       // Assert
       expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, testCardId, testUserId, {
@@ -393,7 +391,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
-      await engine.attemptToTransitCard(testUserId, testCardId, newStatus, emptyPayload)
+      await engine.attemptToTransitCard(testCardId, newStatus, emptyPayload)
 
       // Assert
       expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, testCardId, testUserId, {
@@ -430,7 +428,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       for (const status of statuses) {
-        await engine.attemptToTransitCard(testUserId, testCardId, status, basePayload)
+        await engine.attemptToTransitCard(testCardId, status, basePayload)
 
         expect(mockStorage.updateCard).toHaveBeenCalledWith(
           testWorkflowId,
@@ -477,7 +475,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
       // Act
-      await engine.attemptToTransitCard(testUserId, testCardId, newStatus, payloadWithStatus)
+      await engine.attemptToTransitCard(testCardId, newStatus, payloadWithStatus)
 
       // Assert
       expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, testCardId, testUserId, {
@@ -514,9 +512,9 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.updateCard).mockRejectedValue(transitError)
 
       // Act & Assert
-      await expect(
-        engine.attemptToTransitCard(testUserId, testCardId, newStatus, payload)
-      ).rejects.toThrow('Transit operation failed')
+      await expect(engine.attemptToTransitCard(testCardId, newStatus, payload)).rejects.toThrow(
+        'Transit operation failed'
+      )
     })
   })
 
@@ -528,7 +526,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.deleteCard).mockResolvedValue()
 
       // Act
-      await engine.deleteCard(testUserId, testCardId)
+      await engine.deleteCard(testCardId)
 
       // Assert
       expect(mockStorage.deleteCard).toHaveBeenCalledWith(testWorkflowId, testCardId)
@@ -541,7 +539,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
       // Act
       for (const cardId of cardIds) {
-        await engine.deleteCard(testUserId, cardId)
+        await engine.deleteCard(cardId)
       }
 
       // Assert
@@ -557,9 +555,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.deleteCard).mockRejectedValue(deleteError)
 
       // Act & Assert
-      await expect(engine.deleteCard(testUserId, testCardId)).rejects.toThrow(
-        'Deletion not allowed'
-      )
+      await expect(engine.deleteCard(testCardId)).rejects.toThrow('Deletion not allowed')
     })
   })
 
@@ -578,7 +574,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       vi.mocked(mockStorage.deleteCard).mockResolvedValue()
 
       // 1. CREATE
-      const cardId = await engine.makeNewCard(testUserId, cardCreationPayload)
+      const cardId = await engine.makeNewCard(cardCreationPayload)
       expect(cardId).toBe(createdCardId)
       expect(mockStorage.createCard).toHaveBeenCalledWith(testWorkflowId, testUserId, {
         ...cardCreationPayload,
@@ -592,7 +588,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         description: 'Description updated during lifecycle',
         fieldData: { updated: true }
       }
-      await engine.updateCardDetail(testUserId, cardId, updatePayload)
+      await engine.updateCardDetail(cardId, updatePayload)
       expect(mockStorage.updateCard).toHaveBeenCalledWith(
         testWorkflowId,
         cardId,
@@ -622,7 +618,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         updatedAt: Date.now()
       }
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
-      await engine.attemptToTransitCard(testUserId, cardId, newStatus, transitPayload)
+      await engine.attemptToTransitCard(cardId, newStatus, transitPayload)
       expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, cardId, testUserId, {
         ...transitPayload,
         status: newStatus,
@@ -630,7 +626,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       })
 
       // 4. DELETE
-      await engine.deleteCard(testUserId, cardId)
+      await engine.deleteCard(cardId)
       expect(mockStorage.deleteCard).toHaveBeenCalledWith(testWorkflowId, cardId)
     })
 
@@ -653,12 +649,19 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         .mockResolvedValueOnce('card-2')
       vi.mocked(mockStorage.updateCard).mockResolvedValue()
 
+      // Setup auth provider to return different users
+      vi.mocked(mockAuthProvider.getCurrentUid)
+        .mockResolvedValueOnce(user1)
+        .mockResolvedValueOnce(user1)
+        .mockResolvedValueOnce(user2)
+        .mockResolvedValueOnce(user2)
+
       // User 1 creates and updates their card
-      const card1Id = await engine.makeNewCard(user1, card1Payload)
-      await engine.updateCardDetail(user1, card1Id, { title: 'Updated by User 1' })
+      const card1Id = await engine.makeNewCard(card1Payload)
+      await engine.updateCardDetail(card1Id, { title: 'Updated by User 1' })
 
       // User 2 creates and transits their card
-      const card2Id = await engine.makeNewCard(user2, card2Payload)
+      const card2Id = await engine.makeNewCard(card2Payload)
       const mockCard2: IWorkflowCardEntry = {
         workflowCardId: card2Id,
         workflowId: testWorkflowId,
@@ -676,7 +679,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         updatedAt: Date.now()
       }
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard2)
-      await engine.attemptToTransitCard(user2, card2Id, 'completed', {
+      await engine.attemptToTransitCard(card2Id, 'completed', {
         fieldData: { completedBy: user2 }
       })
 
@@ -731,7 +734,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         const payload: IWorkflowCardEntryModification = {
           fieldData: { transitionStep: i + 1 }
         }
-        await engine.attemptToTransitCard(testUserId, cardId, status, payload)
+        await engine.attemptToTransitCard(cardId, status, payload)
       }
 
       // Verify all transitions were called
@@ -860,9 +863,11 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
-      await expect(
-        engine.attemptToTransitCard(unauthorizedUser, cardId, 'in-progress', {})
-      ).rejects.toThrow("User 'unauthorized-user' is not authorized to perform this transition")
+      vi.mocked(mockAuthProvider.getCurrentUid).mockResolvedValue(unauthorizedUser)
+
+      await expect(engine.attemptToTransitCard(cardId, 'in-progress', {})).rejects.toThrow(
+        "User 'unauthorized-user' is not authorized to perform this transition"
+      )
     })
 
     it('should throw error when required field missing', async () => {
@@ -890,9 +895,11 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
-      await expect(
-        engine.attemptToTransitCard(authorizedUser, cardId, 'in-progress', {})
-      ).rejects.toThrow("Required field 'assignee' is missing or empty")
+      vi.mocked(mockAuthProvider.getCurrentUid).mockResolvedValue(authorizedUser)
+
+      await expect(engine.attemptToTransitCard(cardId, 'in-progress', {})).rejects.toThrow(
+        "Required field 'assignee' is missing or empty"
+      )
     })
 
     it('should throw error when multiple required fields are missing', async () => {
@@ -920,9 +927,9 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
-      await expect(
-        engine.attemptToTransitCard(authorizedUser, cardId, 'review', {})
-      ).rejects.toThrow(
+      vi.mocked(mockAuthProvider.getCurrentUid).mockResolvedValue(authorizedUser)
+
+      await expect(engine.attemptToTransitCard(cardId, 'review', {})).rejects.toThrow(
         "Required fields 'assignee', 'priority', 'description' are missing or empty"
       )
     })
@@ -954,9 +961,11 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
-      await expect(
-        engine.attemptToTransitCard(authorizedUser, cardId, 'review', {})
-      ).rejects.toThrow("Required fields 'priority', 'description' are missing or empty")
+      vi.mocked(mockAuthProvider.getCurrentUid).mockResolvedValue(authorizedUser)
+
+      await expect(engine.attemptToTransitCard(cardId, 'review', {})).rejects.toThrow(
+        "Required fields 'priority', 'description' are missing or empty"
+      )
     })
 
     it('should throw error when transition from invalid status', async () => {
@@ -984,9 +993,11 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
-      await expect(
-        engine.attemptToTransitCard(authorizedUser, cardId, 'in-progress', {})
-      ).rejects.toThrow("Cannot transition from status 'completed' to this status")
+      vi.mocked(mockAuthProvider.getCurrentUid).mockResolvedValue(authorizedUser)
+
+      await expect(engine.attemptToTransitCard(cardId, 'in-progress', {})).rejects.toThrow(
+        "Cannot transition from status 'completed' to this status"
+      )
     })
 
     it('should successfully transit when all preconditions are met', async () => {
@@ -1015,9 +1026,9 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
-      await expect(
-        engine.attemptToTransitCard(authorizedUser, cardId, 'in-progress', {})
-      ).resolves.not.toThrow()
+      vi.mocked(mockAuthProvider.getCurrentUid).mockResolvedValue(authorizedUser)
+
+      await expect(engine.attemptToTransitCard(cardId, 'in-progress', {})).resolves.not.toThrow()
 
       expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, cardId, authorizedUser, {
         status: 'in-progress',
@@ -1032,9 +1043,11 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
-      await expect(
-        engine.attemptToTransitCard(authorizedUser, cardId, 'unknown-status', {})
-      ).rejects.toThrow('Unknown new status: unknown-status')
+      vi.mocked(mockAuthProvider.getCurrentUid).mockResolvedValue(authorizedUser)
+
+      await expect(engine.attemptToTransitCard(cardId, 'unknown-status', {})).rejects.toThrow(
+        'Unknown new status: unknown-status'
+      )
     })
   })
 })
