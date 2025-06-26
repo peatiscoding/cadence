@@ -1,5 +1,7 @@
 import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '../interface'
-import { getAuth, signInWithCustomToken, signOut, type Auth } from 'firebase/auth'
+import type { Auth } from 'firebase/auth'
+import type { Configuration } from '$lib/schema'
+import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest'
@@ -689,6 +691,476 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       // Verify deletion
       await expect(storage.getCard(testWorkflowId, cardId)).rejects.toThrow(
         `Unable to retrieve card ${testWorkflowId}/${cardId}`
+      )
+    })
+  })
+
+  describe('setConfig', () => {
+    const configTestWorkflowId = `config-test-workflow-${Date.now()}`
+
+    const testConfiguration: Configuration = {
+      name: 'Test Workflow Configuration',
+      fields: [
+        {
+          slug: 'title',
+          title: 'Title',
+          description: 'Task title',
+          schema: {
+            kind: 'text',
+            min: 1,
+            max: 100
+          }
+        },
+        {
+          slug: 'priority',
+          title: 'Priority',
+          schema: {
+            kind: 'number',
+            min: 1,
+            max: 5,
+            default: 3
+          }
+        },
+        {
+          slug: 'completed',
+          title: 'Completed',
+          schema: {
+            kind: 'bool',
+            default: false
+          }
+        },
+        {
+          slug: 'reference-url',
+          title: 'Reference URL',
+          schema: {
+            kind: 'url'
+          }
+        }
+      ],
+      statuses: [
+        {
+          slug: 'todo',
+          title: 'To Do',
+          terminal: false,
+          ui: {
+            color: '#gray'
+          },
+          precondition: {
+            from: [],
+            required: [],
+            users: []
+          },
+          transition: [],
+          finally: []
+        },
+        {
+          slug: 'in-progress',
+          title: 'In Progress',
+          terminal: false,
+          ui: {
+            color: '#blue'
+          },
+          precondition: {
+            from: ['todo'],
+            required: [],
+            users: []
+          },
+          transition: [],
+          finally: []
+        },
+        {
+          slug: 'done',
+          title: 'Done',
+          terminal: true,
+          ui: {
+            color: '#green'
+          },
+          precondition: {
+            from: ['in-progress'],
+            required: [],
+            users: []
+          },
+          transition: [],
+          finally: []
+        }
+      ]
+    }
+
+    it('should create a new workflow configuration', async () => {
+      // Act
+      await storage.setConfig(configTestWorkflowId, testConfiguration)
+
+      // Assert - Load the configuration back to verify it was saved
+      const loadedConfig = await storage.loadConfig(configTestWorkflowId)
+
+      expect(loadedConfig.name).toBe(testConfiguration.name)
+      expect(loadedConfig.fields).toEqual(testConfiguration.fields)
+      expect(loadedConfig.statuses).toEqual(testConfiguration.statuses)
+      expect(loadedConfig.fields).toHaveLength(4)
+      expect(loadedConfig.statuses).toHaveLength(3)
+    })
+
+    it('should update existing workflow configuration with merge', async () => {
+      // First create a configuration
+      const initialConfig: Configuration = {
+        name: 'Initial Configuration',
+        fields: [
+          {
+            slug: 'title',
+            title: 'Title',
+            schema: {
+              kind: 'text',
+              min: 1
+            }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'todo',
+            title: 'To Do',
+            terminal: false,
+            ui: { color: '#gray' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      await storage.setConfig(configTestWorkflowId, initialConfig)
+
+      // Verify initial config was set
+      const loadedInitialConfig = await storage.loadConfig(configTestWorkflowId)
+      expect(loadedInitialConfig.name).toBe('Initial Configuration')
+      expect(loadedInitialConfig.fields).toHaveLength(1)
+
+      // Update with new configuration (should merge due to { merge: true })
+      const updatedConfig: Configuration = {
+        name: 'Updated Configuration',
+        fields: [
+          {
+            slug: 'title',
+            title: 'Updated Title',
+            schema: {
+              kind: 'text',
+              min: 1
+            }
+          },
+          {
+            slug: 'description',
+            title: 'Description',
+            schema: {
+              kind: 'text',
+              max: 500
+            }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'todo',
+            title: 'Updated To Do',
+            terminal: false,
+            ui: { color: '#yellow' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'done',
+            title: 'Done',
+            terminal: true,
+            ui: { color: '#green' },
+            precondition: { from: ['todo'], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      await storage.setConfig(configTestWorkflowId, updatedConfig)
+
+      // Verify the configuration was updated
+      const loadedUpdatedConfig = await storage.loadConfig(configTestWorkflowId)
+      expect(loadedUpdatedConfig.name).toBe('Updated Configuration')
+      expect(loadedUpdatedConfig.fields).toHaveLength(2)
+      expect(loadedUpdatedConfig.statuses).toHaveLength(2)
+      expect(loadedUpdatedConfig.fields[0].title).toBe('Updated Title')
+      expect(loadedUpdatedConfig.statuses[0].title).toBe('Updated To Do')
+    })
+
+    it('should handle minimal configuration', async () => {
+      const minimalWorkflowId = `minimal-config-${Date.now()}`
+      const minimalConfig: Configuration = {
+        name: 'Minimal Workflow',
+        fields: [],
+        statuses: []
+      }
+
+      // Act
+      await storage.setConfig(minimalWorkflowId, minimalConfig)
+
+      // Assert
+      const loadedConfig = await storage.loadConfig(minimalWorkflowId)
+      expect(loadedConfig.name).toBe('Minimal Workflow')
+      expect(loadedConfig.fields).toEqual([])
+      expect(loadedConfig.statuses).toEqual([])
+    })
+
+    it('should handle complex configuration with multiple field types', async () => {
+      const complexWorkflowId = `complex-config-${Date.now()}`
+      const complexConfig: Configuration = {
+        name: 'Complex Workflow Configuration',
+        fields: [
+          {
+            slug: 'title',
+            title: 'Task Title',
+            description: 'The main title of the task',
+            schema: {
+              kind: 'text',
+              min: 1,
+              max: 200
+            }
+          },
+          {
+            slug: 'priority',
+            title: 'Priority Level',
+            schema: {
+              kind: 'number',
+              min: 1,
+              max: 10,
+              default: 5
+            }
+          },
+          {
+            slug: 'is-urgent',
+            title: 'Is Urgent',
+            schema: {
+              kind: 'bool',
+              default: false
+            }
+          },
+          {
+            slug: 'document-url',
+            title: 'Documentation URL',
+            schema: {
+              kind: 'url'
+            }
+          },
+          {
+            slug: 'description',
+            title: 'Detailed Description',
+            schema: {
+              kind: 'text',
+              max: 1000
+            }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'backlog',
+            title: 'Backlog',
+            terminal: false,
+            ui: { color: '#gray' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'todo',
+            title: 'To Do',
+            terminal: false,
+            ui: { color: '#blue' },
+            precondition: { from: ['backlog'], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'in-progress',
+            title: 'In Progress',
+            terminal: false,
+            ui: { color: '#yellow' },
+            precondition: { from: ['todo'], required: ['title'], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'done',
+            title: 'Completed',
+            terminal: true,
+            ui: { color: '#green' },
+            precondition: { from: ['in-progress'], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      // Act
+      await storage.setConfig(complexWorkflowId, complexConfig)
+
+      // Assert
+      const loadedConfig = await storage.loadConfig(complexWorkflowId)
+      expect(loadedConfig.name).toBe(complexConfig.name)
+      expect(loadedConfig.fields).toEqual(complexConfig.fields)
+      expect(loadedConfig.statuses).toEqual(complexConfig.statuses)
+
+      // Verify specific field types
+      const titleField = loadedConfig.fields.find((f) => f.slug === 'title')
+      const priorityField = loadedConfig.fields.find((f) => f.slug === 'priority')
+      const urgentField = loadedConfig.fields.find((f) => f.slug === 'is-urgent')
+      const urlField = loadedConfig.fields.find((f) => f.slug === 'document-url')
+
+      expect(titleField?.schema.kind).toBe('text')
+      expect(priorityField?.schema.kind).toBe('number')
+      expect(urgentField?.schema.kind).toBe('bool')
+      expect(urlField?.schema.kind).toBe('url')
+
+      // Verify status properties
+      const todoStatus = loadedConfig.statuses.find((s) => s.slug === 'todo')
+      const inProgressStatus = loadedConfig.statuses.find((s) => s.slug === 'in-progress')
+
+      expect(todoStatus?.terminal).toBe(false)
+      expect(inProgressStatus?.precondition.required).toContain('title')
+    })
+
+    it('should support creating multiple different configurations', async () => {
+      const workflow1Id = `multi-config-1-${Date.now()}`
+      const workflow2Id = `multi-config-2-${Date.now()}`
+
+      const config1: Configuration = {
+        name: 'Bug Tracking Workflow',
+        fields: [
+          {
+            slug: 'title',
+            title: 'Bug Title',
+            schema: { kind: 'text', min: 1 }
+          },
+          {
+            slug: 'severity',
+            title: 'Severity',
+            schema: { kind: 'number', min: 1, max: 5 }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'open',
+            title: 'Open',
+            terminal: false,
+            ui: { color: '#red' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'investigating',
+            title: 'Investigating',
+            terminal: false,
+            ui: { color: '#yellow' },
+            precondition: { from: ['open'], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'fixed',
+            title: 'Fixed',
+            terminal: true,
+            ui: { color: '#green' },
+            precondition: { from: ['investigating'], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      const config2: Configuration = {
+        name: 'Feature Development Workflow',
+        fields: [
+          {
+            slug: 'title',
+            title: 'Feature Title',
+            schema: { kind: 'text', min: 1 }
+          },
+          {
+            slug: 'estimated-hours',
+            title: 'Estimated Hours',
+            schema: { kind: 'number', min: 1, max: 100 }
+          },
+          {
+            slug: 'has-tests',
+            title: 'Has Unit Tests',
+            schema: { kind: 'bool', default: false }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'planning',
+            title: 'Planning',
+            terminal: false,
+            ui: { color: '#purple' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'development',
+            title: 'Development',
+            terminal: false,
+            ui: { color: '#blue' },
+            precondition: { from: ['planning'], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'testing',
+            title: 'Testing',
+            terminal: false,
+            ui: { color: '#orange' },
+            precondition: { from: ['development'], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'deployed',
+            title: 'Deployed',
+            terminal: true,
+            ui: { color: '#green' },
+            precondition: { from: ['testing'], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      // Create both configurations
+      await storage.setConfig(workflow1Id, config1)
+      await storage.setConfig(workflow2Id, config2)
+
+      // Verify both configurations exist and are correct
+      const loadedConfig1 = await storage.loadConfig(workflow1Id)
+      const loadedConfig2 = await storage.loadConfig(workflow2Id)
+
+      expect(loadedConfig1.name).toBe('Bug Tracking Workflow')
+      expect(loadedConfig1.fields).toHaveLength(2)
+      expect(loadedConfig1.statuses).toHaveLength(3)
+
+      expect(loadedConfig2.name).toBe('Feature Development Workflow')
+      expect(loadedConfig2.fields).toHaveLength(3)
+      expect(loadedConfig2.statuses).toHaveLength(4)
+
+      // Verify they are independent
+      expect(loadedConfig1.fields.find((f) => f.slug === 'severity')).toBeDefined()
+      expect(loadedConfig2.fields.find((f) => f.slug === 'has-tests')).toBeDefined()
+      expect(loadedConfig1.fields.find((f) => f.slug === 'has-tests')).toBeUndefined()
+      expect(loadedConfig2.fields.find((f) => f.slug === 'severity')).toBeUndefined()
+    })
+  })
+
+  describe('loadConfig', () => {
+    it('should throw error when loading non-existent configuration', async () => {
+      const nonExistentWorkflowId = `non-existent-${Date.now()}`
+
+      await expect(storage.loadConfig(nonExistentWorkflowId)).rejects.toThrow(
+        `Unable to retrieve configuration ${nonExistentWorkflowId}`
       )
     })
   })

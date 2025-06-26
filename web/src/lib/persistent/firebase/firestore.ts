@@ -11,6 +11,7 @@ import {
   updateDoc,
   getDoc,
   deleteDoc,
+  setDoc,
   serverTimestamp
 } from 'firebase/firestore/lite'
 import { app } from '../../firebase-app'
@@ -101,5 +102,10 @@ export class FirestoreWorkflowCardStorage
       return config
     }
     throw new Error(`Unable to retrieve configuration ${workflowId}`)
+  }
+
+  async setConfig(workflowId: string, configuration: Configuration): Promise<void> {
+    const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
+    await setDoc(ref, configuration, { merge: true })
   }
 }

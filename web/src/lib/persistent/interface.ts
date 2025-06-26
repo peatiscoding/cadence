@@ -43,4 +43,9 @@ export interface IWorkflowConfigurationStorage {
    * Fetch configuration
    */
   loadConfig(workflowId: string): Promise<Configuration>
+
+  /**
+   * Create a new workflow configuration
+   */
+  setConfig(workflowId: string, configuration: Configuration): Promise<void>
 }
