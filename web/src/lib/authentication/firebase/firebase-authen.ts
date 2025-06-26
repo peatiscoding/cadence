@@ -17,6 +17,7 @@ const _helpers = {
     return {
       uid: user.uid,
       displayName: user.displayName || 'Unknown User',
+      email: user.email || '',
       avatarUrl: user.photoURL || ''
     }
   }

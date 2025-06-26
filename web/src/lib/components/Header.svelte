@@ -165,7 +165,7 @@
                     {currentSession?.displayName || 'Unknown User'}
                   </p>
                   <p class="truncate text-xs text-gray-400 dark:text-gray-500">
-                    {currentSession?.uid}
+                    {currentSession?.email}
                   </p>
                 </div>
                 <button

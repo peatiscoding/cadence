@@ -40,6 +40,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       getCurrentSession: vi.fn().mockResolvedValue({
         uid: testUserId,
         displayName: 'Test User',
+        email: 'test@example.com',
         avatarUrl: 'https://example.com/avatar.jpg'
       }),
       login: vi.fn(),

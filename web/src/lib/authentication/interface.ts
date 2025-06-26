@@ -1,6 +1,7 @@
 export interface ICurrentSession {
   uid: string
   displayName: string
+  email: string
   avatarUrl: string
 }
 
