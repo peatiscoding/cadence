@@ -2,13 +2,14 @@
   // TODO: Sample workflow configuration based on the schema, replace me
   import { sampleWorkflow, sampleCards } from '$lib/sample'
   import SettingsIcon from '$lib/assets/settings.svg?raw'
-  
+  import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
+
   let showConfigModal = $state(false)
-  
+
   function toggleConfigModal() {
     showConfigModal = !showConfigModal
   }
-  
+
   function closeModal(event: Event) {
     if (event.target === event.currentTarget) {
       showConfigModal = false
@@ -24,10 +25,10 @@
       </h1>
       <button
         onclick={toggleConfigModal}
-        class="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+        class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
         title="Workflow Settings"
       >
-        <div class="w-5 h-5">
+        <div class="h-5 w-5">
           {@html SettingsIcon}
         </div>
       </button>
@@ -40,22 +41,20 @@
   <!-- Workflow Board -->
   <div class="flex gap-6 overflow-x-auto pb-4">
     <!-- Draft Column (Reserved) -->
-    <div class="flex-shrink-0 w-80">
+    <div class="w-80 flex-shrink-0">
       <!-- Draft Column Header -->
       <div class="mb-4">
-        <div class="flex items-center gap-2 mb-2">
-          <div class="w-3 h-3 rounded-full bg-gray-400"></div>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Draft
-          </h2>
-          <span class="text-sm text-gray-500 dark:text-gray-400">
-            (0)
-          </span>
+        <div class="mb-2 flex items-center gap-2">
+          <div class="h-3 w-3 rounded-full bg-gray-400"></div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Draft</h2>
+          <span class="text-sm text-gray-500 dark:text-gray-400"> (0) </span>
         </div>
       </div>
 
       <!-- Draft Column Content -->
-      <div class="min-h-96 rounded-lg bg-gray-50 p-4 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600">
+      <div
+        class="min-h-96 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800"
+      >
         <div class="py-8 text-center text-gray-500 dark:text-gray-400">
           <p class="mb-4">No draft items</p>
           <!-- Add Card Button -->
@@ -84,8 +83,10 @@
         </div>
 
         <!-- Status Column Content -->
-        <div 
-          class="min-h-96 rounded-lg bg-gray-50 p-4 dark:bg-gray-800 {status.terminal ? 'border-2' : ''}"
+        <div
+          class="min-h-96 rounded-lg bg-gray-50 p-4 dark:bg-gray-800 {status.terminal
+            ? 'border-2'
+            : ''}"
           style={status.terminal ? `border-color: ${status.ui.color}` : ''}
         >
           {#if sampleCards[status.slug]}
@@ -134,7 +135,6 @@
               <p>No items in this status</p>
             </div>
           {/if}
-
         </div>
       </div>
     {/each}
@@ -143,103 +143,45 @@
 
 <!-- Configuration Modal -->
 {#if showConfigModal}
-  <div 
+  <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     onclick={closeModal}
   >
-    <div class="w-full max-w-4xl mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+    <div
+      class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
+    >
       <!-- Modal Header -->
-      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+      <div
+        class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700"
+      >
         <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Workflow Configuration
         </h2>
         <button
-          onclick={() => showConfigModal = false}
-          class="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+          onclick={() => (showConfigModal = false)}
+          class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
           </svg>
         </button>
       </div>
 
       <!-- Modal Content -->
       <div class="p-6">
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-          <!-- Fields -->
-          <div>
-            <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">Fields</h3>
-            <div class="space-y-3">
-              {#each sampleWorkflow.fields as field}
-                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700">
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="font-medium text-gray-900 dark:text-gray-100">
-                      {field.title}
-                    </span>
-                    <span
-                      class="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                    >
-                      {field.schema.kind}
-                    </span>
-                  </div>
-                  <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    {field.description}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-500">
-                    Slug: {field.slug}
-                  </p>
-                </div>
-              {/each}
-            </div>
-          </div>
-
-          <!-- Status Flow -->
-          <div>
-            <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">Status Flow</h3>
-            <div class="space-y-3">
-              {#each sampleWorkflow.statuses as status}
-                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700">
-                  <div class="flex items-center gap-3 mb-2">
-                    <div
-                      class="w-4 h-4 rounded-full"
-                      style="background-color: {status.ui.color}"
-                    ></div>
-                    <span class="font-medium text-gray-900 dark:text-gray-100">
-                      {status.title}
-                    </span>
-                    {#if status.terminal}
-                      <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded dark:bg-green-900 dark:text-green-200">
-                        Terminal
-                      </span>
-                    {/if}
-                  </div>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mb-2">
-                    Slug: {status.slug}
-                  </p>
-                  {#if status.precondition.required.length > 0}
-                    <div class="text-xs text-gray-600 dark:text-gray-400">
-                      <span class="font-medium">Required fields:</span>
-                      {status.precondition.required.join(', ')}
-                    </div>
-                  {/if}
-                  {#if status.precondition.from.length > 0}
-                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      <span class="font-medium">From statuses:</span>
-                      {status.precondition.from.join(', ')}
-                    </div>
-                  {/if}
-                </div>
-              {/each}
-            </div>
-          </div>
-        </div>
+        <WorkflowConfiguration workflow={sampleWorkflow} />
       </div>
 
       <!-- Modal Footer -->
-      <div class="flex justify-end p-6 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex justify-end border-t border-gray-200 p-6 dark:border-gray-700">
         <button
-          onclick={() => showConfigModal = false}
-          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+          onclick={() => (showConfigModal = false)}
+          class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
           Close
         </button>
