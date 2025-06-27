@@ -1,15 +1,29 @@
 <script lang="ts">
-  import type { Configuration } from '$lib/schema'
-  // TODO: Sample workflow configuration based on the schema, replace me
-  import { sampleWorkflow, sampleCards } from '$lib/sample'
+  import type { Configuration, IWorkflowCardEntry } from '$lib/schema'
+  import type { PageData } from './$types'
+  import { FirestoreWorkflowCardStorage } from '$lib/persistent/firebase/firestore'
   import SettingsIcon from '$lib/assets/settings.svg?raw'
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
 
   type PConf = Configuration
 
+  let { data }: { data: PageData } = $props()
+  
   let showConfigModal = $state(false)
-  let editableWorkflow = $state<PConf>({ ...sampleWorkflow })
+  let editableWorkflow = $state<PConf>({ ...data.configuration })
   let configSnapshot = $state<PConf>({} as any)
+  let cards = $state<IWorkflowCardEntry[]>(data.cards)
+  
+  const storage = FirestoreWorkflowCardStorage.shared()
+
+  // Group cards by status
+  const cardsByStatus = $derived(cards.reduce((acc, card) => {
+    if (!acc[card.status]) {
+      acc[card.status] = []
+    }
+    acc[card.status].push(card)
+    return acc
+  }, {} as Record<string, IWorkflowCardEntry[]>))
 
   function openConfigModal() {
     // Take snapshot of current state before opening modal
@@ -23,10 +37,15 @@
     }
   }
 
-  function handleSave() {
-    showConfigModal = false
-    // TODO: Save to backend
-    console.log('Saving workflow:', editableWorkflow)
+  async function handleSave() {
+    try {
+      await storage.saveConfig(data.workflowId, editableWorkflow)
+      showConfigModal = false
+      console.log('Workflow saved successfully')
+    } catch (err) {
+      console.error('Error saving workflow:', err)
+      // TODO: Show error message to user
+    }
   }
 
   function handleCancel() {
@@ -87,7 +106,7 @@
       </div>
     </div>
 
-    {#each sampleWorkflow.statuses as status}
+    {#each editableWorkflow.statuses as status}
       <div class="w-80 flex-shrink-0">
         <!-- Status Column Header -->
         <div class="mb-4">
@@ -97,7 +116,7 @@
               {status.title}
             </h2>
             <span class="text-sm text-gray-500 dark:text-gray-400">
-              ({sampleCards[status.slug]?.length || 0})
+              ({cardsByStatus[status.slug]?.length || 0})
             </span>
           </div>
         </div>
@@ -109,8 +128,8 @@
             : ''}"
           style={status.terminal ? `border-color: ${status.ui.color}` : ''}
         >
-          {#if sampleCards[status.slug]}
-            {#each sampleCards[status.slug] as card}
+          {#if cardsByStatus[status.slug]}
+            {#each cardsByStatus[status.slug] as card}
               <div
                 class="mb-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-600 dark:bg-gray-700"
               >
