@@ -38,6 +38,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
   })
 
   const createdCardIds: string[] = []
+  const createdWorkflowIds: string[] = []
 
   afterAll(async () => {
     // Clean up created cards
@@ -49,6 +50,18 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       )
     )
     createdCardIds.length = 0 // Clear the array
+
+    // Clean up created workflow configurations
+    if (createdWorkflowIds.length > 0) {
+      try {
+        await storage.deleteConfig(...createdWorkflowIds)
+      } catch (error) {
+        // Ignore errors for workflows that might already be deleted
+        console.warn('Error during workflow cleanup:', error)
+      }
+      createdWorkflowIds.length = 0 // Clear the array
+    }
+
     // logout
     await signOut(auth)
   })
@@ -698,6 +711,13 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
   describe('setConfig', () => {
     const configTestWorkflowId = `config-test-workflow-${Date.now()}`
 
+    beforeEach(() => {
+      // Track workflow for cleanup if not already tracked
+      if (!createdWorkflowIds.includes(configTestWorkflowId)) {
+        createdWorkflowIds.push(configTestWorkflowId)
+      }
+    })
+
     const testConfiguration: Configuration = {
       name: 'Test Workflow Configuration',
       fields: [
@@ -890,6 +910,8 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
     it('should handle minimal configuration', async () => {
       const minimalWorkflowId = `minimal-config-${Date.now()}`
+      createdWorkflowIds.push(minimalWorkflowId) // Track for cleanup
+
       const minimalConfig: Configuration = {
         name: 'Minimal Workflow',
         fields: [],
@@ -908,6 +930,8 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
     it('should handle complex configuration with multiple field types', async () => {
       const complexWorkflowId = `complex-config-${Date.now()}`
+      createdWorkflowIds.push(complexWorkflowId) // Track for cleanup
+
       const complexConfig: Configuration = {
         name: 'Complex Workflow Configuration',
         fields: [
@@ -1026,6 +1050,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
     it('should support creating multiple different configurations', async () => {
       const workflow1Id = `multi-config-1-${Date.now()}`
       const workflow2Id = `multi-config-2-${Date.now()}`
+      createdWorkflowIds.push(workflow1Id, workflow2Id) // Track for cleanup
 
       const config1: Configuration = {
         name: 'Bug Tracking Workflow',
@@ -1158,6 +1183,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
   describe('loadConfig', () => {
     it('should throw error when loading non-existent configuration', async () => {
       const nonExistentWorkflowId = `non-existent-${Date.now()}`
+      // Note: Not adding to createdWorkflowIds since this workflow doesn't actually get created
 
       await expect(storage.loadConfig(nonExistentWorkflowId)).rejects.toThrow(
         `Unable to retrieve configuration ${nonExistentWorkflowId}`

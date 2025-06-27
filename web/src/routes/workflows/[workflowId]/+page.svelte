@@ -1,12 +1,15 @@
 <script lang="ts">
+  import type { Configuration } from '$lib/schema'
   // TODO: Sample workflow configuration based on the schema, replace me
   import { sampleWorkflow, sampleCards } from '$lib/sample'
   import SettingsIcon from '$lib/assets/settings.svg?raw'
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
 
+  type PConf = Configuration
+
   let showConfigModal = $state(false)
-  let editableWorkflow = $state({ ...sampleWorkflow })
-  let configSnapshot = $state({ ...sampleWorkflow })
+  let editableWorkflow = $state<PConf>({ ...sampleWorkflow })
+  let configSnapshot = $state<PConf>({} as any)
 
   function openConfigModal() {
     // Take snapshot of current state before opening modal

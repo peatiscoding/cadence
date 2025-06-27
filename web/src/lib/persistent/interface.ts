@@ -48,4 +48,10 @@ export interface IWorkflowConfigurationStorage {
    * Create a new workflow configuration
    */
   setConfig(workflowId: string, configuration: Configuration): Promise<void>
+
+  /**
+   * Delete all workflow ids
+   */
+  deleteConfig(workflowId: string): Promise<void>
+  deleteConfig(...allWorkflowIds: string[]): Promise<void>
 }

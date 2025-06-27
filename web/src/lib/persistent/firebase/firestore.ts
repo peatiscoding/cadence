@@ -108,4 +108,16 @@ export class FirestoreWorkflowCardStorage
     const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
     await setDoc(ref, configuration, { merge: true })
   }
+
+  async deleteConfig(firstWorkflowId: string, ...otherWorkflowIds: string[]): Promise<void> {
+    const allWorkflowIds = [firstWorkflowId, ...otherWorkflowIds]
+
+    // Delete all workflow configurations in parallel
+    await Promise.all(
+      allWorkflowIds.map(async (workflowId) => {
+        const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
+        await deleteDoc(ref)
+      })
+    )
+  }
 }
