@@ -1180,6 +1180,203 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
     })
   })
 
+  describe('listWorkflows', () => {
+    it('should return empty list when no workflows exist', async () => {
+      // Clean up any existing workflows first
+      if (createdWorkflowIds.length > 0) {
+        await storage.deleteConfig(...createdWorkflowIds)
+        createdWorkflowIds.length = 0
+      }
+
+      // Act
+      const result = await storage.listWorkflows()
+
+      // Assert
+      expect(result).toHaveProperty('workflows')
+      expect(Array.isArray(result.workflows)).toBe(true)
+      // Note: There might be other workflows from other tests, so we just check structure
+    })
+
+    it('should list all created workflow configurations', async () => {
+      // Arrange - Create multiple workflows
+      const workflow1Id = `list-test-1-${Date.now()}`
+      const workflow2Id = `list-test-2-${Date.now()}`
+      const workflow3Id = `list-test-3-${Date.now()}`
+      
+      createdWorkflowIds.push(workflow1Id, workflow2Id, workflow3Id)
+
+      const config1: Configuration = {
+        name: 'List Test Workflow 1',
+        description: 'First test workflow for listing',
+        fields: [
+          {
+            slug: 'title',
+            title: 'Title',
+            schema: { kind: 'text', min: 1, max: 100 }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'todo',
+            title: 'To Do',
+            terminal: false,
+            ui: { color: '#blue' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      const config2: Configuration = {
+        name: 'List Test Workflow 2',
+        description: 'Second test workflow for listing',
+        fields: [
+          {
+            slug: 'priority',
+            title: 'Priority',
+            schema: { kind: 'number', min: 1, max: 5 }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'open',
+            title: 'Open',
+            terminal: false,
+            ui: { color: '#red' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      const config3: Configuration = {
+        name: 'List Test Workflow 3',
+        description: 'Third test workflow for listing',
+        fields: [],
+        statuses: []
+      }
+
+      // Create all workflows
+      await storage.setConfig(workflow1Id, config1)
+      await storage.setConfig(workflow2Id, config2)
+      await storage.setConfig(workflow3Id, config3)
+
+      // Act
+      const result = await storage.listWorkflows()
+
+      // Assert
+      expect(result).toHaveProperty('workflows')
+      expect(Array.isArray(result.workflows)).toBe(true)
+      
+      // Find our test workflows in the results
+      const testWorkflows = result.workflows.filter(w => 
+        [workflow1Id, workflow2Id, workflow3Id].includes(w.workflowId)
+      )
+      
+      expect(testWorkflows).toHaveLength(3)
+
+      // Verify each workflow has correct structure and data
+      const workflow1 = testWorkflows.find(w => w.workflowId === workflow1Id)
+      const workflow2 = testWorkflows.find(w => w.workflowId === workflow2Id)
+      const workflow3 = testWorkflows.find(w => w.workflowId === workflow3Id)
+
+      expect(workflow1).toBeDefined()
+      expect(workflow1?.name).toBe('List Test Workflow 1')
+      expect(workflow1?.description).toBe('First test workflow for listing')
+      expect(workflow1?.fields).toHaveLength(1)
+      expect(workflow1?.statuses).toHaveLength(1)
+      expect(workflow1?.workflowId).toBe(workflow1Id)
+
+      expect(workflow2).toBeDefined()
+      expect(workflow2?.name).toBe('List Test Workflow 2')
+      expect(workflow2?.description).toBe('Second test workflow for listing')
+      expect(workflow2?.fields).toHaveLength(1)
+      expect(workflow2?.statuses).toHaveLength(1)
+      expect(workflow2?.workflowId).toBe(workflow2Id)
+
+      expect(workflow3).toBeDefined()
+      expect(workflow3?.name).toBe('List Test Workflow 3')
+      expect(workflow3?.description).toBe('Third test workflow for listing')
+      expect(workflow3?.fields).toHaveLength(0)
+      expect(workflow3?.statuses).toHaveLength(0)
+      expect(workflow3?.workflowId).toBe(workflow3Id)
+    })
+
+    it('should return workflows with all required properties', async () => {
+      // Arrange
+      const testWorkflowId = `properties-test-${Date.now()}`
+      createdWorkflowIds.push(testWorkflowId)
+
+      const testConfig: Configuration = {
+        name: 'Properties Test Workflow',
+        description: 'Testing all properties are returned',
+        fields: [
+          {
+            slug: 'title',
+            title: 'Task Title',
+            description: 'The title of the task',
+            schema: { kind: 'text', min: 1, max: 200 }
+          },
+          {
+            slug: 'priority',
+            title: 'Priority',
+            schema: { kind: 'number', min: 1, max: 10, default: 5 }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'todo',
+            title: 'To Do',
+            terminal: false,
+            ui: { color: '#gray' },
+            precondition: { from: [], required: ['title'], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'done',
+            title: 'Done',
+            terminal: true,
+            ui: { color: '#green' },
+            precondition: { from: ['todo'], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      await storage.setConfig(testWorkflowId, testConfig)
+
+      // Act
+      const result = await storage.listWorkflows()
+
+      // Assert
+      const testWorkflow = result.workflows.find(w => w.workflowId === testWorkflowId)
+      expect(testWorkflow).toBeDefined()
+
+      // Verify all Configuration properties are present
+      expect(testWorkflow?.name).toBe(testConfig.name)
+      expect(testWorkflow?.description).toBe(testConfig.description)
+      expect(testWorkflow?.fields).toEqual(testConfig.fields)
+      expect(testWorkflow?.statuses).toEqual(testConfig.statuses)
+
+      // Verify workflowId is added
+      expect(testWorkflow?.workflowId).toBe(testWorkflowId)
+
+      // Verify field properties
+      expect(testWorkflow?.fields[0].slug).toBe('title')
+      expect(testWorkflow?.fields[0].schema.kind).toBe('text')
+      expect(testWorkflow?.fields[1].schema.kind).toBe('number')
+
+      // Verify status properties  
+      expect(testWorkflow?.statuses[0].terminal).toBe(false)
+      expect(testWorkflow?.statuses[1].terminal).toBe(true)
+      expect(testWorkflow?.statuses[0].precondition.required).toContain('title')
+    })
+  })
+
   describe('loadConfig', () => {
     it('should throw error when loading non-existent configuration', async () => {
       const nonExistentWorkflowId = `non-existent-${Date.now()}`

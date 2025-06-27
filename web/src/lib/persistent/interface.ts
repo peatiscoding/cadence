@@ -50,6 +50,11 @@ export interface IWorkflowConfigurationStorage {
   setConfig(workflowId: string, configuration: Configuration): Promise<void>
 
   /**
+   * List all workflow configurations
+   */
+  listWorkflows(): Promise<{ workflows: Array<Configuration & { workflowId: string }> }>
+
+  /**
    * Delete all workflow ids
    */
   deleteConfig(workflowId: string): Promise<void>

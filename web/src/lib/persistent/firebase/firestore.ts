@@ -10,6 +10,7 @@ import {
   addDoc,
   updateDoc,
   getDoc,
+  getDocs,
   deleteDoc,
   setDoc,
   serverTimestamp
@@ -107,6 +108,28 @@ export class FirestoreWorkflowCardStorage
   async setConfig(workflowId: string, configuration: Configuration): Promise<void> {
     const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
     await setDoc(ref, configuration, { merge: true })
+  }
+
+  async listWorkflows(): Promise<{ workflows: Array<Configuration & { workflowId: string }> }> {
+    const workflowsRef = REFs.WORKFLOWS(this.fs)
+    const querySnapshot = await getDocs(workflowsRef)
+    
+    const workflows: Array<Configuration & { workflowId: string }> = []
+    
+    querySnapshot.forEach((doc) => {
+      if (doc.exists()) {
+        // Convert the document data to Configuration using the converter
+        const configRef = REFs.WORKFLOW_CONFIGURATION(this.fs, doc.id)
+        const configData = workflowConfigurationConverter.fromFirestore(doc, {})
+        
+        workflows.push({
+          ...configData,
+          workflowId: doc.id
+        })
+      }
+    })
+    
+    return { workflows }
   }
 
   async deleteConfig(firstWorkflowId: string, ...otherWorkflowIds: string[]): Promise<void> {

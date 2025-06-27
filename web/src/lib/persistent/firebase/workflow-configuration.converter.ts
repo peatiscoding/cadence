@@ -10,6 +10,7 @@ export const workflowConfigurationConverter: FirestoreDataConverter<Configuratio
     const _d = snapshot.data()
     return {
       name: _d.name,
+      description: _d.description,
       statuses: _d.statuses,
       fields: _d.fields
     }
