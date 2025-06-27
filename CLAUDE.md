@@ -60,3 +60,80 @@ The application revolves around **Cards** that move through configurable **Workf
 - Backend: Firebase Functions, Firestore
 - Testing: Vitest, Playwright
 - Build: Vite
+
+## UI Style Guide
+
+### Hover Effects
+For interactive cards and clickable elements, use consistent hover effects:
+
+**Standard Card Hover Pattern:**
+```html
+class="hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 hover:-translate-y-1 transition-all duration-200"
+```
+
+**Components:**
+- `hover:shadow-lg` - Enhanced shadow for depth
+- `hover:border-blue-300 dark:hover:border-blue-600` - Blue border highlight 
+- `hover:-translate-y-1` - Subtle upward lift (1 unit)
+- `transition-all duration-200` - Smooth 200ms animation for all effects
+
+**Usage Examples:**
+- Workflow listing cards (`/workflows`)
+- Project cards
+- Interactive buttons and panels
+- Any clickable card-like components
+
+**Note:** Always include both light and dark mode variants for border colors.
+
+### Modal Design
+For consistent modal dialogs throughout the application:
+
+**Standard Modal Pattern:**
+```html
+<!-- Modal Backdrop -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onclick={closeModal}>
+  <!-- Modal Container -->
+  <div class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800">
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Modal Title</h2>
+      <button class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200">
+        <!-- Close icon -->
+      </button>
+    </div>
+    
+    <!-- Modal Content -->
+    <div class="p-6">
+      <!-- Content goes here -->
+    </div>
+    
+    <!-- Modal Footer -->
+    <div class="flex justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
+      <button class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
+        Cancel
+      </button>
+      <button class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+```
+
+**Components:**
+- **Backdrop:** `fixed inset-0 z-50 bg-black bg-opacity-50` - Full screen overlay with 50% opacity
+- **Container:** `max-h-[90vh] max-w-4xl overflow-y-auto` - Responsive with scrollable content
+- **Header:** Consistent border, padding, and close button positioning
+- **Footer:** Right-aligned buttons with consistent spacing and colors
+- **Buttons:** Cancel (gray) and primary action (blue) with hover states
+
+**Usage Examples:**
+- Configuration modals (workflow settings)
+- Form dialogs
+- Confirmation dialogs
+- Content editing modals
+
+**Interaction:**
+- Click backdrop to close (implement `closeModal` handler)
+- Escape key support recommended
+- Focus management for accessibility
