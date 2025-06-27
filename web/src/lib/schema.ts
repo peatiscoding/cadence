@@ -102,6 +102,7 @@ const StatusSchema = z.object({
 // Main configuration schema
 export const ConfigurationSchema = z.object({
   name: z.string(),
+  description: z.string().optional(),
   fields: z.array(FieldSchema),
   statuses: z.array(StatusSchema)
 })

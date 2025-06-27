@@ -3,6 +3,7 @@ import type { IWorkflowCardEntry } from '$lib/models/interface'
 
 export const sampleWorkflow: Configuration = {
   name: 'Bug Tracking Workflow',
+  description: 'Track and manage your workflow items through different stages',
   fields: [
     {
       slug: 'title',

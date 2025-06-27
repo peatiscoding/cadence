@@ -5,15 +5,31 @@
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
 
   let showConfigModal = $state(false)
+  let editableWorkflow = $state({ ...sampleWorkflow })
+  let configSnapshot = $state({ ...sampleWorkflow })
 
-  function toggleConfigModal() {
-    showConfigModal = !showConfigModal
+  function openConfigModal() {
+    // Take snapshot of current state before opening modal
+    configSnapshot = { ...editableWorkflow }
+    showConfigModal = true
   }
 
   function closeModal(event: Event) {
     if (event.target === event.currentTarget) {
-      showConfigModal = false
+      handleCancel()
     }
+  }
+
+  function handleSave() {
+    showConfigModal = false
+    // TODO: Save to backend
+    console.log('Saving workflow:', editableWorkflow)
+  }
+
+  function handleCancel() {
+    // Restore to the state before modal was opened
+    editableWorkflow = { ...configSnapshot }
+    showConfigModal = false
   }
 </script>
 
@@ -21,10 +37,10 @@
   <div class="mb-6">
     <div class="flex items-center gap-3">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-        {sampleWorkflow.name}
+        {editableWorkflow.name}
       </h1>
       <button
-        onclick={toggleConfigModal}
+        onclick={openConfigModal}
         class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
         title="Workflow Settings"
       >
@@ -34,7 +50,8 @@
       </button>
     </div>
     <p class="mt-2 text-gray-600 dark:text-gray-400">
-      Track and manage your workflow items through different stages
+      {editableWorkflow.description ||
+        'Track and manage your workflow items through different stages'}
     </p>
   </div>
 
@@ -146,6 +163,7 @@
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     onclick={closeModal}
+    aria-roledescription="modal"
   >
     <div
       class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
@@ -159,6 +177,7 @@
         </h2>
         <button
           onclick={() => (showConfigModal = false)}
+          aria-label="edit workflow's configurations"
           class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,16 +193,22 @@
 
       <!-- Modal Content -->
       <div class="p-6">
-        <WorkflowConfiguration workflow={sampleWorkflow} />
+        <WorkflowConfiguration bind:workflow={editableWorkflow} editable={true} />
       </div>
 
       <!-- Modal Footer -->
-      <div class="flex justify-end border-t border-gray-200 p-6 dark:border-gray-700">
+      <div class="flex justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
         <button
-          onclick={() => (showConfigModal = false)}
+          onclick={handleCancel}
           class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
-          Close
+          Cancel
+        </button>
+        <button
+          onclick={handleSave}
+          class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+        >
+          Save Changes
         </button>
       </div>
     </div>
