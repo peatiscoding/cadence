@@ -22,7 +22,8 @@ export const workflowCardConverter: FirestoreDataConverter<IWorkflowCardEntry> =
       createdBy: _d.createdBy || '',
       updatedAt: (_d.updatedAt?.toDate() || new Date()).getTime(),
       updatedBy: _d.updatedBy || '',
-      statusSince: ((_d.statusSince && _d.statusSince.toDate()) || new Date()).getTime()
+      statusSince: ((_d.statusSince && _d.statusSince.toDate()) || new Date()).getTime(),
+      hidden: _d.hidden || false
     }
   }
 }

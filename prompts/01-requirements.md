@@ -102,6 +102,13 @@ The Workflow Configuration's File:
                         "kind": "field",
                         "field": "field-slug", // if this field is not set, or is not email it will failed to execute (silently)
                     }
+                },
+                {
+                    "kind": "webhook",
+                    "url": string,
+                    "data": any,
+                    "headers": Record<string, string>,
+                    "method": "post" | "get" | "patch" | "put" | "delete"
                 }
             ]
         },
