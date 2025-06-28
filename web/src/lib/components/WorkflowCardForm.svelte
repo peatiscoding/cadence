@@ -2,7 +2,7 @@
   import type { WorkflowCardEngine } from '$lib/workflow/workflow-card-engine'
   import type { Configuration, Field } from '$lib/schema'
   import { z } from 'zod'
-  
+
   export let workflowEngine: WorkflowCardEngine
   export let config: Configuration
   export let status: string = 'draft'
@@ -21,7 +21,7 @@
     hidden: false,
     ...initialData
   }
-  
+
   let errors: Record<string, string> = {}
   let schema: z.ZodObject<any> | null = null
 
@@ -123,37 +123,61 @@
   }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onclick={onCancel} onkeydown={handleKeydown} tabindex="-1">
-  <div class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800" onclick={(e) => e.stopPropagation()}>
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+  onclick={onCancel}
+  onkeydown={handleKeydown}
+  tabindex="-1"
+>
+  <div
+    class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
+    onclick={(e) => e.stopPropagation()}
+  >
     <!-- Modal Header -->
-    <div class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-        {initialData.workflowCardId ? 'Edit Card' : 'Create New Card'}
-      </h2>
-      <button 
+    <div
+      class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700"
+    >
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          {initialData.workflowCardId ? 'Edit Card' : 'Create New Card'}
+        </h2>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Create a new workflow item. Fields marked with * are required.
+        </p>
+      </div>
+      <button
         onclick={onCancel}
         class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
     </div>
 
     <!-- Modal Content -->
     <form onsubmit={handleSubmit}>
-      <div class="p-6 space-y-6">
+      <div class="space-y-6 p-6">
         <!-- Core Fields -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <!-- Title -->
           <div class="md:col-span-2">
-            <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="title"
+              class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Title *
             </label>
             <input
               id="title"
               type="text"
               bind:value={formData.title}
+              placeholder="Name of this card"
               onblur={() => validateField('title', formData.title)}
               class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               class:border-red-500={errors.title}
@@ -166,11 +190,15 @@
 
           <!-- Description -->
           <div class="md:col-span-2">
-            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="description"
+              class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Description
             </label>
             <textarea
               id="description"
+              placeholder="Details of this Card information"
               bind:value={formData.description}
               onblur={() => validateField('description', formData.description)}
               rows="3"
@@ -184,7 +212,10 @@
 
           <!-- Value -->
           <div>
-            <label for="value" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="value"
+              class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Value
             </label>
             <input
@@ -202,7 +233,10 @@
 
           <!-- Type -->
           <div>
-            <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="type"
+              class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Type
             </label>
             <input
@@ -220,7 +254,10 @@
 
           <!-- Owner -->
           <div>
-            <label for="owner" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="owner"
+              class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Owner
             </label>
             <input
@@ -255,17 +292,22 @@
 
         <!-- Dynamic Fields -->
         {#if config.fields.length > 0}
-          <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Custom Fields</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="border-t border-gray-200 pt-6 dark:border-gray-700">
+            <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">Custom Fields</h3>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
               {#each config.fields as field}
                 {@const fieldProps = renderField(field)}
                 {@const fieldError = errors[`fieldData.${field.slug}`]}
                 <div class={fieldProps.type === 'multi-select' ? 'md:col-span-2' : ''}>
-                  <label for={field.slug} class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label
+                    for={field.slug}
+                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     {field.title}
                     {#if field.description}
-                      <span class="text-xs text-gray-500 dark:text-gray-400 block">{field.description}</span>
+                      <span class="block text-xs text-gray-500 dark:text-gray-400"
+                        >{field.description}</span
+                      >
                     {/if}
                   </label>
 
@@ -275,7 +317,8 @@
                         id={field.slug}
                         type="checkbox"
                         bind:checked={formData.fieldData[field.slug]}
-                        onchange={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
+                        onchange={() =>
+                          validateFieldData(field.slug, formData.fieldData[field.slug])}
                         class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                       />
                       <span class="text-sm text-gray-700 dark:text-gray-300">{field.title}</span>
@@ -307,9 +350,14 @@
                                 formData.fieldData[field.slug] = []
                               }
                               if (target.checked) {
-                                formData.fieldData[field.slug] = [...formData.fieldData[field.slug], choice]
+                                formData.fieldData[field.slug] = [
+                                  ...formData.fieldData[field.slug],
+                                  choice
+                                ]
                               } else {
-                                formData.fieldData[field.slug] = formData.fieldData[field.slug].filter((v: any) => v !== choice)
+                                formData.fieldData[field.slug] = formData.fieldData[
+                                  field.slug
+                                ].filter((v: any) => v !== choice)
                               }
                               validateFieldData(field.slug, formData.fieldData[field.slug])
                             }}
@@ -356,9 +404,9 @@
         <button
           type="submit"
           disabled={isSubmitting}
-          class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
-          {isSubmitting ? 'Saving...' : (initialData.workflowCardId ? 'Save Changes' : 'Create Card')}
+          {isSubmitting ? 'Saving...' : initialData.workflowCardId ? 'Save Changes' : 'Create Card'}
         </button>
       </div>
     </form>

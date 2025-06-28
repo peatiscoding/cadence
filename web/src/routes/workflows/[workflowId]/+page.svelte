@@ -7,6 +7,8 @@
   import { FirebaseAuthenticationProvider } from '$lib/authentication/firebase/firebase-authen'
   import SettingsIcon from '$lib/assets/settings.svg?raw'
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
+  import WorkflowCardForm from '$lib/components/WorkflowCardForm.svelte'
+  import { WorkflowFactory } from '$lib/workflow/factory'
 
   type PConf = Configuration
 
@@ -23,6 +25,10 @@
 
   const storage = FirestoreWorkflowCardStorage.shared()
   const authProvider = FirebaseAuthenticationProvider.shared()
+
+  // Create workflow engine for card operations
+  const workflowFactory = WorkflowFactory.use(storage, storage, authProvider)
+  const workflowEngine = workflowFactory.getWorkflowEngine(data.workflowId)
 
   // Group cards by status
   const cardsByStatus = $derived(
@@ -121,6 +127,48 @@
       handleCancel()
     }
   }
+
+  // Handle escape key to close card form modal
+  function handleCardFormKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      closeCardFormModal()
+    }
+  }
+
+  // Card creation handlers
+  function openCardFormModal() {
+    showCardFormModal = true
+  }
+
+  function closeCardFormModal() {
+    showCardFormModal = false
+    cardFormSubmitting = false
+  }
+
+  async function handleCardSubmit(cardData: any) {
+    if (!editableWorkflow) return
+
+    try {
+      cardFormSubmitting = true
+
+      // Create the card using the workflow engine
+      const cardId = await workflowEngine.makeNewCard({
+        title: cardData.title,
+        description: cardData.description,
+        value: cardData.value
+      })
+
+      // TODO: Refresh cards list when card listing is implemented
+      // For now, we'll just close the modal
+      console.log('Card created successfully with ID:', cardId)
+      closeCardFormModal()
+    } catch (err) {
+      console.error('Error creating card:', err)
+      // TODO: Show error message to user
+    } finally {
+      cardFormSubmitting = false
+    }
+  }
 </script>
 
 <div class="p-6">
@@ -189,6 +237,7 @@
             <p class="mb-4">No draft items</p>
             <!-- Add Card Button -->
             <button
+              onclick={openCardFormModal}
               class="w-full rounded-lg border-2 border-dashed border-blue-300 px-4 py-3 text-blue-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
             >
               + Add new item
@@ -330,4 +379,16 @@
       </div>
     </div>
   </div>
+{/if}
+
+<!-- Card Creation Modal -->
+{#if showCardFormModal && editableWorkflow}
+  <WorkflowCardForm
+    {workflowEngine}
+    config={editableWorkflow}
+    status="draft"
+    onSubmit={handleCardSubmit}
+    onCancel={closeCardFormModal}
+    isSubmitting={cardFormSubmitting}
+  />
 {/if}
