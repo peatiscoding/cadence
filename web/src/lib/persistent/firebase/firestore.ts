@@ -19,13 +19,13 @@ import {
   deleteDoc,
   setDoc,
   serverTimestamp,
-  query
-} from 'firebase/firestore/lite'
+  query,
+  onSnapshot
+} from 'firebase/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
 import { workflowConfigurationConverter } from './workflow-configuration.converter'
-import { onSnapshot } from 'firebase/firestore'
 
 const REFs = {
   WORKFLOWS: (fs: Firestore) => collection(fs, `workflows`),
@@ -93,7 +93,7 @@ export class FirestoreWorkflowCardStorage
   }
 
   listenForCards(workflowId: string): ILiveUpdateListenerBuilder<IWorkflowCardEntry> {
-    const q = query(REFs.WORKFLOW_CARDS(this.fs, workflowId))
+    const q = query(REFs.WORKFLOW_CARDS(this.fs, workflowId).withConverter(workflowCardConverter))
     let observer: (changes: ILiveUpdateChange<IWorkflowCardEntry>[]) => any
     //
     const o: ILiveUpdateListenerBuilder<IWorkflowCardEntry> = {
@@ -108,9 +108,12 @@ export class FirestoreWorkflowCardStorage
         const unsubscribe = onSnapshot(q, (changes) => {
           return observer(
             changes.docChanges().map((c): ILiveUpdateChange<IWorkflowCardEntry> => {
+              const convertedData = c.doc.data()
+              // Set the workflowId which couldn't be set in the converter
+              convertedData.workflowId = workflowId
               return {
                 type: c.type,
-                data: c.doc.data() as any
+                data: convertedData
               }
             })
           )

@@ -1,5 +1,5 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
-import type { FirestoreDataConverter } from 'firebase/firestore/lite'
+import type { FirestoreDataConverter } from 'firebase/firestore'
 
 // Firestore data converter for IWorkflowCardEntry
 export const workflowCardConverter: FirestoreDataConverter<IWorkflowCardEntry> = {

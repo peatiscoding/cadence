@@ -1,5 +1,5 @@
 import type { Configuration } from '$lib/schema'
-import type { FirestoreDataConverter } from 'firebase/firestore/lite'
+import type { FirestoreDataConverter } from 'firebase/firestore'
 
 // Firestore data converter for IWorkflowCardEntry
 export const workflowConfigurationConverter: FirestoreDataConverter<Configuration> = {
