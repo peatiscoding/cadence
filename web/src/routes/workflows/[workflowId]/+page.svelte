@@ -13,11 +13,13 @@
   let { data }: { data: PageData } = $props()
 
   let showConfigModal = $state(false)
+  let showCardFormModal = $state(false)
   let editableWorkflow = $state<PConf | null>(null)
   let configSnapshot = $state<PConf>({} as any)
   let cards = $state<IWorkflowCardEntry[]>([])
   let loading = $state(true)
   let error = $state('')
+  let cardFormSubmitting = $state(false)
 
   const storage = FirestoreWorkflowCardStorage.shared()
   const authProvider = FirebaseAuthenticationProvider.shared()
@@ -111,6 +113,13 @@
     // Restore to the state before modal was opened
     editableWorkflow = { ...configSnapshot }
     showConfigModal = false
+  }
+
+  // Handle escape key to close modal
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      handleCancel()
+    }
   }
 </script>
 
@@ -268,10 +277,13 @@
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     onclick={closeModal}
+    onkeydown={handleKeydown}
     aria-roledescription="modal"
+    tabindex="-1"
   >
     <div
       class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
+      onclick={(e) => e.stopPropagation()}
     >
       <!-- Modal Header -->
       <div

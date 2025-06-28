@@ -36,6 +36,13 @@
     }
   }
 
+  // Handle escape key to close modal
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      onCancel()
+    }
+  }
+
   function validateField(fieldName: string, value: any) {
     if (!schema) return
 
@@ -116,7 +123,7 @@
   }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onclick={onCancel}>
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onclick={onCancel} onkeydown={handleKeydown} tabindex="-1">
   <div class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800" onclick={(e) => e.stopPropagation()}>
     <!-- Modal Header -->
     <div class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
@@ -321,7 +328,7 @@
                       minlength={fieldProps.minlength}
                       maxlength={fieldProps.maxlength}
                       bind:value={formData.fieldData[field.slug]}
-                      on:blur={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
+                      onblur={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
                       class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                       class:border-red-500={fieldError}
                     />

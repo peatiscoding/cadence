@@ -135,5 +135,26 @@ For consistent modal dialogs throughout the application:
 
 **Interaction:**
 - Click backdrop to close (implement `closeModal` handler)
-- Escape key support recommended
+- **Escape key support required** - All modals must be dismissible with the Escape key
 - Focus management for accessibility
+- Add `tabindex="-1"` to modal backdrop for keyboard focus
+- Add `onkeydown={handleKeydown}` event handler for escape key detection
+
+**Escape Key Implementation:**
+```javascript
+// Handle escape key to close modal
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    closeModal() // or onCancel() depending on modal
+  }
+}
+```
+
+```html
+<!-- Modal with escape key support -->
+<div class="fixed inset-0 z-50 bg-black bg-opacity-50" onclick={closeModal} onkeydown={handleKeydown} tabindex="-1">
+  <div class="modal-content" onclick={(e) => e.stopPropagation()}>
+    <!-- Modal content -->
+  </div>
+</div>
+```
