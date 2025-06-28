@@ -1,39 +1,45 @@
 <script lang="ts">
   import type { WorkflowCardEngine } from '$lib/workflow/workflow-card-engine'
-  import type { Configuration, Field } from '$lib/schema'
+  import type { Configuration, Field, Type } from '$lib/schema'
   import { z } from 'zod'
   import { onMount } from 'svelte'
 
-  export let workflowEngine: WorkflowCardEngine
-  export let config: Configuration
-  export let status: string = 'draft'
-  export let initialData: Record<string, any> = {}
-  export let onSubmit: (data: any) => Promise<void>
-  export let onCancel: () => void
-  export let isSubmitting: boolean = false
-
-  let formData: Record<string, any> = {
-    title: '',
-    description: '',
-    value: 0,
-    type: '',
-    owner: '',
-    fieldData: {},
-    ...initialData
+  interface Props {
+    workflowEngine: WorkflowCardEngine
+    config: Configuration
+    status?: string
+    initialData?: Record<string, any>
+    onSubmit: (data: any) => Promise<void>
+    onCancel: () => void
+    isSubmitting?: boolean
   }
 
-  let errors: Record<string, string> = {}
+  let {
+    workflowEngine,
+    config,
+    status = 'draft',
+    initialData = {},
+    onSubmit,
+    onCancel,
+    isSubmitting = false
+  }: Props = $props()
+
+  let formData = $state({
+    title: initialData.title || '',
+    description: initialData.description || '',
+    value: initialData.value || 0,
+    type: initialData.type || '',
+    owner: initialData.owner || '',
+    fieldData: initialData.fieldData || {},
+    ...initialData
+  })
+
+  let errors = $state<Record<string, string>>({})
   let schema: z.ZodObject<any> | null = null
 
-  // Load schema when component mounts or status changes
-  $: loadSchema(status)
-
-  // Focus on title input when component mounts
-  onMount(() => {
-    const titleInput = document.getElementById('title') as HTMLInputElement
-    if (titleInput) {
-      titleInput.focus()
-    }
+  // Load schema when status changes
+  $effect(() => {
+    loadSchema(status)
   })
 
   async function loadSchema(currentStatus: string) {
@@ -129,6 +135,41 @@
         return { type: 'text' }
     }
   }
+
+  function getSelectedType(): Type | null {
+    if (!formData.type || !config.types) return null
+    return config.types.find(type => type.slug === formData.type) || null
+  }
+
+  function handleTypeSelect(typeSlug: string) {
+    formData.type = typeSlug
+    validateField('type', formData.type)
+  }
+
+  let typeDropdownOpen = $state(false)
+
+  // Close dropdown when clicking outside
+  function handleClickOutside(event: MouseEvent) {
+    const target = event.target as Element
+    if (!target.closest('.type-dropdown')) {
+      typeDropdownOpen = false
+    }
+  }
+
+  onMount(() => {
+    // Focus on title input when component mounts
+    const titleInput = document.getElementById('title') as HTMLInputElement
+    if (titleInput) {
+      titleInput.focus()
+    }
+
+    // Add click outside listener for dropdown
+    document.addEventListener('click', handleClickOutside)
+    
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+    }
+  })
 </script>
 
 <div
@@ -172,9 +213,86 @@
     <form onsubmit={handleSubmit}>
       <div class="space-y-6 p-6">
         <!-- Core Fields -->
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-12">
+          <!-- Type -->
+          <div class="md:col-span-4">
+            <label
+              for="type"
+              class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Type *
+            </label>
+            {#if config.types && config.types.length > 0}
+              {@const selectedType = getSelectedType()}
+              <div class="relative type-dropdown">
+                <button
+                  type="button"
+                  onclick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    typeDropdownOpen = !typeDropdownOpen
+                  }}
+                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-left focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  class:border-red-500={errors.type}
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      {#if selectedType}
+                        <div
+                          class="h-3 w-3 rounded-full"
+                          style="background-color: {selectedType.ui.color}"
+                        ></div>
+                        <span>{selectedType.title}</span>
+                      {:else}
+                        <span class="text-gray-500 dark:text-gray-400">Select a type...</span>
+                      {/if}
+                    </div>
+                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </button>
+                {#if typeDropdownOpen}
+                  <div class="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+                    {#each config.types as type}
+                      <button
+                        type="button"
+                        onclick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleTypeSelect(type.slug)
+                          typeDropdownOpen = false
+                        }}
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-600 first:rounded-t-lg last:rounded-b-lg"
+                      >
+                        <div
+                          class="h-3 w-3 rounded-full"
+                          style="background-color: {type.ui.color}"
+                        ></div>
+                        <span class="text-gray-900 dark:text-gray-100">{type.title}</span>
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            {:else}
+              <input
+                id="type"
+                type="text"
+                bind:value={formData.type}
+                onblur={() => validateField('type', formData.type)}
+                placeholder="Enter type"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                class:border-red-500={errors.type}
+              />
+            {/if}
+            {#if errors.type}
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type}</p>
+            {/if}
+          </div>
+
           <!-- Title -->
-          <div class="md:col-span-2">
+          <div class="md:col-span-8">
             <label
               for="title"
               class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -197,7 +315,7 @@
           </div>
 
           <!-- Description -->
-          <div class="md:col-span-2">
+          <div class="md:col-span-12">
             <label
               for="description"
               class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -219,7 +337,7 @@
           </div>
 
           <!-- Value -->
-          <div>
+          <div class="md:col-span-6">
             <label
               for="value"
               class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -239,29 +357,9 @@
             {/if}
           </div>
 
-          <!-- Type -->
-          <div>
-            <label
-              for="type"
-              class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Type
-            </label>
-            <input
-              id="type"
-              type="text"
-              bind:value={formData.type}
-              onblur={() => validateField('type', formData.type)}
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-              class:border-red-500={errors.type}
-            />
-            {#if errors.type}
-              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type}</p>
-            {/if}
-          </div>
 
           <!-- Owner -->
-          <div>
+          <div class="md:col-span-6">
             <label
               for="owner"
               class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -283,15 +381,15 @@
 
           <!-- Dynamic Fields -->
           {#if config.fields.length > 0}
-            <div class="border-t border-gray-200 pt-6 dark:border-gray-700">
+            <div class="md:col-span-12 border-t border-gray-200 pt-6 dark:border-gray-700">
               <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                 Custom Fields
               </h3>
-              <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-12">
                 {#each config.fields as field}
                   {@const fieldProps = renderField(field)}
                   {@const fieldError = errors[`fieldData.${field.slug}`]}
-                  <div class={fieldProps.type === 'multi-select' ? 'md:col-span-2' : ''}>
+                  <div class={fieldProps.type === 'multi-select' ? 'md:col-span-12' : 'md:col-span-6'}>
                     <label
                       for={field.slug}
                       class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -385,28 +483,28 @@
             </div>
           {/if}
         </div>
+      </div>
 
-        <!-- Modal Footer -->
-        <div class="flex justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
-          <button
-            type="button"
-            onclick={onCancel}
-            class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
-          >
-            {isSubmitting
-              ? 'Saving...'
-              : initialData.workflowCardId
-                ? 'Save Changes'
-                : 'Create Card'}
-          </button>
-        </div>
+      <!-- Modal Footer -->
+      <div class="flex justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
+        <button
+          type="button"
+          onclick={onCancel}
+          class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+        >
+          {isSubmitting
+            ? 'Saving...'
+            : initialData.workflowCardId
+              ? 'Save Changes'
+              : 'Create Card'}
+        </button>
       </div>
     </form>
   </div>
