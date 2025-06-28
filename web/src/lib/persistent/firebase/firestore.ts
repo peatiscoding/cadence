@@ -86,6 +86,7 @@ export class FirestoreWorkflowCardStorage
   }
 
   listCards(workflowId: string): (onDataChanges: IWorkflowCardEntry[]) => void {
+    // TODO: Implement me
     throw new Error('Method not implemented.')
   }
 
@@ -113,22 +114,21 @@ export class FirestoreWorkflowCardStorage
   async listWorkflows(): Promise<{ workflows: Array<Configuration & { workflowId: string }> }> {
     const workflowsRef = REFs.WORKFLOWS(this.fs)
     const querySnapshot = await getDocs(workflowsRef)
-    
+
     const workflows: Array<Configuration & { workflowId: string }> = []
-    
+
     querySnapshot.forEach((doc) => {
       if (doc.exists()) {
         // Convert the document data to Configuration using the converter
-        const configRef = REFs.WORKFLOW_CONFIGURATION(this.fs, doc.id)
-        const configData = workflowConfigurationConverter.fromFirestore(doc, {})
-        
+        const configData = workflowConfigurationConverter.fromFirestore(doc)
+
         workflows.push({
           ...configData,
           workflowId: doc.id
         })
       }
     })
-    
+
     return { workflows }
   }
 

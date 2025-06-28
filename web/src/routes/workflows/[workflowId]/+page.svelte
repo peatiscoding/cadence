@@ -47,6 +47,34 @@
   onMount(() => {
     let isDestroyed = false
 
+    // Global keyboard event handler
+    const handleGlobalKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showConfigModal) {
+          handleCancel()
+        } else if (showCardFormModal) {
+          closeCardFormModal()
+        }
+        return
+      }
+
+      // Only handle global shortcuts when no modal is open and no input is focused
+      if (showConfigModal || showCardFormModal) return
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
+        return
+
+      if (event.key === 'n' || event.key === 'N') {
+        event.preventDefault()
+        openCardFormModal()
+      } else if (event.key === 'c' || event.key === 'C') {
+        event.preventDefault()
+        openConfigModal()
+      }
+    }
+
+    // Add global keyboard listener
+    window.addEventListener('keydown', handleGlobalKeydown)
+
     // Wait for authentication to be ready, then load data
     const unsubscribe = authProvider.onAuthStateChanged(async (user) => {
       if (isDestroyed) return
@@ -84,6 +112,7 @@
     return () => {
       isDestroyed = true
       unsubscribe()
+      window.removeEventListener('keydown', handleGlobalKeydown)
     }
   })
 
@@ -119,20 +148,6 @@
     // Restore to the state before modal was opened
     editableWorkflow = { ...configSnapshot }
     showConfigModal = false
-  }
-
-  // Handle escape key to close modal
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      handleCancel()
-    }
-  }
-
-  // Handle escape key to close card form modal
-  function handleCardFormKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      closeCardFormModal()
-    }
   }
 
   // Card creation handlers
@@ -326,7 +341,6 @@
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     onclick={closeModal}
-    onkeydown={handleKeydown}
     aria-roledescription="modal"
     tabindex="-1"
   >
