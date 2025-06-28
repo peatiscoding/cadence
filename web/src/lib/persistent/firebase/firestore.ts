@@ -1,5 +1,10 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
-import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '../interface'
+import type {
+  ILiveUpdateChange,
+  ILiveUpdateListenerBuilder,
+  IWorkflowCardStorage,
+  IWorkflowConfigurationStorage
+} from '../interface'
 import type { Configuration } from '$lib/schema'
 
 import {
@@ -13,12 +18,14 @@ import {
   getDocs,
   deleteDoc,
   setDoc,
-  serverTimestamp
+  serverTimestamp,
+  query
 } from 'firebase/firestore/lite'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
 import { workflowConfigurationConverter } from './workflow-configuration.converter'
+import { onSnapshot } from 'firebase/firestore'
 
 const REFs = {
   WORKFLOWS: (fs: Firestore) => collection(fs, `workflows`),
@@ -85,9 +92,33 @@ export class FirestoreWorkflowCardStorage
     throw new Error(`Unable to retrieve card ${workflowId}/${workflowCardId}`)
   }
 
-  listCards(workflowId: string): (onDataChanges: IWorkflowCardEntry[]) => void {
-    // TODO: Implement me
-    throw new Error('Method not implemented.')
+  listenForCards(workflowId: string): ILiveUpdateListenerBuilder<IWorkflowCardEntry> {
+    const q = query(REFs.WORKFLOW_CARDS(this.fs, workflowId))
+    let observer: (changes: ILiveUpdateChange<IWorkflowCardEntry>[]) => any
+    //
+    const o: ILiveUpdateListenerBuilder<IWorkflowCardEntry> = {
+      onDataChanges: (_ob) => {
+        observer = _ob
+        return o
+      },
+      listen() {
+        if (!observer) {
+          console.error('WARNING: OBSERVER IS NOT DEFINED', o)
+        }
+        const unsubscribe = onSnapshot(q, (changes) => {
+          return observer(
+            changes.docChanges().map((c): ILiveUpdateChange<IWorkflowCardEntry> => {
+              return {
+                type: c.type,
+                data: c.doc.data() as any
+              }
+            })
+          )
+        })
+        return () => unsubscribe()
+      }
+    }
+    return o
   }
 
   async deleteCard(workflowId: string, workflowCardId: string): Promise<void> {

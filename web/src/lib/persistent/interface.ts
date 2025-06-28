@@ -1,6 +1,18 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
 import type { Configuration } from '$lib/schema'
 
+export interface ILiveUpdateChange<T> {
+  type: 'added' | 'removed' | 'modified'
+  data: T
+}
+
+export interface ILiveUpdateListenerBuilder<T> {
+  onDataChanges: (
+    observer: (changes: ILiveUpdateChange<T>[]) => any
+  ) => ILiveUpdateListenerBuilder<T>
+  listen(): () => void
+}
+
 /**
  * Storage Interface does not have
  * any concern about the Data Integrity.
@@ -29,8 +41,21 @@ export interface IWorkflowCardStorage {
 
   /**
    * Create a live-listing reference
+   *
+   * Example:
+   *
+   * const unsubFn = storage.listenForCards(workflowId)
+   *    .onDataChanges((changes) => { // handle changes })
+   *    .listen()
+   *
+   * unMount() {
+   *    unsubFn()
+   * }
+   *
+   * @param workflowId - listen to the which workflowId?
+   * @returns the event listener builder
    */
-  listCards(workflowId: string): (onDataChanges: IWorkflowCardEntry[]) => void
+  listenForCards(workflowId: string): ILiveUpdateListenerBuilder<IWorkflowCardEntry>
 
   /**
    * Delete card
