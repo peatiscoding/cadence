@@ -2,6 +2,7 @@
   import type { WorkflowCardEngine } from '$lib/workflow/workflow-card-engine'
   import type { Configuration, Field } from '$lib/schema'
   import { z } from 'zod'
+  import { onMount } from 'svelte'
 
   export let workflowEngine: WorkflowCardEngine
   export let config: Configuration
@@ -27,6 +28,14 @@
 
   // Load schema when component mounts or status changes
   $: loadSchema(status)
+
+  // Focus on title input when component mounts
+  onMount(() => {
+    const titleInput = document.getElementById('title') as HTMLInputElement
+    if (titleInput) {
+      titleInput.focus()
+    }
+  })
 
   async function loadSchema(currentStatus: string) {
     try {

@@ -255,7 +255,7 @@
               onclick={openCardFormModal}
               class="w-full rounded-lg border-2 border-dashed border-blue-300 px-4 py-3 text-blue-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
             >
-              + Add new item
+              + Add new item <kbd class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono text-gray-600 dark:bg-gray-700 dark:text-gray-400">N</kbd>
             </button>
           </div>
         </div>

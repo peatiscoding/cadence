@@ -140,21 +140,75 @@ For consistent modal dialogs throughout the application:
 - Add `tabindex="-1"` to modal backdrop for keyboard focus
 - Add `onkeydown={handleKeydown}` event handler for escape key detection
 
-**Escape Key Implementation:**
+## Keyboard Shortcuts and Event Handling
+
+### Global Keyboard Shortcuts
+For application-wide keyboard shortcuts that work regardless of focus, use `window.addEventListener` in component lifecycle:
+
+**Global Shortcut Pattern:**
 ```javascript
-// Handle escape key to close modal
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    closeModal() // or onCancel() depending on modal
+import { onMount } from 'svelte'
+
+onMount(() => {
+  // Global keyboard event handler
+  const handleGlobalKeydown = (event: KeyboardEvent) => {
+    // Handle escape key for modals
+    if (event.key === 'Escape') {
+      if (showConfigModal) {
+        handleCancel()
+      } else if (showCardFormModal) {
+        closeCardFormModal()
+      }
+      return
+    }
+    
+    // Only handle global shortcuts when no modal is open and no input is focused
+    if (showConfigModal || showCardFormModal) return
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
+      return
+
+    // Application shortcuts
+    if (event.key === 'n' || event.key === 'N') {
+      event.preventDefault()
+      openCardFormModal()
+    } else if (event.key === 'c' || event.key === 'C') {
+      event.preventDefault()
+      openConfigModal()
+    }
   }
-}
+
+  // Register global keyboard listener
+  window.addEventListener('keydown', handleGlobalKeydown)
+
+  // Always clean up on component destroy
+  return () => {
+    window.removeEventListener('keydown', handleGlobalKeydown)
+  }
+})
 ```
 
-```html
-<!-- Modal with escape key support -->
-<div class="fixed inset-0 z-50 bg-black bg-opacity-50" onclick={closeModal} onkeydown={handleKeydown} tabindex="-1">
-  <div class="modal-content" onclick={(e) => e.stopPropagation()}>
-    <!-- Modal content -->
-  </div>
-</div>
+**Key Guidelines:**
+- Use `window.addEventListener('keydown', handler)` for global shortcuts
+- Always clean up with `window.removeEventListener` in onMount return function
+- Check for modal states and input focus to prevent conflicts
+- Use `event.preventDefault()` to prevent default browser behavior
+- Test for both uppercase and lowercase key variants
+
+### Input Focus Management
+For auto-focusing form inputs when modals open:
+
+```javascript
+import { onMount } from 'svelte'
+
+onMount(() => {
+  const titleInput = document.getElementById('title') as HTMLInputElement
+  if (titleInput) {
+    titleInput.focus()
+  }
+})
 ```
+
+**Note:** This pattern works better than element-level `onkeydown` handlers because:
+- Works globally regardless of which element has focus
+- No need for `tabindex="-1"` on containers
+- More predictable behavior across the application
