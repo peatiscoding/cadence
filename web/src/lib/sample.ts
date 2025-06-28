@@ -34,6 +34,23 @@ export const sampleWorkflow: Configuration = {
       schema: { kind: 'number', min: 0, max: 40, default: 2 }
     }
   ],
+  types: [
+    {
+      slug: 'bug',
+      title: 'Bug',
+      ui: { color: '#DC2626' }
+    },
+    {
+      slug: 'performance',
+      title: 'Performance',
+      ui: { color: '#F59E0B' }
+    },
+    {
+      slug: 'ui',
+      title: 'UI/UX',
+      ui: { color: '#8B5CF6' }
+    }
+  ],
   statuses: [
     {
       slug: 'open',

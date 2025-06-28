@@ -82,6 +82,15 @@ const SendEmailActionSchema = z.object({
 const TransitionActionUnion = SetOwnerActionSchema
 const FinallyActionUnion = SendEmailActionSchema
 
+// Type definition
+const TypeSchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  ui: z.object({
+    color: z.string()
+  })
+})
+
 // Status definition
 const StatusSchema = z.object({
   slug: z.string(),
@@ -104,6 +113,7 @@ export const ConfigurationSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   fields: z.array(FieldSchema),
+  types: z.array(TypeSchema),
   statuses: z.array(StatusSchema)
 })
 
@@ -111,6 +121,7 @@ export const ConfigurationSchema = z.object({
 export type Configuration = z.infer<typeof ConfigurationSchema>
 export type Field = z.infer<typeof FieldSchema>
 export type FieldSchemaType = z.infer<typeof FieldSchemaUnion>
+export type Type = z.infer<typeof TypeSchema>
 export type Status = z.infer<typeof StatusSchema>
 export type ActionTarget = z.infer<typeof ActionTargetUnion>
 export type TransitionAction = z.infer<typeof TransitionActionUnion>

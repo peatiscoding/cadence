@@ -67,6 +67,16 @@ The Workflow Configuration's File:
         },
         ...
     ],
+    "types": [ // List of Card Types that this workflow allowed
+        {
+            "slug": "item-type",
+            "title": "Item Type",
+            "ui": {
+                "color": "#448811"
+            }
+        },
+        ...
+    ],
     "statuses": [
         {
             "slug": "status-slug",  // status-slug (key)

@@ -54,7 +54,15 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
   async makeNewCard(creationPayload: IWorkflowCardEntryCreation): Promise<string> {
     const userSsoId = await this.auth.getCurrentUid()
-    // TODO: Validate based on workflow's configuration
+    
+    // Validate payload against workflow configuration
+    const schema = await this.getCardSchema(STATUS_DRAFT)
+    try {
+      schema.parse(creationPayload)
+    } catch (error) {
+      throw new Error(`Card validation failed: ${error instanceof z.ZodError ? error.errors.map(e => e.message).join(', ') : error}`)
+    }
+    
     return this.storage.createCard(this.workflowId, userSsoId, {
       ...creationPayload,
       status: STATUS_DRAFT,
@@ -69,6 +77,16 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     if ((payload as any).status) {
       throw new Error(`Update status is disallowed`)
     }
+    
+    // If type is being updated, validate it against allowed types
+    if (payload.type !== undefined) {
+      const config = await this.config
+      const allowedTypes = config.types?.map(type => type.slug) || []
+      if (allowedTypes.length > 0 && !allowedTypes.includes(payload.type)) {
+        throw new Error(`Invalid card type: ${payload.type}. Allowed types: ${allowedTypes.join(', ')}`)
+      }
+    }
+    
     const userSsoId = await this.auth.getCurrentUid()
     return this.storage.updateCard(this.workflowId, workflowCardId, userSsoId, payload)
   }
@@ -126,6 +144,17 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
     // For draft status or undefined status configs, use empty requirements
     const requiredFields = statusConfig?.precondition?.required || []
+
+    // Build type validation schema
+    const allowedTypes = config.types?.map(type => type.slug) || []
+    let typeSchema: z.ZodTypeAny
+    if (allowedTypes.length > 0) {
+      typeSchema = z.enum(allowedTypes as [string, ...string[]], {
+        errorMap: () => ({ message: 'Invalid card type' })
+      })
+    } else {
+      typeSchema = z.string().default('')
+    }
 
     // Build fieldData schema based on workflow field definitions
     const fieldDataSchema: Record<string, z.ZodTypeAny> = {}
@@ -220,7 +249,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
       title: z.string().min(1, 'Title is required'),
       description: z.string().default(''),
       value: z.number().default(0),
-      type: z.string().default(''),
+      type: typeSchema,
       owner: z.string().default(''),
       fieldData: z.object(fieldDataSchema).default({})
     }

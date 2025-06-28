@@ -720,6 +720,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
     const testConfiguration: Configuration = {
       name: 'Test Workflow Configuration',
+      types: [],
       fields: [
         {
           slug: 'title',
@@ -824,6 +825,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       // First create a configuration
       const initialConfig: Configuration = {
         name: 'Initial Configuration',
+        types: [],
         fields: [
           {
             slug: 'title',
@@ -857,6 +859,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       // Update with new configuration (should merge due to { merge: true })
       const updatedConfig: Configuration = {
         name: 'Updated Configuration',
+        types: [],
         fields: [
           {
             slug: 'title',
@@ -914,6 +917,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
       const minimalConfig: Configuration = {
         name: 'Minimal Workflow',
+        types: [],
         fields: [],
         statuses: []
       }
@@ -934,6 +938,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
       const complexConfig: Configuration = {
         name: 'Complex Workflow Configuration',
+        types: [],
         fields: [
           {
             slug: 'title',
@@ -1054,6 +1059,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
       const config1: Configuration = {
         name: 'Bug Tracking Workflow',
+        types: [],
         fields: [
           {
             slug: 'title',
@@ -1099,6 +1105,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
 
       const config2: Configuration = {
         name: 'Feature Development Workflow',
+        types: [],
         fields: [
           {
             slug: 'title',
@@ -1208,6 +1215,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       const config1: Configuration = {
         name: 'List Test Workflow 1',
         description: 'First test workflow for listing',
+        types: [],
         fields: [
           {
             slug: 'title',
@@ -1231,6 +1239,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       const config2: Configuration = {
         name: 'List Test Workflow 2',
         description: 'Second test workflow for listing',
+        types: [],
         fields: [
           {
             slug: 'priority',
@@ -1254,6 +1263,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       const config3: Configuration = {
         name: 'List Test Workflow 3',
         description: 'Third test workflow for listing',
+        types: [],
         fields: [],
         statuses: []
       }
@@ -1312,6 +1322,7 @@ describe('FirestoreWorkflowCardStorage Integration Tests', () => {
       const testConfig: Configuration = {
         name: 'Properties Test Workflow',
         description: 'Testing all properties are returned',
+        types: [],
         fields: [
           {
             slug: 'title',

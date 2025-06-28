@@ -12,7 +12,8 @@ export const workflowConfigurationConverter: FirestoreDataConverter<Configuratio
       name: _d.name,
       description: _d.description,
       statuses: _d.statuses,
-      fields: _d.fields
+      fields: _d.fields,
+      types: _d.types || []
     }
   }
 }

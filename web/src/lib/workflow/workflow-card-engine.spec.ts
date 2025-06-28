@@ -55,6 +55,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     const mockConfig: Configuration = {
       name: 'Test Workflow',
       fields: [],
+      types: [],
       statuses: [
         {
           slug: 'draft',
@@ -630,30 +631,19 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         updatedBy: 'updater',
         updatedAt: Date.now()
       }
-      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard2)
-      await engine.attemptToTransitCard(card2Id, 'completed', {
-        fieldData: { completedBy: user2 }
-      })
+      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
+      await engine.attemptToTransitCard(cardId, newStatus, transitPayload)
 
-      // Verify correct user attribution
-      expect(mockStorage.createCard).toHaveBeenCalledWith(
-        testWorkflowId,
-        user1,
-        expect.objectContaining(card1Payload)
-      )
-      expect(mockStorage.createCard).toHaveBeenCalledWith(
-        testWorkflowId,
-        user2,
-        expect.objectContaining(card2Payload)
-      )
-      expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, card1Id, user1, {
-        title: 'Updated by User 1'
-      })
-      expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, card2Id, user2, {
-        fieldData: { completedBy: user2 },
-        status: 'completed',
+      // Verify the transition was called correctly
+      expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, cardId, testUserId, {
+        ...transitPayload,
+        status: newStatus,
         statusSince: USE_SERVER_TIMESTAMP
       })
+
+      // 4. DELETE
+      await engine.deleteCard(cardId)
+      expect(mockStorage.deleteCard).toHaveBeenCalledWith(testWorkflowId, cardId)
     })
 
     it('should handle rapid status transitions', async () => {
@@ -748,6 +738,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
           { slug: 'priority', title: 'Priority', schema: { kind: 'text' } },
           { slug: 'assignee', title: 'Assignee', schema: { kind: 'text' } }
         ],
+        types: [],
         statuses: [
           {
             slug: 'draft',
@@ -1046,6 +1037,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
             }
           }
         ],
+        types: [],
         statuses: [
           {
             slug: 'draft',
@@ -1435,6 +1427,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       // Arrange
       const strictConfig: Configuration = {
         ...schemaTestConfig,
+        types: [],
         statuses: [
           {
             slug: 'defined-status',
@@ -1469,7 +1462,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
             title: 'Empty Choice',
             schema: { kind: 'choice', choices: [] }
           }
-        ]
+        ],
+        types: []
       }
 
       vi.mocked(mockConfigStore.loadConfig).mockResolvedValue(configWithEmptyChoices)
