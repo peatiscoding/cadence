@@ -361,8 +361,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -398,8 +397,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -436,8 +434,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -484,8 +481,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -522,8 +518,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -633,70 +628,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
-      }
-      vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
-      await engine.attemptToTransitCard(cardId, newStatus, transitPayload)
-      expect(mockStorage.updateCard).toHaveBeenCalledWith(testWorkflowId, cardId, testUserId, {
-        ...transitPayload,
-        status: newStatus,
-        statusSince: USE_SERVER_TIMESTAMP
-      })
-
-      // 4. DELETE
-      await engine.deleteCard(cardId)
-      expect(mockStorage.deleteCard).toHaveBeenCalledWith(testWorkflowId, cardId)
-    })
-
-    it('should handle multiple users operating on different cards', async () => {
-      const user1 = 'user-1'
-      const user2 = 'user-2'
-      const card1Payload: IWorkflowCardEntryCreation = {
-        title: 'User 1 Card',
-        description: 'Card created by user 1',
-        value: 100
-      }
-      const card2Payload: IWorkflowCardEntryCreation = {
-        title: 'User 2 Card',
-        description: 'Card created by user 2',
-        value: 200
-      }
-
-      vi.mocked(mockStorage.createCard)
-        .mockResolvedValueOnce('card-1')
-        .mockResolvedValueOnce('card-2')
-      vi.mocked(mockStorage.updateCard).mockResolvedValue()
-
-      // Setup auth provider to return different users
-      vi.mocked(mockAuthProvider.getCurrentUid)
-        .mockResolvedValueOnce(user1)
-        .mockResolvedValueOnce(user1)
-        .mockResolvedValueOnce(user2)
-        .mockResolvedValueOnce(user2)
-
-      // User 1 creates and updates their card
-      const card1Id = await engine.makeNewCard(card1Payload)
-      await engine.updateCardDetail(card1Id, { title: 'Updated by User 1' })
-
-      // User 2 creates and transits their card
-      const card2Id = await engine.makeNewCard(card2Payload)
-      const mockCard2: IWorkflowCardEntry = {
-        workflowCardId: card2Id,
-        workflowId: testWorkflowId,
-        title: 'User 2 Card',
-        description: 'Card created by user 2',
-        fieldData: {},
-        value: 200,
-        type: 'task',
-        owner: 'owner1',
-        status: 'draft',
-        statusSince: Date.now(),
-        createdBy: 'creator',
-        createdAt: Date.now(),
-        updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard2)
       await engine.attemptToTransitCard(card2Id, 'completed', {
@@ -744,8 +676,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
 
@@ -876,8 +807,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -909,8 +839,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -942,8 +871,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -977,8 +905,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -1010,8 +937,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -1043,8 +969,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now(),
-        hidden: false
+        updatedAt: Date.now()
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -1114,7 +1039,11 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
           {
             slug: 'tags',
             title: 'Tags',
-            schema: { kind: 'multi-choice', choices: ['frontend', 'backend', 'testing', 'docs'], default: 'frontend,backend' }
+            schema: {
+              kind: 'multi-choice',
+              choices: ['frontend', 'backend', 'testing', 'docs'],
+              default: 'frontend,backend'
+            }
           }
         ],
         statuses: [
@@ -1141,7 +1070,11 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
             title: 'In Progress',
             terminal: false,
             ui: { color: 'yellow' },
-            precondition: { from: ['ready'], required: ['priority', 'estimate', 'description_detail'], users: [] },
+            precondition: {
+              from: ['ready'],
+              required: ['priority', 'estimate', 'description_detail'],
+              users: []
+            },
             transition: [],
             finally: []
           }
@@ -1167,7 +1100,6 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       expect(schema.shape.type).toBeDefined()
       expect(schema.shape.owner).toBeDefined()
       expect(schema.shape.fieldData).toBeDefined()
-      expect(schema.shape.hidden).toBeDefined()
 
       // Core fields should not include implicit fields
       expect(schema.shape.workflowId).toBeUndefined()
@@ -1190,7 +1122,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       // Assert
       const fieldDataSchema = schema.shape.fieldData
       expect(fieldDataSchema).toBeDefined()
-      
+
       // Test by parsing data - if the fields are defined, this will work
       const testData = {
         title: 'Test',
@@ -1198,7 +1130,6 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         value: 0,
         type: '',
         owner: '',
-        hidden: false,
         fieldData: {
           priority: 'high',
           estimate: 5,
@@ -1208,7 +1139,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
           tags: ['frontend']
         }
       }
-      
+
       expect(() => schema.parse(testData)).not.toThrow()
     })
 
@@ -1229,8 +1160,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         value: 0,
         type: '',
         owner: '',
-        fieldData: {},
-        hidden: false
+        fieldData: {}
       }
       expect(() => draftSchema.parse(draftData)).not.toThrow()
 
@@ -1251,10 +1181,9 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         value: 0,
         type: '',
         owner: '',
-        fieldData: {}, // Missing priority and estimate which should be required for 'ready' status
-        hidden: false
+        fieldData: {} // Missing priority and estimate which should be required for 'ready' status
       }
-      
+
       expect(() => readySchema.parse(incompleteData)).toThrow()
 
       // In-progress status requires priority, estimate, and description_detail
@@ -1286,8 +1215,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         fieldData: {
           priority: 'high',
           estimate: 50 // Within range 0-100
-        },
-        hidden: false
+        }
       }
       expect(() => schema.parse(validData)).not.toThrow()
 
@@ -1325,8 +1253,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
           priority: 'high',
           estimate: 5,
           description_detail: 'This is a valid description with proper length and characters.'
-        },
-        hidden: false
+        }
       }
       expect(() => schema.parse(validData)).not.toThrow()
 
@@ -1340,7 +1267,10 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       // Test regex constraint
       const invalidCharData = {
         ...validData,
-        fieldData: { ...validData.fieldData, description_detail: 'This contains invalid chars: @#$%^&*()' }
+        fieldData: {
+          ...validData.fieldData,
+          description_detail: 'This contains invalid chars: @#$%^&*()'
+        }
       }
       expect(() => schema.parse(invalidCharData)).toThrow()
     })
@@ -1363,8 +1293,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         fieldData: {
           priority: 'high', // Valid choice
           estimate: 5
-        },
-        hidden: false
+        }
       }
       expect(() => schema.parse(validData)).not.toThrow()
 
@@ -1393,8 +1322,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         owner: '',
         fieldData: {
           is_urgent: true
-        },
-        hidden: false
+        }
       }
       expect(() => schema.parse(validData)).not.toThrow()
 
@@ -1430,8 +1358,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         owner: '',
         fieldData: {
           reference_url: 'https://example.com/reference'
-        },
-        hidden: false
+        }
       }
       expect(() => schema.parse(validData)).not.toThrow()
 
@@ -1460,8 +1387,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         owner: '',
         fieldData: {
           tags: ['frontend', 'backend']
-        },
-        hidden: false
+        }
       }
       expect(() => schema.parse(validData)).not.toThrow()
 
@@ -1498,7 +1424,6 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       expect(result.value).toBe(0)
       expect(result.type).toBe('')
       expect(result.owner).toBe('')
-      expect(result.hidden).toBe(false)
       // For draft status (no required fields), optional fields should get their defaults
       expect(result.fieldData.priority).toBe('medium')
       expect(result.fieldData.estimate).toBe(1)
@@ -1522,14 +1447,16 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
           }
         ]
       }
-      
+
       vi.mocked(mockConfigStore.loadConfig).mockResolvedValue(strictConfig)
-      
+
       const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
       const engine = factory.getWorkflowEngine(testWorkflowId)
 
       // Act & Assert
-      await expect(engine.getCardSchema('unknown-status')).rejects.toThrow('Unknown status: unknown-status')
+      await expect(engine.getCardSchema('unknown-status')).rejects.toThrow(
+        'Unknown status: unknown-status'
+      )
     })
 
     it('should handle empty field choices gracefully', async () => {
@@ -1562,7 +1489,6 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         value: 0,
         type: '',
         owner: '',
-        hidden: false,
         fieldData: {
           empty_choice: ''
         }

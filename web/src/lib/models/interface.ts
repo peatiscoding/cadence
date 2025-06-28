@@ -16,5 +16,4 @@ export interface IWorkflowCardEntry {
   createdAt: number
   updatedBy: string
   updatedAt: number
-  hidden: boolean
 }

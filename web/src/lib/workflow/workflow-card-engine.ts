@@ -117,13 +117,13 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
     // Find the status configuration
     const statusConfig = config.statuses.find((s) => s.slug === status)
-    
+
     // Only throw error for unknown status if it's not the default 'draft' status
     // Draft is a default status that may not be explicitly defined in configuration
     if (!statusConfig && status !== STATUS_DRAFT) {
       throw new Error(`Unknown status: ${status}`)
     }
-    
+
     // For draft status or undefined status configs, use empty requirements
     const requiredFields = statusConfig?.precondition?.required || []
 
@@ -193,7 +193,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
         }
       } else {
         fieldSchema = fieldSchema.optional()
-        
+
         // Only apply defaults to optional fields
         if ('default' in field.schema && field.schema.default !== undefined) {
           switch (field.schema.kind) {
@@ -222,8 +222,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
       value: z.number().default(0),
       type: z.string().default(''),
       owner: z.string().default(''),
-      fieldData: z.object(fieldDataSchema).default({}),
-      hidden: z.boolean().default(false)
+      fieldData: z.object(fieldDataSchema).default({})
     }
 
     return z.object(schemaFields)

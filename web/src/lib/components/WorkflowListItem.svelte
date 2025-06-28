@@ -34,7 +34,9 @@
   <div class="p-6 pb-14">
     <div class="flex items-center">
       <div class="flex-shrink-0">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
+        <div
+          class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900"
+        >
           <div class="h-5 w-5 text-blue-600 dark:text-blue-400">
             {@html WorkflowIcon}
           </div>
@@ -42,9 +44,7 @@
       </div>
       <div class="ml-5 w-0 flex-1">
         <dl>
-          <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-            Workflow
-          </dt>
+          <dt class="truncate text-sm font-medium text-gray-500 dark:text-gray-400">Workflow</dt>
           <dd class="text-lg font-medium text-gray-900 dark:text-gray-100">
             {workflow.name}
           </dd>
@@ -116,3 +116,4 @@
     </div>
   </div>
 </div>
+
