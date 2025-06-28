@@ -1,4 +1,5 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { z } from 'zod'
 
 export type IWorkflowCardEntryCreation = Pick<IWorkflowCardEntry, 'title' | 'description' | 'value'>
 export type IWorkflowCardEntryModification = Partial<
@@ -33,4 +34,9 @@ export interface IWorkflowCardEngine {
   ): Promise<void>
 
   deleteCard(workflowCardId: string): Promise<void>
+
+  /**
+   * Get dynamic Zod schema for card validation based on status requirements
+   */
+  getCardSchema(status?: string): Promise<z.ZodObject<any>>
 }

@@ -8,6 +8,7 @@ import type {
 
 import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
+import { z } from 'zod'
 
 const _helpers = {
   validateRequiredFields<T>(requiredFields: (keyof T)[], data: T) {
@@ -109,5 +110,122 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
   async deleteCard(workflowCardId: string): Promise<void> {
     // TODO: Validate if user can delete the card based on workflow's configuration
     await this.storage.deleteCard(this.workflowId, workflowCardId)
+  }
+
+  async getCardSchema(status: string = STATUS_DRAFT): Promise<z.ZodObject<any>> {
+    const config = await this.config
+
+    // Find the status configuration
+    const statusConfig = config.statuses.find((s) => s.slug === status)
+    
+    // Only throw error for unknown status if it's not the default 'draft' status
+    // Draft is a default status that may not be explicitly defined in configuration
+    if (!statusConfig && status !== STATUS_DRAFT) {
+      throw new Error(`Unknown status: ${status}`)
+    }
+    
+    // For draft status or undefined status configs, use empty requirements
+    const requiredFields = statusConfig?.precondition?.required || []
+
+    // Build fieldData schema based on workflow field definitions
+    const fieldDataSchema: Record<string, z.ZodTypeAny> = {}
+
+    for (const field of config.fields) {
+      const isRequired = requiredFields.includes(field.slug)
+      let fieldSchema: z.ZodTypeAny
+
+      // Map field schema types to Zod schemas
+      switch (field.schema.kind) {
+        case 'number':
+          let numSchema = z.number()
+          if (field.schema.min !== undefined) {
+            numSchema = numSchema.min(field.schema.min)
+          }
+          if (field.schema.max !== undefined) {
+            numSchema = numSchema.max(field.schema.max)
+          }
+          fieldSchema = numSchema
+          break
+
+        case 'text':
+          let textSchema = z.string()
+          if (field.schema.min !== undefined) {
+            textSchema = textSchema.min(field.schema.min)
+          }
+          if (field.schema.max !== undefined) {
+            textSchema = textSchema.max(field.schema.max)
+          }
+          if (field.schema.regex) {
+            textSchema = textSchema.regex(new RegExp(field.schema.regex))
+          }
+          fieldSchema = textSchema
+          break
+
+        case 'choice':
+          const choices = field.schema.choices || []
+          fieldSchema = z.enum(choices.length > 0 ? (choices as [string, ...string[]]) : [''])
+          break
+
+        case 'multi-choice':
+          const multiChoices = field.schema.choices || []
+          fieldSchema = z.array(
+            z.enum(multiChoices.length > 0 ? (multiChoices as [string, ...string[]]) : [''])
+          )
+          break
+
+        case 'bool':
+          fieldSchema = z.boolean()
+          break
+
+        case 'url':
+          fieldSchema = z.string().url('Must be a valid URL')
+          break
+
+        default:
+          fieldSchema = z.any()
+      }
+
+      // Make field required if it's in the required list
+      if (isRequired) {
+        // For required fields, add specific validation messages
+        if (field.schema.kind === 'text') {
+          fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.title} is required`)
+        }
+      } else {
+        fieldSchema = fieldSchema.optional()
+        
+        // Only apply defaults to optional fields
+        if ('default' in field.schema && field.schema.default !== undefined) {
+          switch (field.schema.kind) {
+            case 'number':
+            case 'text':
+            case 'choice':
+            case 'bool':
+              fieldSchema = fieldSchema.default(field.schema.default)
+              break
+            case 'multi-choice':
+              if (typeof field.schema.default === 'string') {
+                fieldSchema = fieldSchema.default(field.schema.default.split(','))
+              }
+              break
+          }
+        }
+      }
+
+      fieldDataSchema[field.slug] = fieldSchema
+    }
+
+    // Build the base schema object with core card fields (excluding implicit fields)
+    const schemaFields: Record<string, z.ZodTypeAny> = {
+      title: z.string().min(1, 'Title is required'),
+      description: z.string().default(''),
+      value: z.number().default(0),
+      type: z.string().default(''),
+      owner: z.string().default(''),
+      fieldData: z.object(fieldDataSchema).default({}),
+      hidden: z.boolean().default(false)
+    }
+
+    return z.object(schemaFields)
   }
 }

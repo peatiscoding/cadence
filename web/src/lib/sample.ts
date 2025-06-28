@@ -99,7 +99,8 @@ export const sampleCards: Record<string, IWorkflowCardEntry[]> = {
       createdBy: 'user@example.com',
       createdAt: Date.now() - 172800000, // 2 days ago
       updatedBy: 'user@example.com',
-      updatedAt: Date.now() - 86400000
+      updatedAt: Date.now() - 86400000,
+      hidden: false
     },
     {
       workflowId: 'bug-tracking',
@@ -115,7 +116,8 @@ export const sampleCards: Record<string, IWorkflowCardEntry[]> = {
       createdBy: 'user2@example.com',
       createdAt: Date.now() - 43200000,
       updatedBy: 'user2@example.com',
-      updatedAt: Date.now() - 43200000
+      updatedAt: Date.now() - 43200000,
+      hidden: false
     }
   ],
   'in-progress': [
@@ -133,7 +135,8 @@ export const sampleCards: Record<string, IWorkflowCardEntry[]> = {
       createdBy: 'admin@example.com',
       createdAt: Date.now() - 259200000, // 3 days ago
       updatedBy: 'john.doe@example.com',
-      updatedAt: Date.now() - 21600000
+      updatedAt: Date.now() - 21600000,
+      hidden: false
     }
   ],
   review: [
@@ -151,7 +154,8 @@ export const sampleCards: Record<string, IWorkflowCardEntry[]> = {
       createdBy: 'designer@example.com',
       createdAt: Date.now() - 432000000, // 5 days ago
       updatedBy: 'jane.smith@example.com',
-      updatedAt: Date.now() - 7200000
+      updatedAt: Date.now() - 7200000,
+      hidden: false
     }
   ],
   testing: [
@@ -169,7 +173,8 @@ export const sampleCards: Record<string, IWorkflowCardEntry[]> = {
       createdBy: 'tester@example.com',
       createdAt: Date.now() - 345600000, // 4 days ago
       updatedBy: 'bob.wilson@example.com',
-      updatedAt: Date.now() - 3600000
+      updatedAt: Date.now() - 3600000,
+      hidden: false
     }
   ],
   closed: [
@@ -187,7 +192,8 @@ export const sampleCards: Record<string, IWorkflowCardEntry[]> = {
       createdBy: 'designer@example.com',
       createdAt: Date.now() - 604800000, // 7 days ago
       updatedBy: 'alice.johnson@example.com',
-      updatedAt: Date.now() - 1800000
+      updatedAt: Date.now() - 1800000,
+      hidden: false
     }
   ]
 }

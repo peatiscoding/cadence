@@ -11,6 +11,7 @@ import type {
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { WorkflowFactory } from './factory'
 import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
+import { z } from 'zod'
 
 describe('WorkflowCardEngine with Stubbed Storage', () => {
   let mockStorage: IWorkflowCardStorage
@@ -32,7 +33,9 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
     mockConfigStore = {
       loadConfig: vi.fn(),
-      setConfig: vi.fn()
+      setConfig: vi.fn(),
+      listWorkflows: vi.fn(),
+      deleteConfig: vi.fn()
     }
 
     mockAuthProvider = {
@@ -358,7 +361,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -394,7 +398,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -431,7 +436,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -478,7 +484,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -515,7 +522,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -625,7 +633,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
       await engine.attemptToTransitCard(cardId, newStatus, transitPayload)
@@ -686,7 +695,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard2)
       await engine.attemptToTransitCard(card2Id, 'completed', {
@@ -734,7 +744,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
 
@@ -865,7 +876,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -897,7 +909,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -929,7 +942,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -963,7 +977,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -995,7 +1010,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -1027,7 +1043,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
         createdBy: 'creator',
         createdAt: Date.now(),
         updatedBy: 'updater',
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        hidden: false
       }
 
       vi.mocked(mockStorage.getCard).mockResolvedValue(mockCard)
@@ -1058,6 +1075,515 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       await expect(engine.attemptToTransitCard(cardId, 'unknown-status', {})).rejects.toThrow(
         'Unknown new status: unknown-status'
       )
+    })
+  })
+
+  describe('getCardSchema', () => {
+    let schemaTestConfig: Configuration
+
+    beforeEach(() => {
+      schemaTestConfig = {
+        name: 'Schema Test Workflow',
+        fields: [
+          {
+            slug: 'priority',
+            title: 'Priority',
+            description: 'Task priority level',
+            schema: { kind: 'choice', choices: ['low', 'medium', 'high'], default: 'medium' }
+          },
+          {
+            slug: 'estimate',
+            title: 'Estimate',
+            schema: { kind: 'number', min: 0, max: 100, default: 1 }
+          },
+          {
+            slug: 'description_detail',
+            title: 'Detailed Description',
+            schema: { kind: 'text', min: 10, max: 500, regex: '^[A-Za-z0-9 .,!?-]+$' }
+          },
+          {
+            slug: 'is_urgent',
+            title: 'Is Urgent',
+            schema: { kind: 'bool', default: false }
+          },
+          {
+            slug: 'reference_url',
+            title: 'Reference URL',
+            schema: { kind: 'url' }
+          },
+          {
+            slug: 'tags',
+            title: 'Tags',
+            schema: { kind: 'multi-choice', choices: ['frontend', 'backend', 'testing', 'docs'], default: 'frontend,backend' }
+          }
+        ],
+        statuses: [
+          {
+            slug: 'draft',
+            title: 'Draft',
+            terminal: false,
+            ui: { color: 'gray' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'ready',
+            title: 'Ready',
+            terminal: false,
+            ui: { color: 'blue' },
+            precondition: { from: ['draft'], required: ['priority', 'estimate'], users: [] },
+            transition: [],
+            finally: []
+          },
+          {
+            slug: 'in-progress',
+            title: 'In Progress',
+            terminal: false,
+            ui: { color: 'yellow' },
+            precondition: { from: ['ready'], required: ['priority', 'estimate', 'description_detail'], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+
+      vi.mocked(mockConfigStore.loadConfig).mockResolvedValue(schemaTestConfig)
+    })
+
+    it('should generate schema with core card fields', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('draft')
+
+      // Assert
+      expect(schema).toBeDefined()
+      expect(schema.shape.title).toBeDefined()
+      expect(schema.shape.description).toBeDefined()
+      expect(schema.shape.value).toBeDefined()
+      expect(schema.shape.type).toBeDefined()
+      expect(schema.shape.owner).toBeDefined()
+      expect(schema.shape.fieldData).toBeDefined()
+      expect(schema.shape.hidden).toBeDefined()
+
+      // Core fields should not include implicit fields
+      expect(schema.shape.workflowId).toBeUndefined()
+      expect(schema.shape.workflowCardId).toBeUndefined()
+      expect(schema.shape.statusSince).toBeUndefined()
+      expect(schema.shape.createdAt).toBeUndefined()
+      expect(schema.shape.createdBy).toBeUndefined()
+      expect(schema.shape.updatedAt).toBeUndefined()
+      expect(schema.shape.updatedBy).toBeUndefined()
+    })
+
+    it('should generate fieldData schema based on workflow fields', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('draft')
+
+      // Assert
+      const fieldDataSchema = schema.shape.fieldData
+      expect(fieldDataSchema).toBeDefined()
+      
+      // Test by parsing data - if the fields are defined, this will work
+      const testData = {
+        title: 'Test',
+        description: '',
+        value: 0,
+        type: '',
+        owner: '',
+        hidden: false,
+        fieldData: {
+          priority: 'high',
+          estimate: 5,
+          description_detail: 'test description that is long enough',
+          is_urgent: true,
+          reference_url: 'https://example.com',
+          tags: ['frontend']
+        }
+      }
+      
+      expect(() => schema.parse(testData)).not.toThrow()
+    })
+
+    it('should make fields required based on status preconditions', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const draftSchema = await engine.getCardSchema('draft')
+      const readySchema = await engine.getCardSchema('ready')
+      const inProgressSchema = await engine.getCardSchema('in-progress')
+
+      // Assert - Draft status has no required fields
+      const draftData = {
+        title: 'Test Card',
+        description: 'Test description',
+        value: 0,
+        type: '',
+        owner: '',
+        fieldData: {},
+        hidden: false
+      }
+      expect(() => draftSchema.parse(draftData)).not.toThrow()
+
+      // Ready status requires priority and estimate
+      const readyData = {
+        ...draftData,
+        fieldData: {
+          priority: 'high',
+          estimate: 5
+        }
+      }
+      expect(() => readySchema.parse(readyData)).not.toThrow()
+
+      // Missing required fields should fail - try parsing data without required fields
+      const incompleteData = {
+        title: 'Test Card',
+        description: 'Test description',
+        value: 0,
+        type: '',
+        owner: '',
+        fieldData: {}, // Missing priority and estimate which should be required for 'ready' status
+        hidden: false
+      }
+      
+      expect(() => readySchema.parse(incompleteData)).toThrow()
+
+      // In-progress status requires priority, estimate, and description_detail
+      const inProgressData = {
+        ...readyData,
+        fieldData: {
+          ...readyData.fieldData,
+          description_detail: 'This is a detailed description with sufficient length.'
+        }
+      }
+      expect(() => inProgressSchema.parse(inProgressData)).not.toThrow()
+    })
+
+    it('should validate number fields with min/max constraints', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('ready')
+
+      // Assert
+      const validData = {
+        title: 'Test Card',
+        description: 'Test',
+        value: 0,
+        type: '',
+        owner: '',
+        fieldData: {
+          priority: 'high',
+          estimate: 50 // Within range 0-100
+        },
+        hidden: false
+      }
+      expect(() => schema.parse(validData)).not.toThrow()
+
+      // Test min constraint
+      const belowMinData = {
+        ...validData,
+        fieldData: { ...validData.fieldData, estimate: -1 }
+      }
+      expect(() => schema.parse(belowMinData)).toThrow()
+
+      // Test max constraint
+      const aboveMaxData = {
+        ...validData,
+        fieldData: { ...validData.fieldData, estimate: 101 }
+      }
+      expect(() => schema.parse(aboveMaxData)).toThrow()
+    })
+
+    it('should validate text fields with length and regex constraints', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('in-progress')
+
+      // Assert
+      const validData = {
+        title: 'Test Card',
+        description: 'Test',
+        value: 0,
+        type: '',
+        owner: '',
+        fieldData: {
+          priority: 'high',
+          estimate: 5,
+          description_detail: 'This is a valid description with proper length and characters.'
+        },
+        hidden: false
+      }
+      expect(() => schema.parse(validData)).not.toThrow()
+
+      // Test min length constraint
+      const tooShortData = {
+        ...validData,
+        fieldData: { ...validData.fieldData, description_detail: 'Short' }
+      }
+      expect(() => schema.parse(tooShortData)).toThrow()
+
+      // Test regex constraint
+      const invalidCharData = {
+        ...validData,
+        fieldData: { ...validData.fieldData, description_detail: 'This contains invalid chars: @#$%^&*()' }
+      }
+      expect(() => schema.parse(invalidCharData)).toThrow()
+    })
+
+    it('should validate choice fields with enum values', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('ready')
+
+      // Assert
+      const validData = {
+        title: 'Test Card',
+        description: 'Test',
+        value: 0,
+        type: '',
+        owner: '',
+        fieldData: {
+          priority: 'high', // Valid choice
+          estimate: 5
+        },
+        hidden: false
+      }
+      expect(() => schema.parse(validData)).not.toThrow()
+
+      // Test invalid choice
+      const invalidChoiceData = {
+        ...validData,
+        fieldData: { ...validData.fieldData, priority: 'invalid-choice' }
+      }
+      expect(() => schema.parse(invalidChoiceData)).toThrow()
+    })
+
+    it('should validate boolean fields', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('draft')
+
+      // Assert
+      const validData = {
+        title: 'Test Card',
+        description: 'Test',
+        value: 0,
+        type: '',
+        owner: '',
+        fieldData: {
+          is_urgent: true
+        },
+        hidden: false
+      }
+      expect(() => schema.parse(validData)).not.toThrow()
+
+      // Test with false
+      const falseData = {
+        ...validData,
+        fieldData: { is_urgent: false }
+      }
+      expect(() => schema.parse(falseData)).not.toThrow()
+
+      // Test with non-boolean (should fail)
+      const invalidBoolData = {
+        ...validData,
+        fieldData: { is_urgent: 'not-a-boolean' }
+      }
+      expect(() => schema.parse(invalidBoolData)).toThrow()
+    })
+
+    it('should validate URL fields', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('draft')
+
+      // Assert
+      const validData = {
+        title: 'Test Card',
+        description: 'Test',
+        value: 0,
+        type: '',
+        owner: '',
+        fieldData: {
+          reference_url: 'https://example.com/reference'
+        },
+        hidden: false
+      }
+      expect(() => schema.parse(validData)).not.toThrow()
+
+      // Test invalid URL
+      const invalidUrlData = {
+        ...validData,
+        fieldData: { reference_url: 'not-a-valid-url' }
+      }
+      expect(() => schema.parse(invalidUrlData)).toThrow()
+    })
+
+    it('should validate multi-choice fields as arrays', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('draft')
+
+      // Assert
+      const validData = {
+        title: 'Test Card',
+        description: 'Test',
+        value: 0,
+        type: '',
+        owner: '',
+        fieldData: {
+          tags: ['frontend', 'backend']
+        },
+        hidden: false
+      }
+      expect(() => schema.parse(validData)).not.toThrow()
+
+      // Test single valid choice
+      const singleChoiceData = {
+        ...validData,
+        fieldData: { tags: ['testing'] }
+      }
+      expect(() => schema.parse(singleChoiceData)).not.toThrow()
+
+      // Test invalid choice in array
+      const invalidChoiceInArrayData = {
+        ...validData,
+        fieldData: { tags: ['frontend', 'invalid-tag'] }
+      }
+      expect(() => schema.parse(invalidChoiceInArrayData)).toThrow()
+    })
+
+    it('should apply default values from field schemas', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('draft')
+
+      // Assert
+      const minimalData = {
+        title: 'Test Card'
+      }
+      const result = schema.parse(minimalData)
+
+      expect(result.description).toBe('')
+      expect(result.value).toBe(0)
+      expect(result.type).toBe('')
+      expect(result.owner).toBe('')
+      expect(result.hidden).toBe(false)
+      // For draft status (no required fields), optional fields should get their defaults
+      expect(result.fieldData.priority).toBe('medium')
+      expect(result.fieldData.estimate).toBe(1)
+      expect(result.fieldData.is_urgent).toBe(false)
+      expect(result.fieldData.tags).toEqual(['frontend', 'backend'])
+    })
+
+    it('should throw error for unknown status', async () => {
+      // Arrange
+      const strictConfig: Configuration = {
+        ...schemaTestConfig,
+        statuses: [
+          {
+            slug: 'defined-status',
+            title: 'Defined Status',
+            terminal: false,
+            ui: { color: 'blue' },
+            precondition: { from: [], required: [], users: [] },
+            transition: [],
+            finally: []
+          }
+        ]
+      }
+      
+      vi.mocked(mockConfigStore.loadConfig).mockResolvedValue(strictConfig)
+      
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act & Assert
+      await expect(engine.getCardSchema('unknown-status')).rejects.toThrow('Unknown status: unknown-status')
+    })
+
+    it('should handle empty field choices gracefully', async () => {
+      // Arrange
+      const configWithEmptyChoices: Configuration = {
+        ...schemaTestConfig,
+        fields: [
+          {
+            slug: 'empty_choice',
+            title: 'Empty Choice',
+            schema: { kind: 'choice', choices: [] }
+          }
+        ]
+      }
+
+      vi.mocked(mockConfigStore.loadConfig).mockResolvedValue(configWithEmptyChoices)
+
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schema = await engine.getCardSchema('draft')
+
+      // Assert
+      expect(schema).toBeDefined()
+      // Test that we can parse data with the empty choice field
+      const testData = {
+        title: 'Test',
+        description: '',
+        value: 0,
+        type: '',
+        owner: '',
+        hidden: false,
+        fieldData: {
+          empty_choice: ''
+        }
+      }
+      expect(() => schema.parse(testData)).not.toThrow()
+    })
+
+    it('should use STATUS_DRAFT as default status parameter', async () => {
+      // Arrange
+      const factory = WorkflowFactory.use(mockStorage, mockConfigStore, mockAuthProvider)
+      const engine = factory.getWorkflowEngine(testWorkflowId)
+
+      // Act
+      const schemaWithDefault = await engine.getCardSchema()
+      const schemaWithExplicit = await engine.getCardSchema('draft')
+
+      // Assert
+      expect(schemaWithDefault).toBeDefined()
+      expect(schemaWithExplicit).toBeDefined()
+      // Both should have the same structure since 'draft' is the default
+      expect(Object.keys(schemaWithDefault.shape)).toEqual(Object.keys(schemaWithExplicit.shape))
     })
   })
 })
