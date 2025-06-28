@@ -95,21 +95,30 @@
 
   async function handleSubmit(event: Event) {
     event.preventDefault()
-    if (!schema) return
+    if (!schema) {
+      console.error('No schema available for validation')
+      return
+    }
 
     try {
       const validatedData = schema.parse(formData)
       await onSubmit(validatedData)
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Validation errors:', error.errors)
         errors = {}
         error.errors.forEach((err) => {
           const path = err.path.join('.')
           errors[path] = err.message
         })
         errors = { ...errors }
+        
+        // Don't call onSubmit if validation fails - show validation errors in form
+        return
       } else {
         console.error('Submission error:', error)
+        // Re-throw the error so parent can handle it
+        throw error
       }
     }
   }

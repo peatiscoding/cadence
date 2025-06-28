@@ -16,11 +16,14 @@
 
   let showConfigModal = $state(false)
   let showCardFormModal = $state(false)
+  let showErrorModal = $state(false)
   let editableWorkflow = $state<PConf | null>(null)
   let configSnapshot = $state<PConf>({} as any)
   let cards = $state<IWorkflowCardEntry[]>([])
   let loading = $state(true)
   let error = $state('')
+  let errorModalTitle = $state('')
+  let errorModalMessage = $state('')
   let cardFormSubmitting = $state(false)
 
   const storage = FirestoreWorkflowCardStorage.shared()
@@ -50,7 +53,9 @@
     // Global keyboard event handler
     const handleGlobalKeydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        if (showConfigModal) {
+        if (showErrorModal) {
+          closeErrorModal()
+        } else if (showConfigModal) {
           handleCancel()
         } else if (showCardFormModal) {
           closeCardFormModal()
@@ -59,7 +64,7 @@
       }
 
       // Only handle global shortcuts when no modal is open and no input is focused
-      if (showConfigModal || showCardFormModal) return
+      if (showConfigModal || showCardFormModal || showErrorModal) return
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
         return
 
@@ -139,7 +144,10 @@
       console.log('Workflow saved successfully')
     } catch (err) {
       console.error('Error saving workflow:', err)
-      // TODO: Show error message to user
+      
+      // Show user-friendly error message
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while saving the workflow configuration'
+      showError('Failed to Save Workflow', errorMessage)
     }
   }
 
@@ -160,18 +168,27 @@
     cardFormSubmitting = false
   }
 
+  // Error modal functions
+  function showError(title: string, message: string) {
+    errorModalTitle = title
+    errorModalMessage = message
+    showErrorModal = true
+  }
+
+  function closeErrorModal() {
+    showErrorModal = false
+    errorModalTitle = ''
+    errorModalMessage = ''
+  }
+
   async function handleCardSubmit(cardData: any) {
     if (!editableWorkflow) return
 
     try {
       cardFormSubmitting = true
 
-      // Create the card using the workflow engine
-      const cardId = await workflowEngine.makeNewCard({
-        title: cardData.title,
-        description: cardData.description,
-        value: cardData.value
-      })
+      // Create the card using the workflow engine - pass all form data
+      const cardId = await workflowEngine.makeNewCard(cardData)
 
       // TODO: Refresh cards list when card listing is implemented
       // For now, we'll just close the modal
@@ -179,7 +196,10 @@
       closeCardFormModal()
     } catch (err) {
       console.error('Error creating card:', err)
-      // TODO: Show error message to user
+      
+      // Show user-friendly error message
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while creating the card'
+      showError('Failed to Create Card', errorMessage)
     } finally {
       cardFormSubmitting = false
     }
@@ -405,4 +425,58 @@
     onCancel={closeCardFormModal}
     isSubmitting={cardFormSubmitting}
   />
+{/if}
+
+<!-- Error Modal -->
+{#if showErrorModal}
+  <div 
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    onclick={closeErrorModal}
+    onkeydown={(e) => e.key === 'Escape' && closeErrorModal()}
+    tabindex="-1"
+  >
+    <div
+      class="mx-4 max-w-md rounded-lg bg-white shadow-xl dark:bg-gray-800"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <!-- Error Modal Header -->
+      <div class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {errorModalTitle}
+          </h3>
+        </div>
+        <button
+          onclick={closeErrorModal}
+          class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Error Modal Content -->
+      <div class="p-6">
+        <p class="text-gray-700 dark:text-gray-300">
+          {errorModalMessage}
+        </p>
+      </div>
+
+      <!-- Error Modal Footer -->
+      <div class="flex justify-end border-t border-gray-200 p-6 dark:border-gray-700">
+        <button
+          onclick={closeErrorModal}
+          class="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
 {/if}
