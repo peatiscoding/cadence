@@ -49,6 +49,7 @@
 
   onMount(() => {
     let isDestroyed = false
+    let cardsUnsubscribe: (() => void) | null = null
 
     // Global keyboard event handler
     const handleGlobalKeydown = (event: KeyboardEvent) => {
@@ -98,9 +99,39 @@
 
           editableWorkflow = { ...configuration }
 
-          // TODO: Load cards for this workflow when available
-          // const cardsResult = await storage.listCards(data.workflowId)
-          // cards = cardsResult.cards
+          // Set up live listening for cards
+          cardsUnsubscribe = storage.listenForCards(data.workflowId)
+            .onDataChanges((changes) => {
+              if (isDestroyed) return
+              
+              // Process the changes to update our cards array
+              changes.forEach((change) => {
+                const cardData = change.data
+                
+                switch (change.type) {
+                  case 'added':
+                    // Add new card if it doesn't already exist
+                    if (!cards.find(card => card.workflowCardId === cardData.workflowCardId)) {
+                      cards = [...cards, cardData]
+                    }
+                    break
+                    
+                  case 'modified':
+                    // Update existing card
+                    cards = cards.map(card => 
+                      card.workflowCardId === cardData.workflowCardId ? cardData : card
+                    )
+                    break
+                    
+                  case 'removed':
+                    // Remove deleted card
+                    cards = cards.filter(card => card.workflowCardId !== cardData.workflowCardId)
+                    break
+                }
+              })
+            })
+            .listen()
+
         } catch (err) {
           console.error('Error loading workflow:', err)
           error = err instanceof Error ? err.message : 'Failed to load workflow'
@@ -117,6 +148,7 @@
     return () => {
       isDestroyed = true
       unsubscribe()
+      cardsUnsubscribe?.()
       window.removeEventListener('keydown', handleGlobalKeydown)
     }
   })
@@ -190,8 +222,7 @@
       // Create the card using the workflow engine - pass all form data
       const cardId = await workflowEngine.makeNewCard(cardData)
 
-      // TODO: Refresh cards list when card listing is implemented
-      // For now, we'll just close the modal
+      // Card will be automatically added to the UI via live listener
       console.log('Card created successfully with ID:', cardId)
       closeCardFormModal()
     } catch (err) {
@@ -260,7 +291,7 @@
           <div class="mb-2 flex items-center gap-2">
             <div class="h-3 w-3 rounded-full bg-gray-400"></div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Draft</h2>
-            <span class="text-sm text-gray-500 dark:text-gray-400"> (0) </span>
+            <span class="text-sm text-gray-500 dark:text-gray-400"> ({cardsByStatus['draft']?.length || 0}) </span>
           </div>
         </div>
 
@@ -268,16 +299,67 @@
         <div
           class="min-h-96 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 shadow-sm dark:border-gray-600 dark:bg-gray-800"
         >
-          <div class="py-8 text-center text-gray-500 dark:text-gray-400">
-            <p class="mb-4">No draft items</p>
-            <!-- Add Card Button -->
+          {#if cardsByStatus['draft'] && cardsByStatus['draft'].length > 0}
+            {#each cardsByStatus['draft'] as card}
+              <div
+                class="mb-3 cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
+              >
+                <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
+                  {card.title}
+                </h3>
+                <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                  {card.description}
+                </p>
+                <div class="flex flex-wrap gap-2 text-sm">
+                  {#if card.fieldData.priority}
+                    <span
+                      class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    >
+                      {card.fieldData.priority}
+                    </span>
+                  {/if}
+                  {#if card.owner}
+                    <span
+                      class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                    >
+                      {card.owner.split('@')[0]}
+                    </span>
+                  {/if}
+                  {#if card.fieldData.estimated_hours}
+                    <span
+                      class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
+                    >
+                      {card.fieldData.estimated_hours}h
+                    </span>
+                  {/if}
+                  <span
+                    class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                  >
+                    {card.type}
+                  </span>
+                </div>
+              </div>
+            {/each}
+            
+            <!-- Add Card Button at bottom -->
             <button
               onclick={openCardFormModal}
               class="w-full rounded-lg border-2 border-dashed border-blue-300 px-4 py-3 text-blue-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
             >
               + Add new item <kbd class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono text-gray-600 dark:bg-gray-700 dark:text-gray-400">N</kbd>
             </button>
-          </div>
+          {:else}
+            <div class="py-8 text-center text-gray-500 dark:text-gray-400">
+              <p class="mb-4">No draft items</p>
+              <!-- Add Card Button -->
+              <button
+                onclick={openCardFormModal}
+                class="w-full rounded-lg border-2 border-dashed border-blue-300 px-4 py-3 text-blue-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
+              >
+                + Add new item <kbd class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono text-gray-600 dark:bg-gray-700 dark:text-gray-400">N</kbd>
+              </button>
+            </div>
+          {/if}
         </div>
       </div>
 
