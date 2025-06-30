@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { WorkflowCardEngine } from '$lib/workflow/workflow-card-engine'
+  import type { IWorkflowCardEngine } from '$lib/workflow/interface'
   import type { Configuration, Field, Type, Status } from '$lib/schema'
   import { draftStatus, unknownStatus, STATUS_DRAFT } from '$lib/models/status'
   import { z } from 'zod'
@@ -8,7 +8,7 @@
   import { ChevronDownOutline, ArrowRightOutline } from 'flowbite-svelte-icons'
 
   interface Props {
-    workflowEngine: WorkflowCardEngine
+    workflowEngine: IWorkflowCardEngine
     config: Configuration
     status?: string
     targetStatus?: string // The status we're transitioning to (if different from current)
@@ -289,10 +289,15 @@
   onclick={onCancel}
   onkeydown={handleKeydown}
   tabindex="-1"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-title"
 >
   <div
     class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
     onclick={(e) => e.stopPropagation()}
+    onkeydown={(e) => e.stopPropagation()}
+    role="none"
   >
     <!-- Modal Header -->
     <div
@@ -300,7 +305,7 @@
     >
       <div>
         <div class="flex items-center gap-3">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-gray-100">
             {#if formMode() === 'create'}
               Create New Card
             {:else if formMode() === 'transition'}
@@ -431,6 +436,7 @@
       </div>
       <button
         onclick={onCancel}
+        aria-label="Close modal"
         class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

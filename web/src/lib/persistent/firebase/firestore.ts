@@ -3,6 +3,7 @@ import type {
   ILiveUpdateChange,
   ILiveUpdateListenerBuilder,
   IWorkflowCardStorage,
+  IWorkflowConfigurationDynamicStorage,
   IWorkflowConfigurationStorage
 } from '../interface'
 import type { Configuration } from '$lib/schema'
@@ -38,15 +39,19 @@ const REFs = {
 }
 
 export class FirestoreWorkflowCardStorage
-  implements IWorkflowCardStorage, IWorkflowConfigurationStorage
+  implements IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage
 {
-  public static shared(): IWorkflowCardStorage & IWorkflowConfigurationStorage {
+  public static shared(): IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage {
     const db = getFirestore(app)
     return new FirestoreWorkflowCardStorage(db)
   }
 
   //
   private constructor(private readonly fs: Firestore) {}
+
+  isSupportDynamicWorkflows(): boolean {
+    return true
+  }
 
   async createCard(workflowId: string, author: string, payload: any): Promise<string> {
     const res = await addDoc(REFs.WORKFLOW_CARDS(this.fs, workflowId), {

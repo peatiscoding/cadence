@@ -30,6 +30,15 @@
 <div
   class="relative cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white shadow transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-600"
   onclick={handleClick}
+  role="button"
+  tabindex="0"
+  aria-label="Open workflow: {workflow.name}"
+  onkeydown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleClick()
+    }
+  }}
 >
   <div class="p-6 pb-14">
     <div class="flex items-center">

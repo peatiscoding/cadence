@@ -74,7 +74,7 @@
             <p class="mb-2 text-xs text-gray-500 dark:text-gray-500">
               Slug: {status.slug}
             </p>
-            {#if status.precondition.required.length > 0}
+            {#if status.precondition.required && status.precondition.required.length > 0}
               <div class="text-xs text-gray-600 dark:text-gray-400">
                 <span class="font-medium">Required fields:</span>
                 {status.precondition.required.join(', ')}

@@ -429,6 +429,8 @@
           ondragover={(e) => handleDragOver(e, 'draft')}
           ondragleave={(e) => handleDragLeave(e, 'draft')}
           ondrop={(e) => handleDrop(e, 'draft')}
+          role="region"
+          aria-label="Draft cards drop zone"
         >
           {#if cardsByStatus['draft'] && cardsByStatus['draft'].length > 0}
             {#each cardsByStatus['draft'] as card}
@@ -503,6 +505,8 @@
             ondragover={(e) => handleDragOver(e, status.slug)}
             ondragleave={(e) => handleDragLeave(e, status.slug)}
             ondrop={(e) => handleDrop(e, status.slug)}
+            role="region"
+            aria-label="{status.title} cards drop zone"
           >
             {#if cardsByStatus[status.slug]}
               {#each cardsByStatus[status.slug] as card}
@@ -531,18 +535,27 @@
   <div
     class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeModal}
-    aria-roledescription="modal"
+    onkeydown={(e) => {
+      if (e.key === 'Escape') {
+        closeModal(e)
+      }
+    }}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="config-modal-title"
     tabindex="-1"
   >
     <div
       class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
       onclick={(e) => e.stopPropagation()}
+      onkeydown={(e) => e.stopPropagation()}
+      role="none"
     >
       <!-- Modal Header -->
       <div
         class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700"
       >
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <h2 id="config-modal-title" class="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Workflow Configuration
         </h2>
         <button
@@ -605,11 +618,16 @@
     class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeErrorModal}
     onkeydown={(e) => e.key === 'Escape' && closeErrorModal()}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="error-modal-title"
     tabindex="-1"
   >
     <div
       class="mx-4 max-w-md rounded-lg bg-white shadow-xl dark:bg-gray-800"
       onclick={(e) => e.stopPropagation()}
+      onkeydown={(e) => e.stopPropagation()}
+      role="none"
     >
       <!-- Error Modal Header -->
       <div
@@ -631,12 +649,13 @@
               ></path>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h3 id="error-modal-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {errorModalTitle}
           </h3>
         </div>
         <button
           onclick={closeErrorModal}
+          aria-label="Close error modal"
           class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte'
-  import { FirebaseAuthenticationProvider } from '$lib/authentication/firebase/firebase-authen'
+  import { impls } from '$lib/impls'
 
   let isLoggedIn = $state(false)
   let userUid = $state('')
   let isInitializing = $state(true)
 
-  const authProvider = FirebaseAuthenticationProvider.shared()
+  const authProvider = impls.authProvider
   let unsubscribeAuth: (() => void) | null = null
 
   onMount(() => {

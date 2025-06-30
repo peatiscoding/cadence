@@ -58,6 +58,7 @@
   onclick={() => onCardClick(card)}
   role="button"
   tabindex="0"
+  aria-label="Edit card: {card.title}"
   onkeydown={(e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()

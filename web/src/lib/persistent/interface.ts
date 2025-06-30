@@ -70,14 +70,21 @@ export interface IWorkflowConfigurationStorage {
   loadConfig(workflowId: string): Promise<Configuration>
 
   /**
-   * Create a new workflow configuration
-   */
-  setConfig(workflowId: string, configuration: Configuration): Promise<void>
-
-  /**
    * List all workflow configurations
    */
   listWorkflows(): Promise<{ workflows: Array<Configuration & { workflowId: string }> }>
+
+  /**
+   * @returns true if given configuration storage support dynamic workflows
+   */
+  isSupportDynamicWorkflows(): boolean
+}
+
+export interface IWorkflowConfigurationDynamicStorage extends IWorkflowConfigurationStorage {
+  /**
+   * Create a new workflow configuration
+   */
+  setConfig(workflowId: string, configuration: Configuration): Promise<void>
 
   /**
    * Delete all workflow ids

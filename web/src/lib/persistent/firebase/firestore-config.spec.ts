@@ -1,4 +1,4 @@
-import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '../interface'
+import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 import type { Auth } from 'firebase/auth'
 import type { Configuration } from '$lib/schema'
 import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth'
@@ -10,7 +10,7 @@ import { FirestoreWorkflowCardStorage } from './firestore'
 // Integration tests for Firebase Firestore configuration storage
 // These tests require Firebase emulator to be running
 describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
-  let storage: IWorkflowCardStorage & IWorkflowConfigurationStorage
+  let storage: IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage
   let auth: Auth
 
   beforeAll(async () => {
