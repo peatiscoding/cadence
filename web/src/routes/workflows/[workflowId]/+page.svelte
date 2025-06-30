@@ -25,6 +25,8 @@
   let errorModalTitle = $state('')
   let errorModalMessage = $state('')
   let cardFormSubmitting = $state(false)
+  let editingCard = $state<IWorkflowCardEntry | null>(null)
+  let cardFormTargetStatus = $state<string | undefined>(undefined)
 
   const storage = FirestoreWorkflowCardStorage.shared()
   const authProvider = FirebaseAuthenticationProvider.shared()
@@ -190,14 +192,24 @@
     showConfigModal = false
   }
 
-  // Card creation handlers
+  // Card creation and editing handlers
   function openCardFormModal() {
+    editingCard = null
+    cardFormTargetStatus = undefined
+    showCardFormModal = true
+  }
+
+  function openCardEditModal(card: IWorkflowCardEntry, targetStatus?: string) {
+    editingCard = card
+    cardFormTargetStatus = targetStatus
     showCardFormModal = true
   }
 
   function closeCardFormModal() {
     showCardFormModal = false
     cardFormSubmitting = false
+    editingCard = null
+    cardFormTargetStatus = undefined
   }
 
   // Error modal functions
@@ -219,18 +231,38 @@
     try {
       cardFormSubmitting = true
 
-      // Create the card using the workflow engine - pass all form data
-      const cardId = await workflowEngine.makeNewCard(cardData)
+      if (editingCard) {
+        // Update existing card
+        const updatePayload: any = { ...cardData }
+        
+        // Remove fields that shouldn't be updated
+        delete updatePayload.workflowCardId
+        delete updatePayload.workflowId
+        delete updatePayload.createdAt
+        delete updatePayload.createdBy
+        
+        // Get current user for updatedBy
+        const currentUser = authProvider.getCurrentUser()
+        const author = currentUser?.email || 'unknown'
+        
+        await storage.updateCard(data.workflowId, editingCard.workflowCardId, author, updatePayload)
+        
+        console.log('Card updated successfully:', editingCard.workflowCardId)
+      } else {
+        // Create new card using the workflow engine
+        const cardId = await workflowEngine.makeNewCard(cardData)
+        console.log('Card created successfully with ID:', cardId)
+      }
 
-      // Card will be automatically added to the UI via live listener
-      console.log('Card created successfully with ID:', cardId)
+      // Card changes will be automatically reflected in the UI via live listener
       closeCardFormModal()
     } catch (err) {
-      console.error('Error creating card:', err)
+      console.error('Error saving card:', err)
       
       // Show user-friendly error message
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while creating the card'
-      showError('Failed to Create Card', errorMessage)
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while saving the card'
+      const errorTitle = editingCard ? 'Failed to Update Card' : 'Failed to Create Card'
+      showError(errorTitle, errorMessage)
     } finally {
       cardFormSubmitting = false
     }
@@ -303,6 +335,7 @@
             {#each cardsByStatus['draft'] as card}
               <div
                 class="mb-3 cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
+                onclick={() => openCardEditModal(card)}
               >
                 <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
                   {card.title}
@@ -389,6 +422,7 @@
               {#each cardsByStatus[status.slug] as card}
                 <div
                   class="mb-3 cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
+                  onclick={() => openCardEditModal(card)}
                 >
                   <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
                     {card.title}
@@ -497,12 +531,14 @@
   </div>
 {/if}
 
-<!-- Card Creation Modal -->
+<!-- Card Creation/Edit Modal -->
 {#if showCardFormModal && editableWorkflow}
   <WorkflowCardForm
     {workflowEngine}
     config={editableWorkflow}
-    status="draft"
+    status={editingCard?.status || "draft"}
+    targetStatus={cardFormTargetStatus}
+    initialData={editingCard || {}}
     onSubmit={handleCardSubmit}
     onCancel={closeCardFormModal}
     isSubmitting={cardFormSubmitting}

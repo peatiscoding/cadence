@@ -8,6 +8,7 @@
     workflowEngine: WorkflowCardEngine
     config: Configuration
     status?: string
+    targetStatus?: string // The status we're transitioning to (if different from current)
     initialData?: Record<string, any>
     onSubmit: (data: any) => Promise<void>
     onCancel: () => void
@@ -18,6 +19,7 @@
     workflowEngine,
     config,
     status = 'draft',
+    targetStatus,
     initialData = {},
     onSubmit,
     onCancel,
@@ -37,9 +39,22 @@
   let errors = $state<Record<string, string>>({})
   let schema: z.ZodObject<any> | null = null
 
-  // Load schema when status changes
+  // Determine form mode and effective status for schema
+  const isEditing = $derived(!!initialData.workflowCardId)
+  const isTransition = $derived(!!targetStatus && targetStatus !== status)
+  const effectiveStatus = $derived(targetStatus || status)
+  const formMode = $derived(isEditing ? (isTransition ? 'transition' : 'edit') : 'create')
+
+  // Get status configuration for display
+  const statusConfig = $derived(() => {
+    if (effectiveStatus === 'draft') return { title: 'Draft', color: '#6B7280' }
+    return config.statuses.find(s => s.slug === effectiveStatus) || 
+           { title: effectiveStatus, color: '#6B7280' }
+  })
+
+  // Load schema when effective status changes
   $effect(() => {
-    loadSchema(status)
+    loadSchema(effectiveStatus)
   })
 
   async function loadSchema(currentStatus: string) {
@@ -102,7 +117,14 @@
 
     try {
       const validatedData = schema.parse(formData)
-      await onSubmit(validatedData)
+      
+      // Include target status if transitioning
+      const submitData = {
+        ...validatedData,
+        ...(isTransition && { status: effectiveStatus })
+      }
+      
+      await onSubmit(submitData)
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error('Validation errors:', error.errors)
@@ -196,11 +218,35 @@
       class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700"
     >
       <div>
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          {initialData.workflowCardId ? 'Edit Card' : 'Create New Card'}
-        </h2>
+        <div class="flex items-center gap-3">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            {#if formMode === 'create'}
+              Create New Card
+            {:else if formMode === 'transition'}
+              Transition Card
+            {:else}
+              Edit Card
+            {/if}
+          </h2>
+          <!-- Status Badge -->
+          <div class="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 dark:bg-gray-700">
+            <div
+              class="h-2 w-2 rounded-full"
+              style="background-color: {statusConfig().color}"
+            ></div>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {statusConfig().title}
+            </span>
+          </div>
+        </div>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Create a new workflow item. Fields marked with * are required.
+          {#if formMode === 'create'}
+            Create a new workflow item. Fields marked with * are required.
+          {:else if formMode === 'transition'}
+            Update card to transition to "{statusConfig().title}" status.
+          {:else}
+            Edit the workflow item. Fields marked with * are required.
+          {/if}
         </p>
       </div>
       <button
@@ -508,11 +554,15 @@
           disabled={isSubmitting}
           class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
-          {isSubmitting
-            ? 'Saving...'
-            : initialData.workflowCardId
-              ? 'Save Changes'
-              : 'Create Card'}
+          {#if isSubmitting}
+            Saving...
+          {:else if formMode === 'create'}
+            Create Card
+          {:else if formMode === 'transition'}
+            Transition to {statusConfig().title}
+          {:else}
+            Save Changes
+          {/if}
         </button>
       </div>
     </form>
