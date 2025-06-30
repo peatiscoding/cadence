@@ -113,8 +113,8 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
     // Validate its precondition
     const precondition = newStatusConfig.precondition
-    _helpers.validateUser(precondition.users, userSsoId)
-    _helpers.validateRequiredFields(precondition.required, currentCard.fieldData)
+    _helpers.validateUser(precondition.users || [], userSsoId)
+    _helpers.validateRequiredFields(precondition.required || [], currentCard.fieldData)
     _helpers.validateFromStatus(precondition.from, currentCard.status)
 
     // TODO: Run status configuration actions (hooks)
@@ -153,7 +153,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
       }
 
       // Check if current user is authorized
-      if (precondition.users.length > 0 && !precondition.users.includes(currentUser)) {
+      if (precondition.users && precondition.users.length > 0 && !precondition.users.includes(currentUser)) {
         return false
       }
 

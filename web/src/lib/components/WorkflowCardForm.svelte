@@ -325,11 +325,24 @@
               </span>
             </div>
 
-            <!-- Transition Dropdown (only show when editing existing card) -->
-            {#if isEditing && !isTransition && nextStatuses.length > 0}
+            <!-- Transition UI (show when editing and either in transition mode or dropdown available) -->
+            {#if isEditing && (isTransition || nextStatuses.length > 0)}
               <ArrowRightOutline class="h-4 w-4 text-gray-400" />
 
-              {#if selectedTransitionStatus}
+              {#if isTransition}
+                <!-- Target Status Badge (when in transition mode from drag-and-drop) -->
+                <div
+                  class="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 ring-1 ring-blue-200 dark:bg-blue-900/20 dark:ring-blue-800"
+                >
+                  <div
+                    class="h-2 w-2 rounded-full"
+                    style="background-color: {targetStatusConfig().ui.color}"
+                  ></div>
+                  <span class="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    {targetStatusConfig().title}
+                  </span>
+                </div>
+              {:else if selectedTransitionStatus}
                 <!-- Target Status Badge (when transition is selected) -->
                 <button
                   type="button"
@@ -410,7 +423,7 @@
           {#if formMode() === 'create'}
             Create a new workflow item. Fields marked with <span class="text-red-500">*</span> are required.
           {:else if formMode() === 'transition'}
-            Update card to transition to "{statusConfig().title}" status.
+            Update card to transition to "{targetStatusConfig().title}" status.
           {:else}
             Edit the workflow item. Fields marked with <span class="text-red-500">*</span> are required.
           {/if}

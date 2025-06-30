@@ -138,12 +138,14 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       expect(retrievedConfig.fields[0].slug).toBe('priority')
       expect(retrievedConfig.fields[0].title).toBe('Priority')
       expect(retrievedConfig.fields[0].schema.kind).toBe('choice')
-      expect(retrievedConfig.fields[0].schema.choices).toEqual([
-        'low',
-        'medium',
-        'high',
-        'critical'
-      ])
+      if (retrievedConfig.fields[0].schema.kind === 'choice') {
+        expect(retrievedConfig.fields[0].schema.choices).toEqual([
+          'low',
+          'medium',
+          'high',
+          'critical'
+        ])
+      }
 
       // Verify statuses
       expect(retrievedConfig.statuses[0].slug).toBe('todo')
@@ -373,21 +375,29 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       // Verify field types
       const textField = retrievedConfig.fields.find((f) => f.slug === 'text-field')!
       expect(textField.schema.kind).toBe('text')
-      expect(textField.schema.min).toBe(1)
-      expect(textField.schema.max).toBe(100)
+      if (textField.schema.kind === 'text') {
+        expect(textField.schema.min).toBe(1)
+        expect(textField.schema.max).toBe(100)
+      }
 
       const numberField = retrievedConfig.fields.find((f) => f.slug === 'number-field')!
       expect(numberField.schema.kind).toBe('number')
-      expect(numberField.schema.min).toBe(0)
-      expect(numberField.schema.max).toBe(1000)
+      if (numberField.schema.kind === 'number') {
+        expect(numberField.schema.min).toBe(0)
+        expect(numberField.schema.max).toBe(1000)
+      }
 
       const choiceField = retrievedConfig.fields.find((f) => f.slug === 'choice-field')!
       expect(choiceField.schema.kind).toBe('choice')
-      expect(choiceField.schema.choices).toEqual(['option1', 'option2', 'option3'])
+      if (choiceField.schema.kind === 'choice') {
+        expect(choiceField.schema.choices).toEqual(['option1', 'option2', 'option3'])
+      }
 
       const multiChoiceField = retrievedConfig.fields.find((f) => f.slug === 'multi-choice-field')!
       expect(multiChoiceField.schema.kind).toBe('multi-choice')
-      expect(multiChoiceField.schema.choices).toEqual(['tag1', 'tag2', 'tag3', 'tag4'])
+      if (multiChoiceField.schema.kind === 'multi-choice') {
+        expect(multiChoiceField.schema.choices).toEqual(['tag1', 'tag2', 'tag3', 'tag4'])
+      }
     })
 
     it('should support creating multiple different configurations', async () => {
@@ -416,7 +426,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'open',
             title: 'Open',
             terminal: false,
-            precondition: { required: ['title'] },
+            precondition: { from: [], required: ['title'], users: [] },
             ui: { color: '#3B82F6' }
           }
         ]
@@ -442,7 +452,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'planning',
             title: 'Planning',
             terminal: false,
-            precondition: { required: ['title', 'type'] },
+            precondition: { from: [], required: ['title', 'type'], users: [] },
             ui: { color: '#6B7280' }
           }
         ]
@@ -505,7 +515,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'status-1',
             title: 'Status 1',
             terminal: false,
-            precondition: { required: [] },
+            precondition: { from: [], required: [], users: [] },
             ui: { color: '#000001' }
           }
         ]
@@ -521,7 +531,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'status-2',
             title: 'Status 2',
             terminal: true,
-            precondition: { required: ['title'] },
+            precondition: { from: [], required: ['title'], users: [] },
             ui: { color: '#000002' }
           }
         ]
@@ -553,14 +563,14 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'status-3a',
             title: 'Status 3A',
             terminal: false,
-            precondition: { required: [] },
+            precondition: { from: [], required: [], users: [] },
             ui: { color: '#000003' }
           },
           {
             slug: 'status-3b',
             title: 'Status 3B',
             terminal: true,
-            precondition: { required: ['title', 'type'] },
+            precondition: { from: [], required: ['title', 'type'], users: [] },
             ui: { color: '#000004' }
           }
         ]
@@ -638,14 +648,14 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'new',
             title: 'New',
             terminal: false,
-            precondition: { required: ['title'] },
+            precondition: { from: [], required: ['title'], users: [] },
             ui: { color: '#654321' }
           },
           {
             slug: 'completed',
             title: 'Completed',
             terminal: true,
-            precondition: { required: ['title', 'type'] },
+            precondition: { from: [], required: ['title', 'type'], users: [] },
             ui: { color: '#abcdef' }
           }
         ]

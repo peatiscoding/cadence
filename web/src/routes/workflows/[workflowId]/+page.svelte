@@ -28,6 +28,11 @@
   let editingCard = $state<IWorkflowCardEntry | null>(null)
   let cardFormTargetStatus = $state<string | undefined>(undefined)
 
+  // Drag and drop state
+  let draggedCard = $state<IWorkflowCardEntry | null>(null)
+  let draggedOverStatus = $state<string | null>(null)
+  let validDropZones = $state<Set<string>>(new Set())
+
   const storage = FirestoreWorkflowCardStorage.shared()
   const authProvider = FirebaseAuthenticationProvider.shared()
 
@@ -48,6 +53,7 @@
       {} as Record<string, IWorkflowCardEntry[]>
     )
   )
+
 
   onMount(() => {
     let isDestroyed = false
@@ -244,11 +250,17 @@
         delete updatePayload.createdAt
         delete updatePayload.createdBy
 
-        // Get current user for updatedBy
-        const currentUser = authProvider.getCurrentUser()
-        const author = currentUser?.email || 'unknown'
-
-        await storage.updateCard(data.workflowId, editingCard.workflowCardId, author, updatePayload)
+        // If we have a target status, this is a transition
+        if (cardFormTargetStatus) {
+          await workflowEngine.attemptToTransitCard(
+            editingCard.workflowCardId,
+            cardFormTargetStatus,
+            updatePayload
+          )
+        } else {
+          // Otherwise it's a regular update
+          await workflowEngine.updateCardDetail(editingCard.workflowCardId, updatePayload)
+        }
 
         console.log('Card updated successfully:', editingCard.workflowCardId)
       } else {
@@ -269,6 +281,74 @@
       showError(errorTitle, errorMessage)
     } finally {
       cardFormSubmitting = false
+    }
+  }
+
+  // Drag and drop handlers
+  async function handleDragStart(event: DragEvent, card: IWorkflowCardEntry) {
+    if (!event.dataTransfer) return
+
+    draggedCard = card
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', card.workflowCardId)
+
+    // Calculate valid drop zones for this card
+    try {
+      const nextStatuses = await workflowEngine.getNextStatuses(card.status)
+      validDropZones = new Set(nextStatuses.map((status) => status.slug))
+    } catch (error) {
+      console.error('Failed to get next statuses for drag:', error)
+      validDropZones = new Set()
+    }
+  }
+
+  function handleDragEnd() {
+    draggedCard = null
+    draggedOverStatus = null
+    validDropZones = new Set()
+  }
+
+  function handleDragOver(event: DragEvent, statusSlug: string) {
+    if (!draggedCard || !validDropZones.has(statusSlug)) return
+
+    event.preventDefault()
+    event.dataTransfer!.dropEffect = 'move'
+    draggedOverStatus = statusSlug
+  }
+
+  function handleDragLeave(event: DragEvent, statusSlug: string) {
+    // Only clear if we're actually leaving this drop zone
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = event.clientX
+    const y = event.clientY
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      if (draggedOverStatus === statusSlug) {
+        draggedOverStatus = null
+      }
+    }
+  }
+
+  async function handleDrop(event: DragEvent, targetStatusSlug: string) {
+    event.preventDefault()
+
+    if (!draggedCard || !validDropZones.has(targetStatusSlug)) return
+
+    const droppedCard = draggedCard
+    const targetStatus = targetStatusSlug
+
+    // Reset drag state
+    handleDragEnd()
+
+    // Always open the transition modal for user confirmation
+    try {
+      openCardEditModal(droppedCard, targetStatus)
+    } catch (error) {
+      console.error('Failed to process drop:', error)
+      showError(
+        'Drop Failed',
+        error instanceof Error ? error.message : 'Failed to process card drop'
+      )
     }
   }
 </script>
@@ -330,17 +410,36 @@
             <span class="text-sm text-gray-500 dark:text-gray-400">
               ({cardsByStatus['draft']?.length || 0})
             </span>
+            {#if draggedCard && validDropZones.has('draft')}
+              <div class="ml-2 flex items-center gap-1">
+                <div class="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+                <span class="text-xs text-green-600 dark:text-green-400">Drop here</span>
+              </div>
+            {/if}
           </div>
         </div>
 
         <!-- Draft Column Content -->
         <div
-          class="min-h-96 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 shadow-sm dark:border-gray-600 dark:bg-gray-800"
+          class={[
+            'min-h-96 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 shadow-sm dark:border-gray-600 dark:bg-gray-800',
+            validDropZones.has('draft') &&
+              draggedOverStatus === 'draft' &&
+              'border-blue-400 bg-blue-50 dark:bg-blue-900'
+          ]}
+          ondragover={(e) => handleDragOver(e, 'draft')}
+          ondragleave={(e) => handleDragLeave(e, 'draft')}
+          ondrop={(e) => handleDrop(e, 'draft')}
         >
           {#if cardsByStatus['draft'] && cardsByStatus['draft'].length > 0}
             {#each cardsByStatus['draft'] as card}
               <div
-                class="mb-3 cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
+                draggable="true"
+                ondragstart={(e) => handleDragStart(e, card)}
+                ondragend={handleDragEnd}
+                class="mb-3 cursor-grab rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
+                class:opacity-50={draggedCard?.workflowCardId === card.workflowCardId}
+                class:cursor-grabbing={draggedCard?.workflowCardId === card.workflowCardId}
                 onclick={() => openCardEditModal(card)}
               >
                 <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
@@ -420,20 +519,38 @@
               <span class="text-sm text-gray-500 dark:text-gray-400">
                 ({cardsByStatus[status.slug]?.length || 0})
               </span>
+              {#if draggedCard && validDropZones.has(status.slug)}
+                <div class="ml-2 flex items-center gap-1">
+                  <div class="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+                  <span class="text-xs text-green-600 dark:text-green-400">Drop here</span>
+                </div>
+              {/if}
             </div>
           </div>
 
           <!-- Status Column Content -->
           <div
-            class="min-h-96 rounded-lg bg-gray-50 p-4 shadow-sm dark:bg-gray-800 {status.terminal
-              ? 'border-2'
-              : 'border border-gray-200 dark:border-gray-700'}"
+            class={[
+              'min-h-96 rounded-lg bg-gray-50 p-4 shadow-sm dark:bg-gray-800',
+              status.terminal ? 'border-2' : 'border border-gray-200 dark:border-gray-700',
+              draggedOverStatus === status.slug &&
+                validDropZones.has(status.slug) &&
+                '&& border-blue-400 bg-blue-50 dark:bg-blue-900'
+            ]}
             style={status.terminal ? `border-color: ${status.ui.color}` : ''}
+            ondragover={(e) => handleDragOver(e, status.slug)}
+            ondragleave={(e) => handleDragLeave(e, status.slug)}
+            ondrop={(e) => handleDrop(e, status.slug)}
           >
             {#if cardsByStatus[status.slug]}
               {#each cardsByStatus[status.slug] as card}
                 <div
-                  class="mb-3 cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
+                  draggable="true"
+                  ondragstart={(e) => handleDragStart(e, card)}
+                  ondragend={handleDragEnd}
+                  class="mb-3 cursor-grab rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
+                  class:opacity-50={draggedCard?.workflowCardId === card.workflowCardId}
+                  class:cursor-grabbing={draggedCard?.workflowCardId === card.workflowCardId}
                   onclick={() => openCardEditModal(card)}
                 >
                   <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
@@ -487,7 +604,7 @@
 <!-- Configuration Modal -->
 {#if showConfigModal && editableWorkflow}
   <div
-    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     onclick={closeModal}
     aria-roledescription="modal"
     tabindex="-1"
@@ -560,7 +677,7 @@
 <!-- Error Modal -->
 {#if showErrorModal}
   <div
-    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     onclick={closeErrorModal}
     onkeydown={(e) => e.key === 'Escape' && closeErrorModal()}
     tabindex="-1"
