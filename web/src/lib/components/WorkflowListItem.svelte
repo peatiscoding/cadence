@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Configuration } from '$lib/schema'
   import WorkflowIcon from '$lib/assets/workflow.svg?raw'
-  import ChevronRightIcon from '$lib/assets/chevron-right.svg?raw'
+  import { ChevronRightOutline } from 'flowbite-svelte-icons'
 
   interface Props {
     workflow: Configuration & { workflowId: string }
@@ -114,13 +114,13 @@
     {/if}
   </div>
 
-  <div class="absolute right-0 bottom-0 left-0 rounded-b-lg bg-gray-50 px-6 py-3 dark:bg-gray-700">
+  <div class="absolute bottom-0 left-0 right-0 rounded-b-lg bg-gray-50 px-6 py-3 dark:bg-gray-700">
     <div class="flex items-center justify-between">
       <span class="text-xs text-gray-500 dark:text-gray-400">
         ID: {workflow.workflowId}
       </span>
       <div class="h-4 w-4 text-gray-400 dark:text-gray-500">
-        {@html ChevronRightIcon}
+        <ChevronRightOutline />
       </div>
     </div>
   </div>

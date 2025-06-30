@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { Configuration } from '$lib/schema'
-  import { impls } from '$lib/impls'
+  import { ClipboardListOutline } from 'flowbite-svelte-icons'
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
+
+  import { impls } from '$lib/impls'
   import WorkflowListItem from '$lib/components/WorkflowListItem.svelte'
   import ErrorIcon from '$lib/assets/error.svg?raw'
-  import EmptyStateIcon from '$lib/assets/empty-state.svg?raw'
   import PlusIcon from '$lib/assets/plus.svg?raw'
 
   let workflows = $state<Array<Configuration & { workflowId: string }>>([])
@@ -76,7 +77,7 @@
   {:else if workflows.length === 0}
     <div class="py-12 text-center">
       <div class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500">
-        {@html EmptyStateIcon}
+        <ClipboardListOutline class="h-12 w-12 text-blue-700 dark:text-red-500" />
       </div>
       <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
         No workflows defined
