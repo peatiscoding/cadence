@@ -144,7 +144,7 @@
           <div class="relative">
             <button
               onclick={toggleUserMenu}
-              class="flex items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-gray-800 dark:focus:ring-offset-gray-800"
+              class="flex items-center rounded-full bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:bg-gray-800 dark:focus:ring-offset-gray-800"
               disabled={isLoading}
             >
               <span class="sr-only">Open user menu</span>
@@ -167,7 +167,7 @@
 
             {#if showUserMenu}
               <div
-                class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-700 dark:ring-gray-600"
+                class="ring-opacity-5 absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none dark:bg-gray-700 dark:ring-gray-600"
               >
                 <div class="border-b border-gray-100 px-4 py-2 dark:border-gray-600">
                   <p class="text-sm text-gray-500 dark:text-gray-400">Signed in as</p>
@@ -193,7 +193,7 @@
           <button
             onclick={handleLogin}
             disabled={isLoading}
-            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-gray-800"
+            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-gray-800"
           >
             {#if isLoading}
               <div class="h-4 w-4 animate-spin">

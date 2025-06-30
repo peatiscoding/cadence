@@ -105,7 +105,7 @@
     {/if}
   </div>
 
-  <div class="absolute bottom-0 left-0 right-0 rounded-b-lg bg-gray-50 px-6 py-3 dark:bg-gray-700">
+  <div class="absolute right-0 bottom-0 left-0 rounded-b-lg bg-gray-50 px-6 py-3 dark:bg-gray-700">
     <div class="flex items-center justify-between">
       <span class="text-xs text-gray-500 dark:text-gray-400">
         ID: {workflow.workflowId}
@@ -116,4 +116,3 @@
     </div>
   </div>
 </div>
-

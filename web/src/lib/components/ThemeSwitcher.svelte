@@ -22,7 +22,7 @@
 
 <button
   onclick={toggleTheme}
-  class="inline-flex items-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+  class="inline-flex items-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-200"
   title={currentTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
 >
   <span class="sr-only">Toggle theme</span>
