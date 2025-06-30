@@ -11,12 +11,15 @@ import type { IAuthenticationProvider } from '$lib/authentication/interface'
 import { z } from 'zod'
 
 const _helpers = {
-  validateRequiredFields<T>(requiredFields: (keyof T)[], data: T) {
+  validateRequiredFields<T>(requiredFields: (keyof T)[], data: { fieldData: T }) {
     const missingFields: (keyof T)[] = []
 
     for (const requiredField of requiredFields) {
-      if (data[requiredField] === null || data[requiredField] === undefined) {
-        missingFields.push(requiredField)
+      if (requiredField.toString().startsWith('$')) {
+      } else {
+        if (data.fieldData[requiredField] === null || data.fieldData[requiredField] === undefined) {
+          missingFields.push(requiredField)
+        }
       }
     }
 
@@ -114,7 +117,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     // Validate its precondition
     const precondition = newStatusConfig.precondition
     _helpers.validateUser(precondition.users || [], userSsoId)
-    _helpers.validateRequiredFields(precondition.required || [], currentCard.fieldData)
+    _helpers.validateRequiredFields(precondition.required || [], currentCard)
     _helpers.validateFromStatus(precondition.from, currentCard.status)
 
     // TODO: Run status configuration actions (hooks)

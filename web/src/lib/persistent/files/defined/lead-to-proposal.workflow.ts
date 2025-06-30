@@ -5,8 +5,8 @@ const LeadToProposalWorkflow: Configuration & { workflowId: string } = {
   name: 'Lead to Proposal',
   types: [
     { slug: 'ma', title: 'MA', ui: { color: '#8866FF' } },
-    { slug: 'sprint-development', title: 'Sprint Dev', ui: { color: '#33FF88' } },
-    { slug: 'venture', title: 'Venture', ui: { color: '#FF3388' } }
+    { slug: 'sprint-based', title: 'Sprint Based', ui: { color: '#33FF88' } },
+    { slug: 'project-based', title: 'Project Based', ui: { color: '#FF3388' } }
   ],
   fields: [
     {
@@ -37,7 +37,7 @@ const LeadToProposalWorkflow: Configuration & { workflowId: string } = {
       },
       precondition: {
         from: ['brewing'],
-        required: ['value']
+        required: ['$.value', 'proposal-link']
       }
     },
     {
@@ -49,7 +49,7 @@ const LeadToProposalWorkflow: Configuration & { workflowId: string } = {
       },
       precondition: {
         from: ['brewing', 'proposal-sent'],
-        required: ['value']
+        required: ['$.value', 'proposal-link']
       }
     },
     {

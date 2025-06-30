@@ -533,7 +533,7 @@
 <!-- Configuration Modal -->
 {#if showConfigModal && editableWorkflow}
   <div
-    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     onclick={closeModal}
     onkeydown={(e) => {
       if (e.key === 'Escape') {
@@ -615,7 +615,7 @@
 <!-- Error Modal -->
 {#if showErrorModal}
   <div
-    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     onclick={closeErrorModal}
     onkeydown={(e) => e.key === 'Escape' && closeErrorModal()}
     role="dialog"

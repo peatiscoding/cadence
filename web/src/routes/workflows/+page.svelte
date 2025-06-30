@@ -19,14 +19,18 @@
   onMount(async () => {
     try {
       loading = true
-      const result = await storage.listWorkflows()
-      isSupportDynamicWorkflows = storage.isSupportDynamicWorkflows()
-      workflows = result.workflows
+      impls.authProvider.onAuthStateChanged(async (sess) => {
+        if (!sess) {
+          return
+        }
+        const result = await storage.listWorkflows()
+        isSupportDynamicWorkflows = storage.isSupportDynamicWorkflows()
+        workflows = result.workflows
+        loading = false
+      })
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load workflows'
       console.error('Error loading workflows:', err)
-    } finally {
-      loading = false
     }
   })
 
