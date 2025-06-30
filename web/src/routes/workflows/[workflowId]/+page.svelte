@@ -3,9 +3,9 @@
   import type { IWorkflowCardEntry } from '$lib/models/interface'
   import type { PageData } from './$types'
   import { onMount } from 'svelte'
-  import SettingsIcon from '$lib/assets/settings.svg?raw'
   import { FirestoreWorkflowCardStorage } from '$lib/persistent/firebase/firestore'
   import { FirebaseAuthenticationProvider } from '$lib/authentication/firebase/firebase-authen'
+  import { CogOutline } from 'flowbite-svelte-icons'
 
   import { WorkflowFactory } from '$lib/workflow/factory'
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
@@ -388,9 +388,7 @@
           class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
           title="Workflow Settings"
         >
-          <div class="h-5 w-5">
-            {@html SettingsIcon}
-          </div>
+          <CogOutline class="h-5 w-5" />
         </button>
       </div>
       <p class="mt-2 text-gray-600 dark:text-gray-400">
