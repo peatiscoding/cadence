@@ -4,6 +4,7 @@
   import { onMount, onDestroy } from 'svelte'
   import { page } from '$app/stores'
   import { FirebaseAuthenticationProvider } from '$lib/authentication/firebase/firebase-authen'
+  import { Avatar } from 'flowbite-svelte'
   import ThemeSwitcher from './ThemeSwitcher.svelte'
   import SpinnerIcon from '$lib/assets/spinner.svg?raw'
   import UserAvatarIcon from '$lib/assets/user-avatar.svg?raw'
@@ -142,41 +143,27 @@
         {:else if isLoggedIn}
           <!-- User Menu -->
           <div class="relative">
-            <button
-              onclick={toggleUserMenu}
-              class="flex items-center rounded-full bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:bg-gray-800 dark:focus:ring-offset-gray-800"
-              disabled={isLoading}
-            >
-              <span class="sr-only">Open user menu</span>
-              {#if currentSession?.avatarUrl}
-                <img
-                  class="h-8 w-8 rounded-full object-cover"
-                  src={currentSession.avatarUrl}
-                  alt={currentSession.displayName}
-                />
-              {:else}
-                <div
-                  class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white"
-                >
-                  <div class="h-4 w-4">
-                    {@html UserAvatarIcon}
-                  </div>
-                </div>
-              {/if}
+            <button onclick={toggleUserMenu} class="flex items-center" disabled={isLoading}>
+              <Avatar
+                src={currentSession?.avatarUrl}
+                alt={currentSession?.displayName || 'User avatar'}
+                size="sm"
+                border
+                dot={{ color: 'green', size: 'lg', placement: 'bottom-right' }}
+              />
             </button>
 
             {#if showUserMenu}
               <div
-                class="ring-opacity-5 absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none dark:bg-gray-700 dark:ring-gray-600"
+                class="ring-opacity-5 absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-lg bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none dark:bg-gray-700 dark:ring-gray-600"
               >
-                <div class="border-b border-gray-100 px-4 py-2 dark:border-gray-600">
-                  <p class="text-sm text-gray-500 dark:text-gray-400">Signed in as</p>
-                  <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                <div class="border-b border-gray-100 px-4 py-3 dark:border-gray-600">
+                  <span class="block text-sm text-gray-900 dark:text-white">
                     {currentSession?.displayName || 'Unknown User'}
-                  </p>
-                  <p class="truncate text-xs text-gray-400 dark:text-gray-500">
+                  </span>
+                  <span class="block truncate text-sm font-medium text-gray-500 dark:text-gray-400">
                     {currentSession?.email}
-                  </p>
+                  </span>
                 </div>
                 <button
                   onclick={handleLogout}

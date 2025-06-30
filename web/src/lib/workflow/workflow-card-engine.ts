@@ -153,7 +153,11 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
       }
 
       // Check if current user is authorized
-      if (precondition.users && precondition.users.length > 0 && !precondition.users.includes(currentUser)) {
+      if (
+        precondition.users &&
+        precondition.users.length > 0 &&
+        !precondition.users.includes(currentUser)
+      ) {
         return false
       }
 

@@ -285,7 +285,7 @@
 </script>
 
 <div
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+  class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
   onclick={onCancel}
   onkeydown={handleKeydown}
   tabindex="-1"
@@ -385,14 +385,14 @@
                       e.stopPropagation()
                       transitionDropdownOpen = !transitionDropdownOpen
                     }}
-                    class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   >
                     Select Status
                     <ChevronDownOutline class="h-3 w-3" />
                   </button>
                   {#if transitionDropdownOpen}
                     <div
-                      class="absolute left-0 top-full z-10 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700"
+                      class="absolute top-full left-0 z-10 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700"
                     >
                       {#each nextStatuses as nextStatus}
                         <button
@@ -467,7 +467,7 @@
                     e.stopPropagation()
                     typeDropdownOpen = !typeDropdownOpen
                   }}
-                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-left focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-left focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                   class:border-red-500={errors.type}
                 >
                   <div class="flex items-center justify-between">
@@ -529,7 +529,7 @@
                 bind:value={formData.type}
                 onblur={() => validateField('type', formData.type)}
                 placeholder="Enter type"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 class:border-red-500={errors.type}
               />
             {/if}
@@ -552,7 +552,7 @@
               bind:value={formData.title}
               placeholder="Name of this card"
               onblur={() => validateField('title', formData.title)}
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               class:border-red-500={errors.title}
               required
             />
@@ -575,7 +575,7 @@
               bind:value={formData.description}
               onblur={() => validateField('description', formData.description)}
               rows="3"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               class:border-red-500={errors.description}
             ></textarea>
             {#if errors.description}
@@ -596,7 +596,7 @@
               type="number"
               bind:value={formData.value}
               onblur={() => validateField('value', formData.value)}
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               class:border-red-500={errors.value}
             />
             {#if errors.value}
@@ -617,7 +617,7 @@
               type="text"
               bind:value={formData.owner}
               onblur={() => validateField('owner', formData.owner)}
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               class:border-red-500={errors.owner}
             />
             {#if errors.owner}
@@ -671,7 +671,7 @@
                         bind:value={formData.fieldData[field.slug]}
                         onchange={() =>
                           validateFieldData(field.slug, formData.fieldData[field.slug])}
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                         class:border-red-500={fieldError}
                       >
                         <option value="">Select {field.title}</option>
@@ -720,7 +720,7 @@
                         maxlength={fieldProps.maxlength}
                         bind:value={formData.fieldData[field.slug]}
                         onblur={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                         class:border-red-500={fieldError}
                       />
                     {/if}

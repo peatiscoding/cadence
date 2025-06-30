@@ -3,12 +3,14 @@
   import type { IWorkflowCardEntry } from '$lib/models/interface'
   import type { PageData } from './$types'
   import { onMount } from 'svelte'
+  import SettingsIcon from '$lib/assets/settings.svg?raw'
   import { FirestoreWorkflowCardStorage } from '$lib/persistent/firebase/firestore'
   import { FirebaseAuthenticationProvider } from '$lib/authentication/firebase/firebase-authen'
-  import SettingsIcon from '$lib/assets/settings.svg?raw'
+
+  import { WorkflowFactory } from '$lib/workflow/factory'
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
   import WorkflowCardForm from '$lib/components/WorkflowCardForm.svelte'
-  import { WorkflowFactory } from '$lib/workflow/factory'
+  import WorkflowCard from '$lib/components/WorkflowCard.svelte'
 
   type PConf = Configuration
 
@@ -53,7 +55,6 @@
       {} as Record<string, IWorkflowCardEntry[]>
     )
   )
-
 
   onMount(() => {
     let isDestroyed = false
@@ -401,7 +402,7 @@
     <!-- Workflow Board -->
     <div class="flex gap-6 overflow-x-auto pb-4">
       <!-- Draft Column (Reserved) -->
-      <div class="w-80 flex-shrink-0">
+      <div class="w-90 flex-shrink-0">
         <!-- Draft Column Header -->
         <div class="mb-4">
           <div class="mb-2 flex items-center gap-2">
@@ -433,50 +434,13 @@
         >
           {#if cardsByStatus['draft'] && cardsByStatus['draft'].length > 0}
             {#each cardsByStatus['draft'] as card}
-              <div
-                draggable="true"
-                ondragstart={(e) => handleDragStart(e, card)}
-                ondragend={handleDragEnd}
-                class="mb-3 cursor-grab rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
-                class:opacity-50={draggedCard?.workflowCardId === card.workflowCardId}
-                class:cursor-grabbing={draggedCard?.workflowCardId === card.workflowCardId}
-                onclick={() => openCardEditModal(card)}
-              >
-                <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
-                  {card.title}
-                </h3>
-                <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
-                  {card.description}
-                </p>
-                <div class="flex flex-wrap gap-2 text-sm">
-                  {#if card.fieldData.priority}
-                    <span
-                      class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                    >
-                      {card.fieldData.priority}
-                    </span>
-                  {/if}
-                  {#if card.owner}
-                    <span
-                      class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-                    >
-                      {card.owner.split('@')[0]}
-                    </span>
-                  {/if}
-                  {#if card.fieldData.estimated_hours}
-                    <span
-                      class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
-                    >
-                      {card.fieldData.estimated_hours}h
-                    </span>
-                  {/if}
-                  <span
-                    class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                  >
-                    {card.type}
-                  </span>
-                </div>
-              </div>
+              <WorkflowCard
+                {card}
+                isDragged={draggedCard?.workflowCardId === card.workflowCardId}
+                onCardClick={openCardEditModal}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              />
             {/each}
 
             <!-- Add Card Button at bottom -->
@@ -508,7 +472,7 @@
       </div>
 
       {#each editableWorkflow.statuses as status}
-        <div class="w-80 flex-shrink-0">
+        <div class="w-90 flex-shrink-0">
           <!-- Status Column Header -->
           <div class="mb-4">
             <div class="mb-2 flex items-center gap-2">
@@ -544,50 +508,13 @@
           >
             {#if cardsByStatus[status.slug]}
               {#each cardsByStatus[status.slug] as card}
-                <div
-                  draggable="true"
-                  ondragstart={(e) => handleDragStart(e, card)}
-                  ondragend={handleDragEnd}
-                  class="mb-3 cursor-grab rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-600"
-                  class:opacity-50={draggedCard?.workflowCardId === card.workflowCardId}
-                  class:cursor-grabbing={draggedCard?.workflowCardId === card.workflowCardId}
-                  onclick={() => openCardEditModal(card)}
-                >
-                  <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
-                    {card.title}
-                  </h3>
-                  <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
-                    {card.description}
-                  </p>
-                  <div class="flex flex-wrap gap-2 text-sm">
-                    {#if card.fieldData.priority}
-                      <span
-                        class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                      >
-                        {card.fieldData.priority}
-                      </span>
-                    {/if}
-                    {#if card.owner}
-                      <span
-                        class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-                      >
-                        {card.owner.split('@')[0]}
-                      </span>
-                    {/if}
-                    {#if card.fieldData.estimated_hours}
-                      <span
-                        class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
-                      >
-                        {card.fieldData.estimated_hours}h
-                      </span>
-                    {/if}
-                    <span
-                      class="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                    >
-                      {card.type}
-                    </span>
-                  </div>
-                </div>
+                <WorkflowCard
+                  {card}
+                  isDragged={draggedCard?.workflowCardId === card.workflowCardId}
+                  onCardClick={openCardEditModal}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                />
               {/each}
             {:else}
               <div class="py-8 text-center text-gray-500 dark:text-gray-400">
@@ -604,7 +531,7 @@
 <!-- Configuration Modal -->
 {#if showConfigModal && editableWorkflow}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeModal}
     aria-roledescription="modal"
     tabindex="-1"
@@ -677,7 +604,7 @@
 <!-- Error Modal -->
 {#if showErrorModal}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeErrorModal}
     onkeydown={(e) => e.key === 'Escape' && closeErrorModal()}
     tabindex="-1"
