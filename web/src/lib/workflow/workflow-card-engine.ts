@@ -1,12 +1,12 @@
 import type { IWorkflowCardStorage } from '$lib/persistent/interface'
-import type { Configuration } from '$lib/schema'
+import type { Configuration, Status } from '$lib/schema'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
   IWorkflowCardEntryModification
 } from './interface'
-
-import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
+import { STATUS_DRAFT } from '$lib/models/status'
+import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 import { z } from 'zod'
 
@@ -54,15 +54,17 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
   async makeNewCard(creationPayload: IWorkflowCardEntryCreation): Promise<string> {
     const userSsoId = await this.auth.getCurrentUid()
-    
+
     // Validate payload against workflow configuration
     const schema = await this.getCardSchema(STATUS_DRAFT)
     try {
       schema.parse(creationPayload)
     } catch (error) {
-      throw new Error(`Card validation failed: ${error instanceof z.ZodError ? error.errors.map(e => e.message).join(', ') : error}`)
+      throw new Error(
+        `Card validation failed: ${error instanceof z.ZodError ? error.errors.map((e) => e.message).join(', ') : error}`
+      )
     }
-    
+
     return this.storage.createCard(this.workflowId, userSsoId, {
       ...creationPayload,
       status: STATUS_DRAFT,
@@ -77,16 +79,18 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     if ((payload as any).status) {
       throw new Error(`Update status is disallowed`)
     }
-    
+
     // If type is being updated, validate it against allowed types
     if (payload.type !== undefined) {
       const config = await this.config
-      const allowedTypes = config.types?.map(type => type.slug) || []
+      const allowedTypes = config.types?.map((type) => type.slug) || []
       if (allowedTypes.length > 0 && !allowedTypes.includes(payload.type)) {
-        throw new Error(`Invalid card type: ${payload.type}. Allowed types: ${allowedTypes.join(', ')}`)
+        throw new Error(
+          `Invalid card type: ${payload.type}. Allowed types: ${allowedTypes.join(', ')}`
+        )
       }
     }
-    
+
     const userSsoId = await this.auth.getCurrentUid()
     return this.storage.updateCard(this.workflowId, workflowCardId, userSsoId, payload)
   }
@@ -130,6 +134,35 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     await this.storage.deleteCard(this.workflowId, workflowCardId)
   }
 
+  async getNextStatuses(currentCardStatus: string): Promise<Status[]> {
+    const config = await this.config
+    const currentUser = await this.auth.getCurrentUid()
+
+    // Get all statuses that can be transitioned to from the current status
+    const nextStatuses = config.statuses.filter((status) => {
+      // Skip current status
+      if (status.slug === currentCardStatus) {
+        return false
+      }
+
+      const precondition = status.precondition
+
+      // Check if transition from current status is allowed
+      if (precondition.from.length > 0 && !precondition.from.includes(currentCardStatus)) {
+        return false
+      }
+
+      // Check if current user is authorized
+      if (precondition.users.length > 0 && !precondition.users.includes(currentUser)) {
+        return false
+      }
+
+      return true
+    })
+
+    return nextStatuses
+  }
+
   async getCardSchema(status: string = STATUS_DRAFT): Promise<z.ZodObject<any>> {
     const config = await this.config
 
@@ -146,7 +179,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     const requiredFields = statusConfig?.precondition?.required || []
 
     // Build type validation schema
-    const allowedTypes = config.types?.map(type => type.slug) || []
+    const allowedTypes = config.types?.map((type) => type.slug) || []
     let typeSchema: z.ZodTypeAny
     if (allowedTypes.length > 0) {
       typeSchema = z.enum(allowedTypes as [string, ...string[]], {

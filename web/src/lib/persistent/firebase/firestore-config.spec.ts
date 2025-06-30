@@ -90,18 +90,26 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             title: 'To Do',
             terminal: false,
             precondition: {
-              required: ['title', 'type']
+              required: ['title', 'type'],
+              from: ['draft'],
+              users: ['*']
             },
-            ui: { color: '#6B7280' }
+            ui: { color: '#6B7280' },
+            transition: [],
+            finally: []
           },
           {
             slug: 'done',
             title: 'Done',
             terminal: true,
             precondition: {
-              required: ['title', 'type']
+              required: ['title', 'type'],
+              from: ['draft'],
+              users: ['*']
             },
-            ui: { color: '#10B981' }
+            ui: { color: '#10B981' },
+            transition: [],
+            finally: []
           }
         ]
       }
@@ -130,7 +138,12 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       expect(retrievedConfig.fields[0].slug).toBe('priority')
       expect(retrievedConfig.fields[0].title).toBe('Priority')
       expect(retrievedConfig.fields[0].schema.kind).toBe('choice')
-      expect(retrievedConfig.fields[0].schema.choices).toEqual(['low', 'medium', 'high', 'critical'])
+      expect(retrievedConfig.fields[0].schema.choices).toEqual([
+        'low',
+        'medium',
+        'high',
+        'critical'
+      ])
 
       // Verify statuses
       expect(retrievedConfig.statuses[0].slug).toBe('todo')
@@ -161,8 +174,10 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'initial-status',
             title: 'Initial Status',
             terminal: false,
-            precondition: { required: [] },
-            ui: { color: '#000000' }
+            precondition: { required: [], from: ['draft'], users: ['*'] },
+            ui: { color: '#000000' },
+            transition: [],
+            finally: []
           }
         ]
       }
@@ -186,7 +201,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'updated-status',
             title: 'Updated Status',
             terminal: true,
-            precondition: { required: ['title'] },
+            precondition: { required: ['title'], from: ['draft'] },
             ui: { color: '#FFFFFF' }
           }
         ]
@@ -312,35 +327,35 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
             slug: 'backlog',
             title: 'Backlog',
             terminal: false,
-            precondition: { required: ['title'] },
+            precondition: { required: ['title'], from: ['draft'] },
             ui: { color: '#6B7280' }
           },
           {
             slug: 'todo',
             title: 'To Do',
             terminal: false,
-            precondition: { required: ['title', 'type'] },
+            precondition: { required: ['title', 'type'], from: ['draft'] },
             ui: { color: '#3B82F6' }
           },
           {
             slug: 'in-progress',
             title: 'In Progress',
             terminal: false,
-            precondition: { required: ['title', 'type', 'owner'] },
+            precondition: { required: ['title', 'type', 'owner'], from: ['draft'] },
             ui: { color: '#F59E0B' }
           },
           {
             slug: 'review',
             title: 'Review',
             terminal: false,
-            precondition: { required: ['title', 'type', 'owner'] },
+            precondition: { required: ['title', 'type', 'owner'], from: ['draft'] },
             ui: { color: '#8B5CF6' }
           },
           {
             slug: 'done',
             title: 'Done',
             terminal: true,
-            precondition: { required: ['title', 'type'] },
+            precondition: { required: ['title', 'type'], from: ['draft'] },
             ui: { color: '#10B981' }
           }
         ]
@@ -356,21 +371,21 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       expect(retrievedConfig.statuses).toHaveLength(5)
 
       // Verify field types
-      const textField = retrievedConfig.fields.find(f => f.slug === 'text-field')!
+      const textField = retrievedConfig.fields.find((f) => f.slug === 'text-field')!
       expect(textField.schema.kind).toBe('text')
       expect(textField.schema.min).toBe(1)
       expect(textField.schema.max).toBe(100)
 
-      const numberField = retrievedConfig.fields.find(f => f.slug === 'number-field')!
+      const numberField = retrievedConfig.fields.find((f) => f.slug === 'number-field')!
       expect(numberField.schema.kind).toBe('number')
       expect(numberField.schema.min).toBe(0)
       expect(numberField.schema.max).toBe(1000)
 
-      const choiceField = retrievedConfig.fields.find(f => f.slug === 'choice-field')!
+      const choiceField = retrievedConfig.fields.find((f) => f.slug === 'choice-field')!
       expect(choiceField.schema.kind).toBe('choice')
       expect(choiceField.schema.choices).toEqual(['option1', 'option2', 'option3'])
 
-      const multiChoiceField = retrievedConfig.fields.find(f => f.slug === 'multi-choice-field')!
+      const multiChoiceField = retrievedConfig.fields.find((f) => f.slug === 'multi-choice-field')!
       expect(multiChoiceField.schema.kind).toBe('multi-choice')
       expect(multiChoiceField.schema.choices).toEqual(['tag1', 'tag2', 'tag3', 'tag4'])
     })
@@ -499,9 +514,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       const config2: Configuration = {
         name: 'List Test Workflow 2',
         description: 'Second test workflow for listing',
-        types: [
-          { slug: 'type-2', title: 'Type 2', ui: { color: '#000002' } }
-        ],
+        types: [{ slug: 'type-2', title: 'Type 2', ui: { color: '#000002' } }],
         fields: [],
         statuses: [
           {
@@ -605,9 +618,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       const testConfig: Configuration = {
         name: 'Properties Test Workflow',
         description: 'Testing all workflow properties',
-        types: [
-          { slug: 'test-type', title: 'Test Type', ui: { color: '#123456' } }
-        ],
+        types: [{ slug: 'test-type', title: 'Test Type', ui: { color: '#123456' } }],
         fields: [
           {
             slug: 'title',

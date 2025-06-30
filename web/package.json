@@ -25,7 +25,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@vitest/browser": "^3.2.3",
     "flowbite": "^3.1.2",
-    "flowbite-svelte": "^1.8.2",
+    "flowbite-svelte": "^1.8.3",
     "flowbite-svelte-icons": "^2.2.1",
     "playwright": "^1.53.0",
     "prettier": "^3.4.2",

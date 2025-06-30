@@ -102,38 +102,38 @@
           editableWorkflow = { ...configuration }
 
           // Set up live listening for cards
-          cardsUnsubscribe = storage.listenForCards(data.workflowId)
+          cardsUnsubscribe = storage
+            .listenForCards(data.workflowId)
             .onDataChanges((changes) => {
               if (isDestroyed) return
-              
+
               // Process the changes to update our cards array
               changes.forEach((change) => {
                 const cardData = change.data
-                
+
                 switch (change.type) {
                   case 'added':
                     // Add new card if it doesn't already exist
-                    if (!cards.find(card => card.workflowCardId === cardData.workflowCardId)) {
+                    if (!cards.find((card) => card.workflowCardId === cardData.workflowCardId)) {
                       cards = [...cards, cardData]
                     }
                     break
-                    
+
                   case 'modified':
                     // Update existing card
-                    cards = cards.map(card => 
+                    cards = cards.map((card) =>
                       card.workflowCardId === cardData.workflowCardId ? cardData : card
                     )
                     break
-                    
+
                   case 'removed':
                     // Remove deleted card
-                    cards = cards.filter(card => card.workflowCardId !== cardData.workflowCardId)
+                    cards = cards.filter((card) => card.workflowCardId !== cardData.workflowCardId)
                     break
                 }
               })
             })
             .listen()
-
         } catch (err) {
           console.error('Error loading workflow:', err)
           error = err instanceof Error ? err.message : 'Failed to load workflow'
@@ -178,9 +178,12 @@
       console.log('Workflow saved successfully')
     } catch (err) {
       console.error('Error saving workflow:', err)
-      
+
       // Show user-friendly error message
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while saving the workflow configuration'
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'An unexpected error occurred while saving the workflow configuration'
       showError('Failed to Save Workflow', errorMessage)
     }
   }
@@ -234,19 +237,19 @@
       if (editingCard) {
         // Update existing card
         const updatePayload: any = { ...cardData }
-        
+
         // Remove fields that shouldn't be updated
         delete updatePayload.workflowCardId
         delete updatePayload.workflowId
         delete updatePayload.createdAt
         delete updatePayload.createdBy
-        
+
         // Get current user for updatedBy
         const currentUser = authProvider.getCurrentUser()
         const author = currentUser?.email || 'unknown'
-        
+
         await storage.updateCard(data.workflowId, editingCard.workflowCardId, author, updatePayload)
-        
+
         console.log('Card updated successfully:', editingCard.workflowCardId)
       } else {
         // Create new card using the workflow engine
@@ -258,9 +261,10 @@
       closeCardFormModal()
     } catch (err) {
       console.error('Error saving card:', err)
-      
+
       // Show user-friendly error message
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while saving the card'
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unexpected error occurred while saving the card'
       const errorTitle = editingCard ? 'Failed to Update Card' : 'Failed to Create Card'
       showError(errorTitle, errorMessage)
     } finally {
@@ -323,7 +327,9 @@
           <div class="mb-2 flex items-center gap-2">
             <div class="h-3 w-3 rounded-full bg-gray-400"></div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Draft</h2>
-            <span class="text-sm text-gray-500 dark:text-gray-400"> ({cardsByStatus['draft']?.length || 0}) </span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">
+              ({cardsByStatus['draft']?.length || 0})
+            </span>
           </div>
         </div>
 
@@ -373,13 +379,16 @@
                 </div>
               </div>
             {/each}
-            
+
             <!-- Add Card Button at bottom -->
             <button
               onclick={openCardFormModal}
               class="w-full rounded-lg border-2 border-dashed border-blue-300 px-4 py-3 text-blue-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
             >
-              + Add new item <kbd class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono text-gray-600 dark:bg-gray-700 dark:text-gray-400">N</kbd>
+              + Add new item <kbd
+                class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                >N</kbd
+              >
             </button>
           {:else}
             <div class="py-8 text-center text-gray-500 dark:text-gray-400">
@@ -389,7 +398,10 @@
                 onclick={openCardFormModal}
                 class="w-full rounded-lg border-2 border-dashed border-blue-300 px-4 py-3 text-blue-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
               >
-                + Add new item <kbd class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono text-gray-600 dark:bg-gray-700 dark:text-gray-400">N</kbd>
+                + Add new item <kbd
+                  class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                  >N</kbd
+                >
               </button>
             </div>
           {/if}
@@ -475,7 +487,7 @@
 <!-- Configuration Modal -->
 {#if showConfigModal && editableWorkflow}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeModal}
     aria-roledescription="modal"
     tabindex="-1"
@@ -536,7 +548,7 @@
   <WorkflowCardForm
     {workflowEngine}
     config={editableWorkflow}
-    status={editingCard?.status || "draft"}
+    status={editingCard?.status || 'draft'}
     targetStatus={cardFormTargetStatus}
     initialData={editingCard || {}}
     onSubmit={handleCardSubmit}
@@ -547,8 +559,8 @@
 
 <!-- Error Modal -->
 {#if showErrorModal}
-  <div 
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+  <div
+    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeErrorModal}
     onkeydown={(e) => e.key === 'Escape' && closeErrorModal()}
     tabindex="-1"
@@ -558,11 +570,23 @@
       onclick={(e) => e.stopPropagation()}
     >
       <!-- Error Modal Header -->
-      <div class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
+      <div
+        class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700"
+      >
         <div class="flex items-center gap-3">
           <div class="flex-shrink-0">
-            <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            <svg
+              class="h-6 w-6 text-red-600 dark:text-red-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              ></path>
             </svg>
           </div>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -574,7 +598,12 @@
           class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
           </svg>
         </button>
       </div>

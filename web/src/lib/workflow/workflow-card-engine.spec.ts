@@ -10,7 +10,8 @@ import type {
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { WorkflowFactory } from './factory'
-import { STATUS_DRAFT, USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
+import { STATUS_DRAFT } from '$lib/models/status'
+import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 import { z } from 'zod'
 
 describe('WorkflowCardEngine with Stubbed Storage', () => {

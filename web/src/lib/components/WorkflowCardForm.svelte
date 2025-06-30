@@ -1,8 +1,11 @@
 <script lang="ts">
   import type { WorkflowCardEngine } from '$lib/workflow/workflow-card-engine'
-  import type { Configuration, Field, Type } from '$lib/schema'
+  import type { Configuration, Field, Type, Status } from '$lib/schema'
+  import { draftStatus, unknownStatus, STATUS_DRAFT } from '$lib/models/status'
   import { z } from 'zod'
   import { onMount } from 'svelte'
+  import { Button } from 'flowbite-svelte'
+  import { ChevronDownOutline, ArrowRightOutline } from 'flowbite-svelte-icons'
 
   interface Props {
     workflowEngine: WorkflowCardEngine
@@ -18,7 +21,7 @@
   let {
     workflowEngine,
     config,
-    status = 'draft',
+    status = STATUS_DRAFT,
     targetStatus,
     initialData = {},
     onSubmit,
@@ -38,30 +41,84 @@
 
   let errors = $state<Record<string, string>>({})
   let schema: z.ZodObject<any> | null = null
+  let nextStatuses = $state<Status[]>([])
+  let selectedTransitionStatus = $state<string | null>(null)
 
   // Determine form mode and effective status for schema
   const isEditing = $derived(!!initialData.workflowCardId)
   const isTransition = $derived(!!targetStatus && targetStatus !== status)
-  const effectiveStatus = $derived(targetStatus || status)
-  const formMode = $derived(isEditing ? (isTransition ? 'transition' : 'edit') : 'create')
-
-  // Get status configuration for display
-  const statusConfig = $derived(() => {
-    if (effectiveStatus === 'draft') return { title: 'Draft', color: '#6B7280' }
-    return config.statuses.find(s => s.slug === effectiveStatus) || 
-           { title: effectiveStatus, color: '#6B7280' }
+  const isDropdownTransition = $derived(isEditing && !!selectedTransitionStatus)
+  const effectiveStatus = $derived(selectedTransitionStatus || targetStatus || status)
+  const formMode = $derived(() => {
+    if (!isEditing) return 'create'
+    if (isTransition || isDropdownTransition) return 'transition'
+    return 'edit'
   })
+
+  // Get status configuration for display (always shows original status)
+  const statusConfig = $derived((): Status => {
+    if (status === STATUS_DRAFT) return draftStatus
+
+    return config.statuses.find((s) => s.slug === status) || unknownStatus(status)
+  })
+
+  // Get target status configuration for transition display
+  const targetStatusConfig = $derived((): Status => {
+    const targetSlug = selectedTransitionStatus || targetStatus
+    if (!targetSlug || targetSlug === 'draft') return draftStatus
+    return config.statuses.find((s) => s.slug === targetSlug) || unknownStatus(targetSlug)
+  })
+
+  // Get required fields for current status
+  const requiredFields = $derived(() => {
+    if (!config || !config.statuses || effectiveStatus === 'draft') return []
+    const statusConfig = config.statuses.find((s) => s.slug === effectiveStatus)
+    const required = statusConfig?.precondition?.required
+    // Ensure we always return an array
+    return Array.isArray(required) ? required : []
+  })
+
+  let mounted = $state(false)
 
   // Load schema when effective status changes
   $effect(() => {
-    loadSchema(effectiveStatus)
+    if (mounted) {
+      loadSchema(effectiveStatus)
+    }
+  })
+
+  // Load next statuses when editing an existing card
+  $effect(() => {
+    if (mounted && isEditing && !isTransition) {
+      loadNextStatuses()
+    }
   })
 
   async function loadSchema(currentStatus: string) {
     try {
-      schema = await workflowEngine.getCardSchema(currentStatus)
+      if (workflowEngine && workflowEngine.getCardSchema) {
+        schema = await workflowEngine.getCardSchema(currentStatus)
+      } else {
+        console.warn('WorkflowEngine or getCardSchema method not available')
+        schema = null
+      }
     } catch (error) {
       console.error('Failed to load schema:', error)
+      schema = null
+    }
+  }
+
+  async function loadNextStatuses() {
+    try {
+      if (workflowEngine && workflowEngine.getNextStatuses) {
+        nextStatuses = await workflowEngine.getNextStatuses(status)
+      } else {
+        console.warn('WorkflowEngine or getNextStatuses method not available')
+        nextStatuses = []
+      }
+    } catch (error) {
+      console.error('Failed to load next statuses:', error)
+      nextStatuses = []
     }
   }
 
@@ -117,13 +174,24 @@
 
     try {
       const validatedData = schema.parse(formData)
-      
-      // Include target status if transitioning
-      const submitData = {
-        ...validatedData,
-        ...(isTransition && { status: effectiveStatus })
+
+      // Determine the submit data based on form mode
+      let submitData = { ...validatedData }
+
+      // If transitioning via dropdown selection, include the target status
+      if (isEditing && selectedTransitionStatus) {
+        submitData = {
+          ...submitData,
+          status: selectedTransitionStatus
+        }
+      } else if (isTransition) {
+        // Direct transition mode (status passed as prop)
+        submitData = {
+          ...submitData,
+          status: effectiveStatus
+        }
       }
-      
+
       await onSubmit(submitData)
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -134,7 +202,7 @@
           errors[path] = err.message
         })
         errors = { ...errors }
-        
+
         // Don't call onSubmit if validation fails - show validation errors in form
         return
       } else {
@@ -169,7 +237,7 @@
 
   function getSelectedType(): Type | null {
     if (!formData.type || !config.types) return null
-    return config.types.find(type => type.slug === formData.type) || null
+    return config.types.find((type) => type.slug === formData.type) || null
   }
 
   function handleTypeSelect(typeSlug: string) {
@@ -177,7 +245,15 @@
     validateField('type', formData.type)
   }
 
+  function handleTransitionSelect(targetStatusSlug: string) {
+    selectedTransitionStatus = targetStatusSlug
+    transitionDropdownOpen = false
+    // Reload schema for the target status to validate required fields
+    loadSchema(targetStatusSlug)
+  }
+
   let typeDropdownOpen = $state(false)
+  let transitionDropdownOpen = $state(false)
 
   // Close dropdown when clicking outside
   function handleClickOutside(event: MouseEvent) {
@@ -185,9 +261,14 @@
     if (!target.closest('.type-dropdown')) {
       typeDropdownOpen = false
     }
+    if (!target.closest('.transition-dropdown')) {
+      transitionDropdownOpen = false
+    }
   }
 
   onMount(() => {
+    mounted = true
+
     // Focus on title input when component mounts
     const titleInput = document.getElementById('title') as HTMLInputElement
     if (titleInput) {
@@ -196,7 +277,7 @@
 
     // Add click outside listener for dropdown
     document.addEventListener('click', handleClickOutside)
-    
+
     return () => {
       document.removeEventListener('click', handleClickOutside)
     }
@@ -220,32 +301,118 @@
       <div>
         <div class="flex items-center gap-3">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            {#if formMode === 'create'}
+            {#if formMode() === 'create'}
               Create New Card
-            {:else if formMode === 'transition'}
+            {:else if formMode() === 'transition'}
               Transition Card
             {:else}
               Edit Card
             {/if}
           </h2>
-          <!-- Status Badge -->
-          <div class="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 dark:bg-gray-700">
+
+          <!-- Status Badge and Transition -->
+          <div class="flex items-center gap-3">
+            <!-- Current Status Badge -->
             <div
-              class="h-2 w-2 rounded-full"
-              style="background-color: {statusConfig().color}"
-            ></div>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {statusConfig().title}
-            </span>
+              class="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 dark:bg-gray-700"
+            >
+              <div
+                class="h-2 w-2 rounded-full"
+                style="background-color: {statusConfig().ui.color}"
+              ></div>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {statusConfig().title}
+              </span>
+            </div>
+
+            <!-- Transition Dropdown (only show when editing existing card) -->
+            {#if isEditing && !isTransition && nextStatuses.length > 0}
+              <ArrowRightOutline class="h-4 w-4 text-gray-400" />
+
+              {#if selectedTransitionStatus}
+                <!-- Target Status Badge (when transition is selected) -->
+                <button
+                  type="button"
+                  onclick={() => {
+                    selectedTransitionStatus = null
+                    transitionDropdownOpen = false
+                    loadSchema(status) // Reset to original status schema
+                  }}
+                  class="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 ring-1 ring-blue-200 transition-colors hover:bg-blue-100 dark:bg-blue-900/20 dark:ring-blue-800 dark:hover:bg-blue-900/30"
+                  title="Click to change transition target"
+                >
+                  <div
+                    class="h-2 w-2 rounded-full"
+                    style="background-color: {targetStatusConfig().ui.color}"
+                  ></div>
+                  <span class="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    {targetStatusConfig().title}
+                  </span>
+                  <svg
+                    class="h-3 w-3 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              {:else}
+                <!-- Transition Dropdown -->
+                <div class="transition-dropdown relative">
+                  <button
+                    type="button"
+                    onclick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      transitionDropdownOpen = !transitionDropdownOpen
+                    }}
+                    class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  >
+                    Select Status
+                    <ChevronDownOutline class="h-3 w-3" />
+                  </button>
+                  {#if transitionDropdownOpen}
+                    <div
+                      class="absolute left-0 top-full z-10 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700"
+                    >
+                      {#each nextStatuses as nextStatus}
+                        <button
+                          type="button"
+                          onclick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleTransitionSelect(nextStatus.slug)
+                            transitionDropdownOpen = false
+                          }}
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm first:rounded-t-lg last:rounded-b-lg hover:bg-gray-50 dark:hover:bg-gray-600"
+                        >
+                          <div
+                            class="h-2 w-2 rounded-full"
+                            style="background-color: {nextStatus.ui.color}"
+                          ></div>
+                          <span class="text-gray-900 dark:text-gray-100">{nextStatus.title}</span>
+                        </button>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            {/if}
           </div>
         </div>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {#if formMode === 'create'}
-            Create a new workflow item. Fields marked with * are required.
-          {:else if formMode === 'transition'}
+          {#if formMode() === 'create'}
+            Create a new workflow item. Fields marked with <span class="text-red-500">*</span> are required.
+          {:else if formMode() === 'transition'}
             Update card to transition to "{statusConfig().title}" status.
           {:else}
-            Edit the workflow item. Fields marked with * are required.
+            Edit the workflow item. Fields marked with <span class="text-red-500">*</span> are required.
           {/if}
         </p>
       </div>
@@ -275,11 +442,11 @@
               for="type"
               class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Type *
+              Type <span class="text-red-500">*</span>
             </label>
             {#if config.types && config.types.length > 0}
               {@const selectedType = getSelectedType()}
-              <div class="relative type-dropdown">
+              <div class="type-dropdown relative">
                 <button
                   type="button"
                   onclick={(e) => {
@@ -302,13 +469,25 @@
                         <span class="text-gray-500 dark:text-gray-400">Select a type...</span>
                       {/if}
                     </div>
-                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    <svg
+                      class="h-4 w-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      ></path>
                     </svg>
                   </div>
                 </button>
                 {#if typeDropdownOpen}
-                  <div class="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+                  <div
+                    class="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700"
+                  >
                     {#each config.types as type}
                       <button
                         type="button"
@@ -318,7 +497,7 @@
                           handleTypeSelect(type.slug)
                           typeDropdownOpen = false
                         }}
-                        class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-600 first:rounded-t-lg last:rounded-b-lg"
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left first:rounded-t-lg last:rounded-b-lg hover:bg-gray-50 dark:hover:bg-gray-600"
                       >
                         <div
                           class="h-3 w-3 rounded-full"
@@ -352,7 +531,7 @@
               for="title"
               class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Title *
+              Title <span class="text-red-500">*</span>
             </label>
             <input
               id="title"
@@ -412,7 +591,6 @@
             {/if}
           </div>
 
-
           <!-- Owner -->
           <div class="md:col-span-6">
             <label
@@ -436,7 +614,7 @@
 
           <!-- Dynamic Fields -->
           {#if config.fields.length > 0}
-            <div class="md:col-span-12 border-t border-gray-200 pt-6 dark:border-gray-700">
+            <div class="border-t border-gray-200 pt-6 md:col-span-12 dark:border-gray-700">
               <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                 Custom Fields
               </h3>
@@ -444,12 +622,17 @@
                 {#each config.fields as field}
                   {@const fieldProps = renderField(field)}
                   {@const fieldError = errors[`fieldData.${field.slug}`]}
-                  <div class={fieldProps.type === 'multi-select' ? 'md:col-span-12' : 'md:col-span-6'}>
+                  <div
+                    class={fieldProps.type === 'multi-select' ? 'md:col-span-12' : 'md:col-span-6'}
+                  >
                     <label
                       for={field.slug}
                       class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       {field.title}
+                      {#if requiredFields().includes(field.slug)}
+                        <span class="text-red-500">*</span>
+                      {/if}
                       {#if field.description}
                         <span class="block text-xs text-gray-500 dark:text-gray-400"
                           >{field.description}</span
@@ -542,28 +725,18 @@
 
       <!-- Modal Footer -->
       <div class="flex justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
-        <button
-          type="button"
-          onclick={onCancel}
-          class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
-        >
+        <Button color="alternative" onclick={onCancel}>Cancel</Button>
+        <Button type="submit" disabled={isSubmitting} color="blue">
           {#if isSubmitting}
             Saving...
-          {:else if formMode === 'create'}
+          {:else if formMode() === 'create'}
             Create Card
-          {:else if formMode === 'transition'}
+          {:else if formMode() === 'transition'}
             Transition to {statusConfig().title}
           {:else}
             Save Changes
           {/if}
-        </button>
+        </Button>
       </div>
     </form>
   </div>

@@ -101,11 +101,11 @@ const StatusSchema = z.object({
   }),
   precondition: z.object({
     from: z.array(z.string()),
-    required: z.array(z.string()),
-    users: z.array(z.string())
+    required: z.array(z.string()).optional(),
+    users: z.array(z.string()).optional()
   }),
-  transition: z.array(TransitionActionUnion),
-  finally: z.array(FinallyActionUnion)
+  transition: z.array(TransitionActionUnion).optional(),
+  finally: z.array(FinallyActionUnion).optional()
 })
 
 // Main configuration schema

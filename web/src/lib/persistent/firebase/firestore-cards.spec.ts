@@ -235,7 +235,7 @@ describe('FirestoreWorkflowCardStorage - Card Operations', () => {
       const originalStatusSince = originalCard.statusSince
 
       // Wait a moment to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
       // Act - Update status
       const statusUpdate = {
@@ -428,7 +428,7 @@ describe('FirestoreWorkflowCardStorage - Card Operations', () => {
       const originalUpdatedAt = originalCard.updatedAt
 
       // Wait to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
       // Act - Update the card
       const updatePayload = {
@@ -600,11 +600,11 @@ describe('FirestoreWorkflowCardStorage - Card Operations', () => {
       cardIds.push(...createdCardIds)
 
       // Act - Delete cards concurrently
-      const deletePromises = cardIds.map(cardId => storage.deleteCard(testWorkflowId, cardId))
+      const deletePromises = cardIds.map((cardId) => storage.deleteCard(testWorkflowId, cardId))
       await Promise.all(deletePromises)
 
       // Assert - All cards should be deleted
-      const verificationPromises = cardIds.map(cardId =>
+      const verificationPromises = cardIds.map((cardId) =>
         expect(storage.getCard(testWorkflowId, cardId)).rejects.toThrow()
       )
       await Promise.all(verificationPromises)
