@@ -16,6 +16,15 @@ const LeadToProposalWorkflow: Configuration & { workflowId: string } = {
       schema: {
         kind: 'url'
       }
+    },
+    {
+      slug: 'reason',
+      description: 'Why this lead is terminated?',
+      title: 'Termination Reason',
+      schema: {
+        kind: 'multi-choice',
+        choices: ['Timeline', 'Pricing/Budget', 'Politics']
+      }
     }
   ],
   statuses: [
@@ -59,7 +68,7 @@ const LeadToProposalWorkflow: Configuration & { workflowId: string } = {
       ui: {
         color: '#EE4455'
       },
-      precondition: { from: ['draft', 'brewing'] }
+      precondition: { from: ['draft', 'brewing'], required: ['reason'] }
     }
   ]
 }

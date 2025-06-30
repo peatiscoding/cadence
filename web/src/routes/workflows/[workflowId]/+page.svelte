@@ -3,14 +3,14 @@
   import type { IWorkflowCardEntry } from '$lib/models/interface'
   import type { PageData } from './$types'
   import { onMount } from 'svelte'
-  import { FirestoreWorkflowCardStorage } from '$lib/persistent/firebase/firestore'
-  import { FirebaseAuthenticationProvider } from '$lib/authentication/firebase/firebase-authen'
   import { CogOutline } from 'flowbite-svelte-icons'
 
   import { WorkflowFactory } from '$lib/workflow/factory'
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
   import WorkflowCardForm from '$lib/components/WorkflowCardForm.svelte'
   import WorkflowCard from '$lib/components/WorkflowCard.svelte'
+  import { impls } from '$lib/impls'
+  import type { IWorkflowConfigurationDynamicStorage } from '$lib/persistent/interface'
 
   type PConf = Configuration
 
@@ -29,18 +29,26 @@
   let cardFormSubmitting = $state(false)
   let editingCard = $state<IWorkflowCardEntry | null>(null)
   let cardFormTargetStatus = $state<string | undefined>(undefined)
+  let isSupportDynamicWorkflows = $state(false)
 
   // Drag and drop state
   let draggedCard = $state<IWorkflowCardEntry | null>(null)
   let draggedOverStatus = $state<string | null>(null)
   let validDropZones = $state<Set<string>>(new Set())
 
-  const storage = FirestoreWorkflowCardStorage.shared()
-  const authProvider = FirebaseAuthenticationProvider.shared()
+  const storage = impls.configurationStore
+  const authProvider = impls.authProvider
+  const factory = impls.workflowEngineFactory
 
   // Create workflow engine for card operations
-  const workflowFactory = WorkflowFactory.use(storage, storage, authProvider)
-  const workflowEngine = workflowFactory.getWorkflowEngine(data.workflowId)
+  const workflowEngine = factory.getWorkflowEngine(data.workflowId)
+
+  function getDynamicStorage(): IWorkflowConfigurationDynamicStorage | undefined {
+    if (storage.isSupportDynamicWorkflows()) {
+      return storage as IWorkflowConfigurationDynamicStorage
+    }
+    return undefined
+  }
 
   // Group cards by status
   const cardsByStatus = $derived(
@@ -94,12 +102,13 @@
     const unsubscribe = authProvider.onAuthStateChanged(async (user) => {
       if (isDestroyed) return
 
+      isSupportDynamicWorkflows = impls.configurationStore.isSupportDynamicWorkflows()
+
       if (user) {
         try {
           loading = true
           error = ''
-
-          const configuration = await storage.loadConfig(data.workflowId)
+          const configuration = await workflowEngine.configuration
 
           if (!configuration) {
             error = 'Workflow not found'
@@ -109,7 +118,7 @@
           editableWorkflow = { ...configuration }
 
           // Set up live listening for cards
-          cardsUnsubscribe = storage
+          cardsUnsubscribe = workflowEngine
             .listenForCards(data.workflowId)
             .onDataChanges((changes) => {
               if (isDestroyed) return
@@ -175,12 +184,17 @@
     }
   }
 
-  async function handleSave() {
+  async function handleUpdateWorkflowConfiguration() {
     if (!editableWorkflow) return
+    const dynamicStorage = getDynamicStorage()
+    if (!dynamicStorage) {
+      console.warn('DynamicStorage is required to update the configurations')
+      return
+    }
     try {
       // Create a plain object copy to avoid Svelte proxy issues with Firestore
       const plainWorkflow = JSON.parse(JSON.stringify(editableWorkflow))
-      await storage.setConfig(data.workflowId, plainWorkflow)
+      await dynamicStorage.setConfig(data.workflowId, plainWorkflow)
       showConfigModal = false
       console.log('Workflow saved successfully')
     } catch (err) {
@@ -383,13 +397,15 @@
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
           {editableWorkflow.name}
         </h1>
-        <button
-          onclick={openConfigModal}
-          class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-          title="Workflow Settings"
-        >
-          <CogOutline class="h-5 w-5" />
-        </button>
+        {#if isSupportDynamicWorkflows}
+          <button
+            onclick={openConfigModal}
+            class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            title="Workflow Settings"
+          >
+            <CogOutline class="h-5 w-5" />
+          </button>
+        {/if}
       </div>
       <p class="mt-2 text-gray-600 dark:text-gray-400">
         {editableWorkflow.description ||
@@ -588,7 +604,7 @@
           Cancel
         </button>
         <button
-          onclick={handleSave}
+          onclick={handleUpdateWorkflowConfiguration}
           class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
           Save Changes

@@ -1,5 +1,6 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
-import type { Status } from '$lib/schema'
+import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
+import type { Configuration, Status } from '$lib/schema'
 import type { z } from 'zod'
 
 export type IWorkflowCardEntryCreation = Pick<IWorkflowCardEntry, 'title' | 'description' | 'value'>
@@ -18,6 +19,11 @@ export type IWorkflowCardEntryModification = Partial<
 >
 
 export interface IWorkflowCardEngine {
+  /**
+   * Get the configurations
+   */
+  configuration: Promise<Configuration>
+
   makeNewCard(creationPayload: IWorkflowCardEntryCreation): Promise<string>
 
   /**
@@ -45,4 +51,22 @@ export interface IWorkflowCardEngine {
    * Get available next statuses for a card from current status
    */
   getNextStatuses(currentCardStatus: string): Promise<Status[]>
+
+  /**
+   * Create a live-listing reference
+   *
+   * Example:
+   *
+   * const unsubFn = storage.listenForCards(workflowId)
+   *    .onDataChanges((changes) => { // handle changes })
+   *    .listen()
+   *
+   * unMount() {
+   *    unsubFn()
+   * }
+   *
+   * @param workflowId - listen to the which workflowId?
+   * @returns the event listener builder
+   */
+  listenForCards(workflowId: string): ILiveUpdateListenerBuilder<IWorkflowCardEntry>
 }

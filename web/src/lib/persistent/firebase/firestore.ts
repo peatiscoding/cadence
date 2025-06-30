@@ -1,11 +1,6 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
-import type {
-  ILiveUpdateChange,
-  ILiveUpdateListenerBuilder,
-  IWorkflowCardStorage,
-  IWorkflowConfigurationDynamicStorage,
-  IWorkflowConfigurationStorage
-} from '../interface'
+import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/live-update'
+import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 import type { Configuration } from '$lib/schema'
 
 import {

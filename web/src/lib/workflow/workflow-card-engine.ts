@@ -48,7 +48,7 @@ const _helpers = {
 export class WorkflowCardEngine implements IWorkflowCardEngine {
   public constructor(
     public readonly workflowId: string,
-    public readonly config: Promise<Configuration>,
+    public readonly configuration: Promise<Configuration>,
     public readonly auth: IAuthenticationProvider,
     protected readonly storage: IWorkflowCardStorage
   ) {
@@ -85,7 +85,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
     // If type is being updated, validate it against allowed types
     if (payload.type !== undefined) {
-      const config = await this.config
+      const config = await this.configuration
       const allowedTypes = config.types?.map((type) => type.slug) || []
       if (allowedTypes.length > 0 && !allowedTypes.includes(payload.type)) {
         throw new Error(
@@ -104,7 +104,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     payload: IWorkflowCardEntryModification
   ): Promise<void> {
     const userSsoId = await this.auth.getCurrentUid()
-    const config = await this.config
+    const config = await this.configuration
     // Validate if requested status is defined within configuration?
     const newStatusConfig = config.statuses.find((a) => a.slug === toStatus)
     if (!newStatusConfig) {
@@ -138,7 +138,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
   }
 
   async getNextStatuses(currentCardStatus: string): Promise<Status[]> {
-    const config = await this.config
+    const config = await this.configuration
     const currentUser = await this.auth.getCurrentUid()
 
     // Get all statuses that can be transitioned to from the current status
@@ -170,8 +170,12 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     return nextStatuses
   }
 
+  listenForCards(workflowId: string) {
+    return this.storage.listenForCards(workflowId)
+  }
+
   async getCardSchema(status: string = STATUS_DRAFT): Promise<z.ZodObject<any>> {
-    const config = await this.config
+    const config = await this.configuration
 
     // Find the status configuration
     const statusConfig = config.statuses.find((s) => s.slug === status)

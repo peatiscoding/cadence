@@ -1,17 +1,6 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 import type { Configuration } from '$lib/schema'
-
-export interface ILiveUpdateChange<T> {
-  type: 'added' | 'removed' | 'modified'
-  data: T
-}
-
-export interface ILiveUpdateListenerBuilder<T> {
-  onDataChanges: (
-    observer: (changes: ILiveUpdateChange<T>[]) => any
-  ) => ILiveUpdateListenerBuilder<T>
-  listen(): () => void
-}
 
 /**
  * Storage Interface does not have
