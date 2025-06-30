@@ -5,6 +5,7 @@ import { FirebaseAuthenticationProvider } from './authentication/firebase/fireba
 import { FirestoreWorkflowCardStorage } from './persistent/firebase/firestore'
 import { WorkflowFactory } from './workflow/factory'
 import { BuildTimeWorkflows } from './persistent/files/build-time-workflows'
+import LeadToProposalWorkflow from './persistent/files/defined/lead-to-proposal.workflow'
 
 export interface Impls {
   authProvider: IAuthenticationProvider
@@ -14,9 +15,12 @@ export interface Impls {
 
 // This is where we choose out implementations
 export const impls: Impls = (() => {
-  const firestore = FirestoreWorkflowCardStorage.shared()
   const authProvider = FirebaseAuthenticationProvider.shared()
-  const configurationStore: IWorkflowConfigurationStorage = new BuildTimeWorkflows([])
+  const firestore = FirestoreWorkflowCardStorage.shared()
+  const configurationStore: IWorkflowConfigurationStorage = new BuildTimeWorkflows(
+    [LeadToProposalWorkflow],
+    authProvider
+  )
   const workflowEngineFactory = WorkflowFactory.use(firestore, configurationStore, authProvider)
   return {
     authProvider,

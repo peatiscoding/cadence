@@ -95,7 +95,7 @@ const TypeSchema = z.object({
 const StatusSchema = z.object({
   slug: z.string(),
   title: z.string(),
-  terminal: z.boolean(),
+  terminal: z.boolean().default(false),
   ui: z.object({
     color: z.string()
   }),
@@ -110,7 +110,8 @@ const StatusSchema = z.object({
 
 // Main configuration schema
 export const ConfigurationSchema = z.object({
-  name: z.string(),
+  name: z.string(), // title of the workflow
+  access: z.array(z.string()).optional(), // in absence of this parameter - will allowed all users to access this workflows
   description: z.string().optional(),
   fields: z.array(FieldSchema),
   types: z.array(TypeSchema),

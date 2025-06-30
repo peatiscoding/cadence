@@ -41,6 +41,9 @@ The Workflow Configuration's File:
 ```json
 {
     "name": "workflow-name",        // Workflow's name
+    "access": [                     // Access parameter for this workflow, (optional)
+        "@muze.co.th",              // allow everyone with email of muze.co.th to access this workflow
+    ],
     "fields": [                     // Field's schema
         {
             "slug": "field-key",    // required, Field's key

@@ -1,8 +1,15 @@
 import type { Configuration } from '$lib/schema'
 import type { IWorkflowConfigurationStorage } from '$lib/persistent/interface'
+import type { IAuthenticationProvider } from '$lib/authentication/interface'
+
+import { canAccessWorkflow } from '$lib/models/access'
 
 export class BuildTimeWorkflows implements IWorkflowConfigurationStorage {
-  constructor(protected readonly workflows: Array<Configuration & { workflowId: string }>) {}
+  constructor(
+    protected readonly workflows: Array<Configuration & { workflowId: string }>,
+    protected readonly authProvider: IAuthenticationProvider
+  ) {}
+
   isSupportDynamicWorkflows(): boolean {
     return false
   }
@@ -16,6 +23,8 @@ export class BuildTimeWorkflows implements IWorkflowConfigurationStorage {
   }
 
   async listWorkflows(): Promise<{ workflows: Array<Configuration & { workflowId: string }> }> {
-    return { workflows: this.workflows }
+    const sess = await this.authProvider.getCurrentSession()
+    const email = sess.email
+    return { workflows: this.workflows.filter((a) => canAccessWorkflow(a, email)) }
   }
 }
