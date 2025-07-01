@@ -1,8 +1,5 @@
-import { error } from '@sveltejs/kit'
 import type { PageLoad } from './$types'
-
-// Prevent ServerSide rendering.
-export const ssr = false
+import { error } from '@sveltejs/kit'
 
 export const load: PageLoad = async ({ params }) => {
   const { workflowId } = params
