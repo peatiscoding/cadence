@@ -10,6 +10,7 @@
   import WorkflowCard from '$lib/components/WorkflowCard.svelte'
   import { impls } from '$lib/impls'
   import type { IWorkflowConfigurationDynamicStorage } from '$lib/persistent/interface'
+  import { Button, Kbd } from 'flowbite-svelte'
 
   type PConf = Configuration
 
@@ -367,7 +368,7 @@
   }
 </script>
 
-<div class="flex h-[calc(100vh-4rem)] flex-col p-6 pb-0">
+<div class="flex h-[calc(100vh-4rem)] flex-col pt-6">
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <div class="flex items-center gap-3">
@@ -391,7 +392,7 @@
       </div>
     </div>
   {:else if editableWorkflow}
-    <div class="mb-6">
+    <div class="mb-4 px-6">
       <div class="flex items-center gap-3">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
           {editableWorkflow.name}
@@ -413,7 +414,7 @@
     </div>
 
     <!-- Workflow Board -->
-    <div class="flex flex-1 gap-6 overflow-x-auto pb-4">
+    <div class="flex flex-1 gap-6 overflow-x-auto px-4 pb-4">
       <!-- Draft Column (Reserved) -->
       <div
         class="w-90 flex flex-shrink-0 flex-col"
@@ -460,32 +461,17 @@
                 onDragEnd={handleDragEnd}
               />
             {/each}
-
-            <!-- Add Card Button at bottom -->
-            <button
-              onclick={openCardFormModal}
-              class="w-full rounded-lg border-2 border-dashed border-blue-300 px-4 py-3 text-blue-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
-            >
-              + Add new item <kbd
-                class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400"
-                >N</kbd
-              >
-            </button>
           {:else}
-            <div class="py-8 text-center text-gray-500 dark:text-gray-400">
-              <p class="mb-4">No draft items</p>
-              <!-- Add Card Button -->
-              <button
-                onclick={openCardFormModal}
-                class="w-full rounded-lg border-2 border-dashed border-blue-300 px-4 py-3 text-blue-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-blue-600 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
-              >
-                + Add new item <kbd
-                  class="ml-2 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400"
-                  >N</kbd
-                >
-              </button>
-            </div>
+            <p class="mb-4 mt-6 text-center text-gray-400">No draft items</p>
           {/if}
+          <!-- Add Card Button at bottom -->
+          <Button
+            color="sky"
+            outline
+            size="lg"
+            class="border-2 border-dashed"
+            onclick={openCardFormModal}>+ Add new item <Kbd class="ml-2 px-2 py-1">N</Kbd></Button
+          >
         </div>
       </div>
 
