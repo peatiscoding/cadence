@@ -3,6 +3,7 @@
   import type { IWorkflowCardEntry } from '$lib/models/interface'
   import type { PageData } from './$types'
   import { onMount } from 'svelte'
+  import { Button, Kbd, Modal } from 'flowbite-svelte'
   import { CogOutline } from 'flowbite-svelte-icons'
 
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
@@ -10,7 +11,6 @@
   import WorkflowCard from '$lib/components/WorkflowCard.svelte'
   import { impls } from '$lib/impls'
   import type { IWorkflowConfigurationDynamicStorage } from '$lib/persistent/interface'
-  import { Button, Kbd } from 'flowbite-svelte'
 
   type PConf = Configuration
 
@@ -613,8 +613,9 @@
 {#if showCardFormModal && editableWorkflow}
   <WorkflowCardForm
     {workflowEngine}
+    bind:open={showCardFormModal}
     config={editableWorkflow}
-    status={editingCard?.status || 'draft'}
+    status={editingCard?.status}
     targetStatus={cardFormTargetStatus}
     initialData={editingCard || {}}
     onSubmit={handleCardSubmit}
