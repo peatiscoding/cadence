@@ -77,7 +77,7 @@
         </Heading>
 
         <!-- Status Since Info -->
-        {#if card.statusSince}
+        {#if card.statusSince > 5000}
           <div
             class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
             title="In this status for {formatRelativeTime(card.statusSince)}"
@@ -109,7 +109,7 @@
           {#if card.value > 0}
             <div class="flex items-center gap-2">
               <Badge color="orange" rounded>
-                {(card.value || 0) + ' THB'}
+                {(card.value || 0).toLocaleString() + '฿'}
               </Badge>
             </div>
           {/if}

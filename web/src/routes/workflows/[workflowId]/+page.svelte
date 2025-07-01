@@ -367,7 +367,7 @@
   }
 </script>
 
-<div class="p-6">
+<div class="flex h-[calc(100vh-4rem)] flex-col p-6 pb-0">
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <div class="flex items-center gap-3">
@@ -413,9 +413,12 @@
     </div>
 
     <!-- Workflow Board -->
-    <div class="flex gap-6 overflow-x-auto pb-4">
+    <div class="flex flex-1 gap-6 overflow-x-auto pb-4">
       <!-- Draft Column (Reserved) -->
-      <div class="w-90 flex-shrink-0">
+      <div
+        class="w-90 flex flex-shrink-0 flex-col"
+        class:opacity-50={draggedCard && !validDropZones.has('draft')}
+      >
         <!-- Draft Column Header -->
         <div class="mb-4">
           <div class="mb-2 flex items-center gap-2">
@@ -436,10 +439,10 @@
         <!-- Draft Column Content -->
         <div
           class={[
-            'min-h-96 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 shadow-sm dark:border-gray-600 dark:bg-gray-800',
+            'flex flex-1 flex-col overflow-y-auto rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 shadow-sm transition-all duration-200 dark:border-gray-600 dark:bg-gray-800',
             validDropZones.has('draft') &&
               draggedOverStatus === 'draft' &&
-              'border-blue-400 bg-blue-50 dark:bg-blue-900'
+              '-translate-y-1 border-4 border-solid border-blue-500 bg-blue-50 shadow-lg dark:border-blue-400 dark:bg-blue-900'
           ]}
           ondragover={(e) => handleDragOver(e, 'draft')}
           ondragleave={(e) => handleDragLeave(e, 'draft')}
@@ -487,7 +490,10 @@
       </div>
 
       {#each editableWorkflow.statuses as status}
-        <div class="w-90 flex-shrink-0">
+        <div
+          class="w-90 flex flex-shrink-0 flex-col"
+          class:opacity-50={draggedCard && !validDropZones.has(status.slug)}
+        >
           <!-- Status Column Header -->
           <div class="mb-4">
             <div class="mb-2 flex items-center gap-2">
@@ -510,11 +516,11 @@
           <!-- Status Column Content -->
           <div
             class={[
-              'min-h-96 rounded-lg bg-gray-50 p-4 shadow-sm dark:bg-gray-800',
+              'flex flex-1 flex-col overflow-y-auto rounded-lg bg-gray-50 p-4 shadow-sm transition-all duration-200 dark:bg-gray-800',
               status.terminal ? 'border-2' : 'border border-gray-200 dark:border-gray-700',
               draggedOverStatus === status.slug &&
                 validDropZones.has(status.slug) &&
-                '&& border-blue-400 bg-blue-50 dark:bg-blue-900'
+                '-translate-y-1 border-4 border-solid border-blue-500 bg-blue-50 shadow-lg dark:border-blue-400 dark:bg-blue-900'
             ]}
             style={status.terminal ? `border-color: ${status.ui.color}` : ''}
             ondragover={(e) => handleDragOver(e, status.slug)}
