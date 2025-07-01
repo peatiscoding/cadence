@@ -1,7 +1,7 @@
 import type { EntryGenerator } from './$types'
-
-export const entries: EntryGenerator = () => {
-  return [{ workflowId: 'ld2ppsl' }]
-}
+import { supportedWorkflows } from '$lib/persistent/files/defined'
 
 export const prerender = true
+
+export const entries: EntryGenerator = () =>
+  supportedWorkflows.map(({ workflowId }) => ({ workflowId }))

@@ -3,6 +3,7 @@ import type { Configuration } from '$lib/schema'
 const LeadToProposalWorkflow: Configuration & { workflowId: string } = {
   workflowId: 'ld2ppsl',
   name: 'Lead to Proposal',
+  access: ['@muze.co.th'],
   types: [
     { slug: 'ma', title: 'MA', ui: { color: '#8866FF' } },
     { slug: 'sprint-based', title: 'Sprint Based', ui: { color: '#33FF88' } },

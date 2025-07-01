@@ -1,5 +1,15 @@
 import type { Configuration } from '$lib/schema'
 
+const _helpers = {
+  evalAclStatement(rawStatement: string, currentUserEmail: string): boolean {
+    const stmt = rawStatement.toLowerCase().trim()
+    if (stmt.startsWith('*') || stmt.startsWith('@')) {
+      return currentUserEmail.endsWith(stmt.replace(/^\*/, ''))
+    }
+    return stmt === currentUserEmail.toLowerCase()
+  }
+}
+
 /**
  * Evaluate if given currentUserEmail may access this workflow
  *
@@ -11,7 +21,7 @@ export const canAccessWorkflow = (
 ): boolean => {
   if (workflowAccessConfig.access) {
     const aclStatements: string[] = workflowAccessConfig.access
-    return aclStatements.includes(currentUserEmail) // TODO: Enhance this to handle complex pattern
+    return aclStatements.some((stmt) => _helpers.evalAclStatement(stmt, currentUserEmail))
   }
   return true
 }
