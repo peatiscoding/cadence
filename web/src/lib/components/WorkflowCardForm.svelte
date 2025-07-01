@@ -296,7 +296,11 @@
   <div
     class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
     onclick={(e) => e.stopPropagation()}
-    onkeydown={(e) => e.stopPropagation()}
+    onkeydown={(e) => {
+      if (e.key !== 'Escape') {
+        e.stopPropagation()
+      }
+    }}
     role="none"
   >
     <!-- Modal Header -->

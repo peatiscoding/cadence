@@ -5,7 +5,6 @@
   import { onMount } from 'svelte'
   import { CogOutline } from 'flowbite-svelte-icons'
 
-  import { WorkflowFactory } from '$lib/workflow/factory'
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
   import WorkflowCardForm from '$lib/components/WorkflowCardForm.svelte'
   import WorkflowCard from '$lib/components/WorkflowCard.svelte'
@@ -564,7 +563,11 @@
     <div
       class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
       onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.stopPropagation()}
+      onkeydown={(e) => {
+        if (e.key !== 'Escape') {
+          e.stopPropagation()
+        }
+      }}
       role="none"
     >
       <!-- Modal Header -->
@@ -642,7 +645,11 @@
     <div
       class="mx-4 max-w-md rounded-lg bg-white shadow-xl dark:bg-gray-800"
       onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.stopPropagation()}
+      onkeydown={(e) => {
+        if (e.key !== 'Escape') {
+          e.stopPropagation()
+        }
+      }}
       role="none"
     >
       <!-- Error Modal Header -->
