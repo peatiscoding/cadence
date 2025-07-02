@@ -1,3 +1,4 @@
 web/src/firebase.config.js
 .cred
 functions/firebase-debug.log
+node_modules

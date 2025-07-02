@@ -8,22 +8,47 @@ Cadence is a configurable project management tool with Firebase/Firestore backen
 
 ## Development Commands
 
-### Web Frontend (SvelteKit)
+This project uses **npm workspaces** for monorepo management. You can run commands from the root directory.
+
+### Root-level Commands
+- `npm run dev` - Start web development server
+- `npm run build` - Build all workspaces (web + functions)
+- `npm run build:web` - Build web frontend only
+- `npm run build:functions` - Build functions only
+- `npm run test` - Run tests in all workspaces
+- `npm run test:web` - Run web tests only
+- `npm run check` - Type check web frontend
+- `npm run lint` - Run linting on all workspaces
+- `npm run format` - Format code in all workspaces
+- `npm run deploy` - Build and deploy everything to Firebase
+- `npm run deploy:web` - Build and deploy web frontend only
+- `npm run deploy:functions` - Build and deploy functions only
+- `npm run serve:functions` - Start Firebase emulators
+- `npm run clean` - Clean all node_modules and build artifacts
+- `npm run install:all` - Install dependencies for all workspaces
+
+### Web Frontend (SvelteKit) - Workspace Commands
+- `npm run dev --workspace=web` - Start development server
+- `npm run build --workspace=web` - Build for production  
+- `npm run preview --workspace=web` - Preview production build
+- `npm run test --workspace=web` - Run all tests
+- `npm run test:unit --workspace=web` - Run unit tests with Vitest (interactive mode)
+- `npm run test:unit -- --run --workspace=web` - Run unit tests once
+- `npm run check --workspace=web` - Type check with svelte-check
+- `npm run lint --workspace=web` - Check code formatting with Prettier
+- `npm run format --workspace=web` - Format code with Prettier
+
+### Firebase Functions - Workspace Commands
+- `npm run build --workspace=functions` - Compile TypeScript
+- `npm run serve --workspace=functions` - Start Firebase emulators
+- `npm run deploy --workspace=functions` - Deploy to Firebase
+- `npm run logs --workspace=functions` - View function logs
+
+### Legacy Commands (still work)
 - `cd web && npm run dev` - Start development server
 - `cd web && npm run build` - Build for production  
-- `cd web && npm run preview` - Preview production build
-- `cd web && npm run test` - Run all tests
-- `cd web && npm run test:unit` - Run unit tests with Vitest (interactive mode)
-- `cd web && npm run test:unit -- --run` - Run unit tests once
-- `cd web && npm run check` - Type check with svelte-check
-- `cd web && npm run lint` - Check code formatting with Prettier
-- `cd web && npm run format` - Format code with Prettier
-
-### Firebase Functions
 - `cd functions && npm run build` - Compile TypeScript
 - `cd functions && npm run serve` - Start Firebase emulators
-- `cd functions && npm run deploy` - Deploy to Firebase
-- `cd functions && npm run logs` - View function logs
 
 ## Architecture
 

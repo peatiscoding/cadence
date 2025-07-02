@@ -1,0 +1,43 @@
+{
+  "name": "cadence-monorepo",
+  "version": "1.0.0",
+  "description": "Cadence - A configurable project management tool with Firebase/Firestore backend and Svelte frontend",
+  "private": true,
+  "workspaces": [
+    "web",
+    "functions"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "build": "npm run build --workspaces --if-present",
+    "build:web": "npm run build --workspace=web",
+    "build:functions": "npm run build --workspace=functions",
+    "test": "npm run test --workspaces --if-present",
+    "test:web": "npm run test --workspace=web",
+    "check": "npm run check --workspace=web",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "npm run format --workspaces --if-present",
+    "deploy": "npm run build && firebase deploy",
+    "deploy:web": "npm run build:web && firebase deploy --only hosting",
+    "deploy:functions": "npm run build:functions && firebase deploy --only functions",
+    "serve:functions": "npm run serve --workspace=functions",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "install:all": "npm install && npm install --workspaces"
+  },
+  "keywords": [
+    "workflow",
+    "project-management", 
+    "svelte",
+    "firebase",
+    "kanban"
+  ],
+  "author": "Cadence Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  }
+}
