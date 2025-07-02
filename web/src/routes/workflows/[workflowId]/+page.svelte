@@ -1,18 +1,16 @@
 <script lang="ts">
-  import type { Configuration } from '$lib/schema'
+  import type { WorkflowConfiguration as PConf } from '@cadence/shared/validation'
+  import type { IWorkflowConfigurationDynamicStorage } from '$lib/persistent/interface'
   import type { IWorkflowCardEntry } from '$lib/models/interface'
   import type { PageData } from './$types'
   import { onMount } from 'svelte'
-  import { Button, Kbd, Modal } from 'flowbite-svelte'
+  import { Button, Kbd } from 'flowbite-svelte'
   import { CogOutline } from 'flowbite-svelte-icons'
 
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
   import WorkflowCardForm from '$lib/components/WorkflowCardForm.svelte'
   import WorkflowCard from '$lib/components/WorkflowCard.svelte'
   import { impls } from '$lib/impls'
-  import type { IWorkflowConfigurationDynamicStorage } from '$lib/persistent/interface'
-
-  type PConf = Configuration
 
   let { data }: { data: PageData } = $props()
 
@@ -417,7 +415,7 @@
     <div class="flex flex-1 gap-6 overflow-x-auto px-4 pb-4">
       <!-- Draft Column (Reserved) -->
       <div
-        class="w-90 flex flex-shrink-0 flex-col"
+        class="flex w-90 flex-shrink-0 flex-col"
         class:opacity-50={draggedCard && !validDropZones.has('draft')}
       >
         <!-- Draft Column Header -->
@@ -462,7 +460,7 @@
               />
             {/each}
           {:else}
-            <p class="mb-4 mt-6 text-center text-gray-400">No draft items</p>
+            <p class="mt-6 mb-4 text-center text-gray-400">No draft items</p>
           {/if}
           <!-- Add Card Button at bottom -->
           <Button
@@ -477,7 +475,7 @@
 
       {#each editableWorkflow.statuses as status}
         <div
-          class="w-90 flex flex-shrink-0 flex-col"
+          class="flex w-90 flex-shrink-0 flex-col"
           class:opacity-50={draggedCard && !validDropZones.has(status.slug)}
         >
           <!-- Status Column Header -->
@@ -540,7 +538,7 @@
 <!-- Configuration Modal -->
 {#if showConfigModal && editableWorkflow}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeModal}
     onkeydown={(e) => {
       if (e.key === 'Escape') {
@@ -627,7 +625,7 @@
 <!-- Error Modal -->
 {#if showErrorModal}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeErrorModal}
     onkeydown={(e) => e.key === 'Escape' && closeErrorModal()}
     role="dialog"

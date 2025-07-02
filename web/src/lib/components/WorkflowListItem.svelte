@@ -1,24 +1,24 @@
 <script lang="ts">
-  import type { Configuration } from '$lib/schema'
+  import type { WorkflowConfiguration as WorkflowConfiguration } from '@cadence/shared/validation'
   import WorkflowIcon from '$lib/assets/workflow.svg?raw'
   import { ChevronRightOutline } from 'flowbite-svelte-icons'
 
   interface Props {
-    workflow: Configuration & { workflowId: string }
+    workflow: WorkflowConfiguration & { workflowId: string }
     onNavigate: (workflowId: string) => void
   }
 
   let { workflow, onNavigate }: Props = $props()
 
-  function getStatusCount(workflow: Configuration & { workflowId: string }) {
+  function getStatusCount(workflow: WorkflowConfiguration & { workflowId: string }) {
     return workflow.statuses.length
   }
 
-  function getFieldCount(workflow: Configuration & { workflowId: string }) {
+  function getFieldCount(workflow: WorkflowConfiguration & { workflowId: string }) {
     return workflow.fields.length
   }
 
-  function getTerminalStatusCount(workflow: Configuration & { workflowId: string }) {
+  function getTerminalStatusCount(workflow: WorkflowConfiguration & { workflowId: string }) {
     return workflow.statuses.filter((status) => status.terminal).length
   }
 
@@ -114,7 +114,7 @@
     {/if}
   </div>
 
-  <div class="absolute bottom-0 left-0 right-0 rounded-b-lg bg-gray-50 px-6 py-3 dark:bg-gray-700">
+  <div class="absolute right-0 bottom-0 left-0 rounded-b-lg bg-gray-50 px-6 py-3 dark:bg-gray-700">
     <div class="flex items-center justify-between">
       <span class="text-xs text-gray-500 dark:text-gray-400">
         ID: {workflow.workflowId}

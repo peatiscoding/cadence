@@ -1,4 +1,4 @@
-import type { Configuration } from '$lib/schema'
+import type { WorkflowConfiguration } from '@cadence/shared/validation'
 
 const _helpers = {
   evalAclStatement(rawStatement: string, currentUserEmail: string): boolean {
@@ -16,7 +16,7 @@ const _helpers = {
  * @returns boolean - true if user is allowed to access false otherwise.
  */
 export const canAccessWorkflow = (
-  workflowAccessConfig: Pick<Configuration, 'access'>,
+  workflowAccessConfig: Pick<WorkflowConfiguration, 'access'>,
   currentUserEmail: string
 ): boolean => {
   if (workflowAccessConfig.access) {

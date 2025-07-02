@@ -1,7 +1,7 @@
 import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '$lib/persistent/interface'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 import type { IWorkflowCardEntry } from '$lib/models/interface'
-import type { Configuration } from '$lib/schema'
+import type { WorkflowConfiguration } from '@cadence/shared/validation'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
@@ -12,7 +12,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { WorkflowFactory } from './factory'
 import { STATUS_DRAFT } from '$lib/models/status'
 import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
-import { z } from 'zod'
 
 describe('WorkflowCardEngine with Stubbed Storage', () => {
   let mockStorage: IWorkflowCardStorage
@@ -34,9 +33,8 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
     mockConfigStore = {
       loadConfig: vi.fn(),
-      setConfig: vi.fn(),
       listWorkflows: vi.fn(),
-      deleteConfig: vi.fn()
+      isSupportDynamicWorkflows: vi.fn()
     }
 
     mockAuthProvider = {
@@ -53,7 +51,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     }
 
     // Create WorkflowEngine using factory
-    const mockConfig: Configuration = {
+    const mockConfig: WorkflowConfiguration = {
       name: 'Test Workflow',
       fields: [],
       types: [],
@@ -730,7 +728,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
   })
 
   describe('Precondition validation with actual config', () => {
-    let mockConfig: Configuration
+    let mockConfig: WorkflowConfiguration
 
     beforeEach(() => {
       mockConfig = {
@@ -996,7 +994,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
   })
 
   describe('getCardSchema', () => {
-    let schemaTestConfig: Configuration
+    let schemaTestConfig: WorkflowConfiguration
 
     beforeEach(() => {
       schemaTestConfig = {
@@ -1426,7 +1424,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
     it('should throw error for unknown status', async () => {
       // Arrange
-      const strictConfig: Configuration = {
+      const strictConfig: WorkflowConfiguration = {
         ...schemaTestConfig,
         types: [],
         statuses: [
@@ -1455,7 +1453,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
 
     it('should handle empty field choices gracefully', async () => {
       // Arrange
-      const configWithEmptyChoices: Configuration = {
+      const configWithEmptyChoices: WorkflowConfiguration = {
         ...schemaTestConfig,
         fields: [
           {

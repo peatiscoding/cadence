@@ -1,5 +1,5 @@
 import type { IWorkflowCardStorage } from '$lib/persistent/interface'
-import type { Configuration, Status } from '$lib/schema'
+import type { WorkflowConfiguration, WorkflowStatus } from '@cadence/shared/validation'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
@@ -48,7 +48,7 @@ const _helpers = {
 export class WorkflowCardEngine implements IWorkflowCardEngine {
   public constructor(
     public readonly workflowId: string,
-    public readonly configuration: Promise<Configuration>,
+    public readonly configuration: Promise<WorkflowConfiguration>,
     public readonly auth: IAuthenticationProvider,
     protected readonly storage: IWorkflowCardStorage
   ) {
@@ -137,7 +137,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     await this.storage.deleteCard(this.workflowId, workflowCardId)
   }
 
-  async getNextStatuses(currentCardStatus: string): Promise<Status[]> {
+  async getNextStatuses(currentCardStatus: string): Promise<WorkflowStatus[]> {
     const config = await this.configuration
     const currentUser = await this.auth.getCurrentUid()
 

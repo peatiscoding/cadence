@@ -1,4 +1,4 @@
-import type { Configuration } from '$lib/schema'
+import type { WorkflowConfiguration } from '@cadence/shared/validation'
 import type { IWorkflowConfigurationStorage } from '$lib/persistent/interface'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 
@@ -6,7 +6,7 @@ import { canAccessWorkflow } from '$lib/models/access'
 
 export class BuildTimeWorkflows implements IWorkflowConfigurationStorage {
   constructor(
-    protected readonly workflows: Array<Configuration & { workflowId: string }>,
+    protected readonly workflows: Array<WorkflowConfiguration & { workflowId: string }>,
     protected readonly authProvider: IAuthenticationProvider
   ) {}
 
@@ -14,7 +14,7 @@ export class BuildTimeWorkflows implements IWorkflowConfigurationStorage {
     return false
   }
 
-  async loadConfig(workflowId: string): Promise<Configuration> {
+  async loadConfig(workflowId: string): Promise<WorkflowConfiguration> {
     const o = this.workflows.find((f) => f.workflowId === workflowId)
     if (!o) {
       throw new Error(`Unknown workflowId: ${workflowId}`)
@@ -22,7 +22,9 @@ export class BuildTimeWorkflows implements IWorkflowConfigurationStorage {
     return o
   }
 
-  async listWorkflows(): Promise<{ workflows: Array<Configuration & { workflowId: string }> }> {
+  async listWorkflows(): Promise<{
+    workflows: Array<WorkflowConfiguration & { workflowId: string }>
+  }> {
     const sess = await this.authProvider.getCurrentSession()
     const email = sess.email
     return { workflows: this.workflows.filter((a) => canAccessWorkflow(a, email)) }

@@ -1,6 +1,11 @@
 <script lang="ts">
   import type { IWorkflowCardEngine } from '$lib/workflow/interface'
-  import type { Configuration, Field, Type, Status } from '$lib/schema'
+  import type {
+    WorkflowConfiguration,
+    WorkflowField,
+    WorkflowType,
+    WorkflowStatus
+  } from '@cadence/shared/validation'
   import { draftStatus, unknownStatus, STATUS_DRAFT } from '$lib/models/status'
   import { z } from 'zod'
   import { onMount } from 'svelte'
@@ -10,7 +15,7 @@
   interface Props {
     open: boolean
     workflowEngine: IWorkflowCardEngine
-    config: Configuration
+    config: WorkflowConfiguration
     status?: string
     targetStatus?: string // The status we're transitioning to (if different from current)
     initialData?: Record<string, any>
@@ -43,7 +48,7 @@
 
   let errors = $state<Record<string, string>>({})
   let schema: z.ZodObject<any> | null = null
-  let nextStatuses = $state<Status[]>([])
+  let nextStatuses = $state<WorkflowStatus[]>([])
   let selectedTransitionStatus = $state<string | null>(null)
   let isTypeDropdownOpen = $state(false)
 
@@ -59,14 +64,14 @@
   })
 
   // Get status configuration for display (always shows original status)
-  const statusConfig = $derived((): Status => {
+  const statusConfig = $derived((): WorkflowStatus => {
     if (status === STATUS_DRAFT) return draftStatus
 
     return config.statuses.find((s) => s.slug === status) || unknownStatus(status)
   })
 
   // Get target status configuration for transition display
-  const targetStatusConfig = $derived((): Status => {
+  const targetStatusConfig = $derived((): WorkflowStatus => {
     const targetSlug = selectedTransitionStatus || targetStatus
     if (!targetSlug || targetSlug === 'draft') return draftStatus
     return config.statuses.find((s) => s.slug === targetSlug) || unknownStatus(targetSlug)
@@ -209,7 +214,7 @@
     }
   }
 
-  function renderField(field: Field) {
+  function renderField(field: WorkflowField) {
     switch (field.schema.kind) {
       case 'number':
         return { type: 'number', min: field.schema.min, max: field.schema.max }
@@ -228,7 +233,7 @@
     }
   }
 
-  function getSelectedType(): Type | null {
+  function getSelectedType(): WorkflowType | null {
     if (!formData.type || !config.types) return null
     return config.types.find((type) => type.slug === formData.type) || null
   }
@@ -387,7 +392,7 @@
               bind:value={formData.type}
               onblur={() => validateField('type', formData.type)}
               placeholder="Enter type"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               class:border-red-500={errors.type}
             />
           {/if}
@@ -410,7 +415,7 @@
             bind:value={formData.title}
             placeholder="Name of this card"
             onblur={() => validateField('title', formData.title)}
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             class:border-red-500={errors.title}
             required
           />
@@ -433,7 +438,7 @@
             bind:value={formData.description}
             onblur={() => validateField('description', formData.description)}
             rows="3"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             class:border-red-500={errors.description}
           ></textarea>
           {#if errors.description}
@@ -454,7 +459,7 @@
             type="number"
             bind:value={formData.value}
             onblur={() => validateField('value', formData.value)}
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             class:border-red-500={errors.value}
           />
           {#if errors.value}
@@ -475,7 +480,7 @@
             type="text"
             bind:value={formData.owner}
             onblur={() => validateField('owner', formData.owner)}
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             class:border-red-500={errors.owner}
           />
           {#if errors.owner}
@@ -526,7 +531,7 @@
                       id={field.slug}
                       bind:value={formData.fieldData[field.slug]}
                       onchange={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
-                      class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                       class:border-red-500={fieldError}
                     >
                       <option value="">Select {field.title}</option>
@@ -575,7 +580,7 @@
                       maxlength={fieldProps.maxlength}
                       bind:value={formData.fieldData[field.slug]}
                       onblur={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
-                      class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                       class:border-red-500={fieldError}
                     />
                   {/if}

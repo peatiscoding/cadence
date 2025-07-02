@@ -5,13 +5,15 @@
   "private": true,
   "workspaces": [
     "web",
-    "functions"
+    "functions",
+    "shared"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=web",
     "build": "npm run build --workspaces --if-present",
     "build:web": "npm run build --workspace=web",
     "build:functions": "npm run build --workspace=functions",
+    "build:shared": "npm run build --workspace=shared",
     "test": "npm run test --workspaces --if-present",
     "test:web": "npm run test --workspace=web",
     "check": "npm run check --workspace=web",

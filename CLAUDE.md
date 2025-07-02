@@ -44,6 +44,14 @@ This project uses **npm workspaces** for monorepo management. You can run comman
 - `npm run deploy --workspace=functions` - Deploy to Firebase
 - `npm run logs --workspace=functions` - View function logs
 
+### Shared Utilities - Workspace Commands
+- `npm run build --workspace=shared` - Compile TypeScript shared utilities
+- `npm run build:watch --workspace=shared` - Watch mode compilation
+- `npm run type-check --workspace=shared` - Type check without compilation
+- `npm run test --workspace=shared` - Run Jest tests
+- `npm run test:watch --workspace=shared` - Run tests in watch mode
+- `npm run format --workspace=shared` - Format code with Prettier
+
 ### Legacy Commands (still work)
 - `cd web && npm run dev` - Start development server
 - `cd web && npm run build` - Build for production  
@@ -55,6 +63,7 @@ This project uses **npm workspaces** for monorepo management. You can run comman
 ### Project Structure
 - `/web` - SvelteKit frontend with TailwindCSS v4
 - `/functions` - Firebase Functions backend (TypeScript)
+- `/shared` - Shared TypeScript utilities and logic (used by both web and functions)
 - `/prompts` - Project requirements and specifications
 - `firestore.rules` - Firestore security rules
 - `firestore.indexes.json` - Database indexes

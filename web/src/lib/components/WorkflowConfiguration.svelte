@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { Configuration } from '$lib/schema'
+  import type { WorkflowConfiguration } from '@cadence/shared/validation'
 
   interface Props {
-    workflow: Configuration
+    workflow: WorkflowConfiguration
     editable?: boolean
   }
 

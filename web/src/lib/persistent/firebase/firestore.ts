@@ -1,7 +1,7 @@
+import type { WorkflowConfiguration } from '@cadence/shared/validation'
 import type { IWorkflowCardEntry } from '$lib/models/interface'
 import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
-import type { Configuration } from '$lib/schema'
 
 import {
   getFirestore,
@@ -129,7 +129,7 @@ export class FirestoreWorkflowCardStorage
     await deleteDoc(ref)
   }
 
-  async loadConfig(workflowId: string): Promise<Configuration> {
+  async loadConfig(workflowId: string): Promise<WorkflowConfiguration> {
     const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
     const docSnap = await getDoc(ref)
     if (docSnap.exists()) {
@@ -140,16 +140,18 @@ export class FirestoreWorkflowCardStorage
     throw new Error(`Unable to retrieve configuration ${workflowId}`)
   }
 
-  async setConfig(workflowId: string, configuration: Configuration): Promise<void> {
+  async setConfig(workflowId: string, configuration: WorkflowConfiguration): Promise<void> {
     const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
     await setDoc(ref, configuration, { merge: true })
   }
 
-  async listWorkflows(): Promise<{ workflows: Array<Configuration & { workflowId: string }> }> {
+  async listWorkflows(): Promise<{
+    workflows: Array<WorkflowConfiguration & { workflowId: string }>
+  }> {
     const workflowsRef = REFs.WORKFLOWS(this.fs)
     const querySnapshot = await getDocs(workflowsRef)
 
-    const workflows: Array<Configuration & { workflowId: string }> = []
+    const workflows: Array<WorkflowConfiguration & { workflowId: string }> = []
 
     querySnapshot.forEach((doc) => {
       if (doc.exists()) {

@@ -1,6 +1,6 @@
-import type { Configuration } from '$lib/schema'
+import type { WorkflowConfiguration } from '@cadence/shared/validation'
 
-const LeadToProposalWorkflow: Configuration & { workflowId: string } = {
+const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
   workflowId: 'ld2ppsl',
   name: 'Lead to Proposal',
   access: ['@muze.co.th'],

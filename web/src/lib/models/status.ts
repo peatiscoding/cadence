@@ -1,8 +1,8 @@
-import type { Status } from '$lib/schema'
+import type { WorkflowStatus } from '@cadence/shared/validation'
 
 export const STATUS_DRAFT = 'draft'
 
-export const draftStatus: Status = {
+export const draftStatus: WorkflowStatus = {
   title: 'Draft',
   ui: {
     color: '#6B7280'
@@ -14,7 +14,7 @@ export const draftStatus: Status = {
   }
 }
 
-export const unknownStatus = (slug: string): Status => {
+export const unknownStatus = (slug: string): WorkflowStatus => {
   return {
     title: `${slug}`.toUpperCase(),
     ui: {

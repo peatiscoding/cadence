@@ -1,6 +1,6 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
 import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
-import type { Configuration } from '$lib/schema'
+import type { WorkflowConfiguration } from '@cadence/shared/validation'
 
 /**
  * Storage Interface does not have
@@ -56,12 +56,12 @@ export interface IWorkflowConfigurationStorage {
   /**
    * Fetch configuration
    */
-  loadConfig(workflowId: string): Promise<Configuration>
+  loadConfig(workflowId: string): Promise<WorkflowConfiguration>
 
   /**
    * List all workflow configurations
    */
-  listWorkflows(): Promise<{ workflows: Array<Configuration & { workflowId: string }> }>
+  listWorkflows(): Promise<{ workflows: Array<WorkflowConfiguration & { workflowId: string }> }>
 
   /**
    * @returns true if given configuration storage support dynamic workflows
@@ -73,7 +73,7 @@ export interface IWorkflowConfigurationDynamicStorage extends IWorkflowConfigura
   /**
    * Create a new workflow configuration
    */
-  setConfig(workflowId: string, configuration: Configuration): Promise<void>
+  setConfig(workflowId: string, configuration: WorkflowConfiguration): Promise<void>
 
   /**
    * Delete all workflow ids

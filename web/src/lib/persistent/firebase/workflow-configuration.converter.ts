@@ -1,12 +1,12 @@
-import type { Configuration } from '$lib/schema'
+import type { WorkflowConfiguration } from '@cadence/shared/validation'
 import type { FirestoreDataConverter } from 'firebase/firestore'
 
 // Firestore data converter for IWorkflowCardEntry
-export const workflowConfigurationConverter: FirestoreDataConverter<Configuration> = {
-  toFirestore(conf: Configuration): any {
+export const workflowConfigurationConverter: FirestoreDataConverter<WorkflowConfiguration> = {
+  toFirestore(conf: WorkflowConfiguration): any {
     return conf
   },
-  fromFirestore(snapshot): Configuration {
+  fromFirestore(snapshot): WorkflowConfiguration {
     const _d = snapshot.data()
     return {
       name: _d.name,

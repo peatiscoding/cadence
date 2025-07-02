@@ -1,6 +1,6 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
 import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
-import type { Configuration, Status } from '$lib/schema'
+import type { WorkflowConfiguration, WorkflowStatus } from '@cadence/shared/validation'
 import type { z } from 'zod'
 
 export type IWorkflowCardEntryCreation = Pick<IWorkflowCardEntry, 'title' | 'description' | 'value'>
@@ -22,7 +22,7 @@ export interface IWorkflowCardEngine {
   /**
    * Get the configurations
    */
-  configuration: Promise<Configuration>
+  configuration: Promise<WorkflowConfiguration>
 
   makeNewCard(creationPayload: IWorkflowCardEntryCreation): Promise<string>
 
@@ -50,7 +50,7 @@ export interface IWorkflowCardEngine {
   /**
    * Get available next statuses for a card from current status
    */
-  getNextStatuses(currentCardStatus: string): Promise<Status[]>
+  getNextStatuses(currentCardStatus: string): Promise<WorkflowStatus[]>
 
   /**
    * Create a live-listing reference

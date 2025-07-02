@@ -4,6 +4,10 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 const config = {
   preprocess: vitePreprocess(),
   kit: {
+    alias: {
+      '@cadence/shared': '../shared/src/index.ts',
+      '@cadence/shared/*': '../shared/src/*'
+    },
     adapter: adapter({
       fallback: 'index.html'
     })

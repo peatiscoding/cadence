@@ -1,6 +1,6 @@
 import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 import type { Auth } from 'firebase/auth'
-import type { Configuration } from '$lib/schema'
+import type { WorkflowConfiguration } from '@cadence/shared/validation'
 import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 
@@ -58,7 +58,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       const workflowId = `config-test-${Date.now()}`
       createdWorkflowIds.push(workflowId)
 
-      const testConfig: Configuration = {
+      const testConfig: WorkflowConfiguration = {
         name: 'Test Workflow',
         description: 'A test workflow for configuration testing',
         types: [
@@ -159,7 +159,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       const workflowId = `update-test-${Date.now()}`
       createdWorkflowIds.push(workflowId)
 
-      const initialConfig: Configuration = {
+      const initialConfig: WorkflowConfiguration = {
         name: 'Initial Config',
         description: 'Initial description',
         types: [],
@@ -187,7 +187,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       await storage.setConfig(workflowId, initialConfig)
 
       // Act - Update with partial configuration (should merge)
-      const updateConfig: Configuration = {
+      const updateConfig: WorkflowConfiguration = {
         name: 'Updated Config Name',
         description: 'Updated description',
         types: [
@@ -227,7 +227,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       const workflowId = `minimal-test-${Date.now()}`
       createdWorkflowIds.push(workflowId)
 
-      const minimalConfig: Configuration = {
+      const minimalConfig: WorkflowConfiguration = {
         name: 'Minimal Workflow',
         description: 'A minimal workflow configuration',
         types: [],
@@ -252,7 +252,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       const workflowId = `complex-test-${Date.now()}`
       createdWorkflowIds.push(workflowId)
 
-      const complexConfig: Configuration = {
+      const complexConfig: WorkflowConfiguration = {
         name: 'Complex Workflow',
         description: 'A complex workflow with various field types',
         types: [
@@ -406,7 +406,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       const workflowId2 = `multi-config-2-${Date.now()}`
       createdWorkflowIds.push(workflowId1, workflowId2)
 
-      const config1: Configuration = {
+      const config1: WorkflowConfiguration = {
         name: 'Software Development',
         description: 'Workflow for software development tasks',
         types: [
@@ -432,7 +432,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
         ]
       }
 
-      const config2: Configuration = {
+      const config2: WorkflowConfiguration = {
         name: 'Marketing Campaign',
         description: 'Workflow for marketing campaign management',
         types: [
@@ -498,7 +498,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       createdWorkflowIds.push(workflow1Id, workflow2Id, workflow3Id)
 
-      const config1: Configuration = {
+      const config1: WorkflowConfiguration = {
         name: 'List Test Workflow 1',
         description: 'First test workflow for listing',
         types: [],
@@ -521,7 +521,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
         ]
       }
 
-      const config2: Configuration = {
+      const config2: WorkflowConfiguration = {
         name: 'List Test Workflow 2',
         description: 'Second test workflow for listing',
         types: [{ slug: 'type-2', title: 'Type 2', ui: { color: '#000002' } }],
@@ -537,7 +537,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
         ]
       }
 
-      const config3: Configuration = {
+      const config3: WorkflowConfiguration = {
         name: 'List Test Workflow 3',
         description: 'Third test workflow for listing',
         types: [
@@ -625,7 +625,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       const testWorkflowId = `properties-test-${Date.now()}`
       createdWorkflowIds.push(testWorkflowId)
 
-      const testConfig: Configuration = {
+      const testConfig: WorkflowConfiguration = {
         name: 'Properties Test Workflow',
         description: 'Testing all workflow properties',
         types: [{ slug: 'test-type', title: 'Test Type', ui: { color: '#123456' } }],
