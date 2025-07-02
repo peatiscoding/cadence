@@ -2,7 +2,7 @@ import type { WorkflowConfiguration } from '@cadence/shared/validation'
 import type { IWorkflowConfigurationStorage } from '$lib/persistent/interface'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 
-import { canAccessWorkflow } from '$lib/models/access'
+import { canAccessWorkflow } from '@cadence/shared/models/access'
 
 export class BuildTimeWorkflows implements IWorkflowConfigurationStorage {
   constructor(

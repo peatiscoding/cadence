@@ -6,7 +6,7 @@
     WorkflowType,
     WorkflowStatus
   } from '@cadence/shared/validation'
-  import { draftStatus, unknownStatus, STATUS_DRAFT } from '$lib/models/status'
+  import { draftStatus, unknownStatus, STATUS_DRAFT } from '@cadence/shared/models/status'
   import { z } from 'zod'
   import { onMount } from 'svelte'
   import { Button, Badge, Indicator, Modal, Dropdown, DropdownItem } from 'flowbite-svelte'

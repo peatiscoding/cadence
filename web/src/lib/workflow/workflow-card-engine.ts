@@ -5,7 +5,7 @@ import type {
   IWorkflowCardEntryCreation,
   IWorkflowCardEntryModification
 } from './interface'
-import { STATUS_DRAFT } from '$lib/models/status'
+import { STATUS_DRAFT } from '@cadence/shared/models/status'
 import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 import { z } from 'zod'

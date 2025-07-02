@@ -1,4 +1,4 @@
-import type { WorkflowStatus } from '@cadence/shared/validation'
+import type { WorkflowStatus } from '../validation'
 
 export const STATUS_DRAFT = 'draft'
 

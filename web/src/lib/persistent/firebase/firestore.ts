@@ -4,10 +4,10 @@ import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/
 import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 
 import {
+  type Firestore,
   getFirestore,
   doc,
   collection,
-  Firestore,
   addDoc,
   updateDoc,
   getDoc,

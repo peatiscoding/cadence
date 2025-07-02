@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration } from '@cadence/shared/validation'
+import type { WorkflowConfiguration } from '../validation'
 
 const _helpers = {
   evalAclStatement(rawStatement: string, currentUserEmail: string): boolean {
