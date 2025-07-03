@@ -1,13 +1,13 @@
 <script lang="ts">
   import '../app.css'
-  import Header from '$lib/components/Header.svelte'
+  import Sidebar from '$lib/components/Sidebar.svelte'
 
   let { children } = $props()
 </script>
 
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-  <Header />
-  <main>
+  <Sidebar />
+  <main class="ml-64">
     {@render children()}
   </main>
 </div>

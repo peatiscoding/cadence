@@ -366,7 +366,7 @@
   }
 </script>
 
-<div class="flex h-[calc(100vh-4rem)] flex-col pt-6">
+<div class="flex h-screen flex-col pt-4">
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <div class="flex items-center gap-3">
@@ -412,14 +412,14 @@
     </div>
 
     <!-- Workflow Board -->
-    <div class="flex flex-1 gap-6 overflow-x-auto px-4 pb-4">
+    <div class="flex flex-1 gap-6 overflow-x-auto px-6 pb-4">
       <!-- Draft Column (Reserved) -->
       <div
         class="flex w-90 flex-shrink-0 flex-col"
         class:opacity-50={draggedCard && !validDropZones.has('draft')}
       >
         <!-- Draft Column Header -->
-        <div class="mb-4">
+        <div class="mb-2">
           <div class="mb-2 flex items-center gap-2">
             <div class="h-3 w-3 rounded-full bg-gray-400"></div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Draft</h2>
@@ -479,7 +479,7 @@
           class:opacity-50={draggedCard && !validDropZones.has(status.slug)}
         >
           <!-- Status Column Header -->
-          <div class="mb-4">
+          <div class="mb-2">
             <div class="mb-2 flex items-center gap-2">
               <div class="h-3 w-3 rounded-full" style="background-color: {status.ui.color}"></div>
               <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
