@@ -139,11 +139,11 @@
         <!-- User Profile Section -->
         <div class="space-y-2">
           <div class="flex items-center space-x-3">
-            <Avatar
+            <img
               src={currentSession?.avatarUrl}
               alt={currentSession?.displayName || 'User avatar'}
-              size="sm"
-              border
+              class="h-8 w-8 rounded-full border border-gray-300 bg-gray-200 dark:border-gray-600 dark:bg-gray-600"
+              referrerpolicy="no-referrer"
             />
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
