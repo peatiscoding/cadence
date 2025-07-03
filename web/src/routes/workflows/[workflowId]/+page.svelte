@@ -4,8 +4,8 @@
   import type { IWorkflowCardEntry } from '$lib/models/interface'
   import type { PageData } from './$types'
   import { onMount } from 'svelte'
-  import { Button, Kbd } from 'flowbite-svelte'
-  import { CogOutline } from 'flowbite-svelte-icons'
+  import { Button, Kbd, Alert, Spinner } from 'flowbite-svelte'
+  import { CogOutline, BanOutline } from 'flowbite-svelte-icons'
 
   import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
   import WorkflowCardForm from '$lib/components/WorkflowCardForm.svelte'
@@ -370,25 +370,20 @@
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <div class="flex items-center gap-3">
-        <div
-          class="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"
-        ></div>
+        <Spinner size="5" color="blue" />
         <span class="text-gray-600 dark:text-gray-400">Loading workflow...</span>
       </div>
     </div>
   {:else if error}
-    <div
-      class="rounded-lg border border-red-400 bg-red-100 p-4 dark:border-red-600 dark:bg-red-900"
-    >
-      <div class="flex">
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error loading workflow</h3>
-          <p class="mt-1 text-sm text-red-700 dark:text-red-300">
-            {error}
-          </p>
-        </div>
-      </div>
-    </div>
+    <Alert color="orange" class="mx-3 items-start!">
+      {#snippet icon()}
+        <BanOutline />
+      {/snippet}
+      <p class="font-medium">Error loading workflow:</p>
+      <ul class="ms-4 mt-1.5 list-inside list-disc">
+        <li>{error}</li>
+      </ul>
+    </Alert>
   {:else if editableWorkflow}
     <div class="mb-4 px-6">
       <div class="flex items-center gap-3">
