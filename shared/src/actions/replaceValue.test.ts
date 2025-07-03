@@ -63,22 +63,24 @@ describe('withContext', () => {
       expect(result).toBe('')
     })
 
-    it('should handle undefined field data gracefully', () => {
+    it('should throw error for undefined field data when required', () => {
       const contextReplacer = withContext(mockCard)
 
-      const result = contextReplacer.replace('Non-existent field: #.nonExistentField')
-      expect(result).toBe('Non-existent field: undefined')
+      expect(() => {
+        contextReplacer.replace('Non-existent field: #.nonExistentField')
+      }).toThrow('Cannot replace \'#.nonExistentField\' the value is required')
     })
 
-    it('should handle undefined card fields gracefully', () => {
+    it('should throw error for undefined card fields when required', () => {
       const cardWithUndefinedFields: IWorkflowCard = {
         ...mockCard,
         description: undefined
       }
       const contextReplacer = withContext(cardWithUndefinedFields)
 
-      const result = contextReplacer.replace('Description: $.description')
-      expect(result).toBe('Description: undefined')
+      expect(() => {
+        contextReplacer.replace('Description: $.description')
+      }).toThrow('Cannot replace \'$.description\' the value is required')
     })
 
     it('should handle complex strings with special characters', () => {
@@ -113,16 +115,19 @@ describe('withContext', () => {
       const contextReplacer = withContext(cardWithSpacedFields)
 
       // Note: The regex pattern stops at spaces, so this won't work as expected
-      // This test documents the current behavior
-      const result = contextReplacer.replace('Field: #.field with spaces')
-      expect(result).toBe('Field: undefined with spaces')
+      // This test documents the current behavior - field name 'field' doesn't exist
+      expect(() => {
+        contextReplacer.replace('Field: #.field with spaces')
+      }).toThrow("Cannot replace '#.field' the value is required")
     })
 
     it('should handle malformed placeholders', () => {
       const contextReplacer = withContext(mockCard)
 
-      const result = contextReplacer.replace('Malformed: $ .title and #title and $.and #.')
-      expect(result).toThrow()
+      // Test shows that malformed placeholders like '$.and' throw errors for non-existent fields
+      expect(() => {
+        contextReplacer.replace('Malformed: $ .title and #title and $.and #.')
+      }).toThrow("Cannot replace '$.and' the value is required")
     })
 
     it('should handle numeric field values', () => {
@@ -176,19 +181,26 @@ describe('withContext', () => {
     })
   })
 
-  describe('edge cases', () => {
-    it('should handle card with empty fieldData', () => {
-      const cardWithEmptyFieldData: IWorkflowCard = {
-        ...mockCard,
-        fieldData: {}
-      }
-      const contextReplacer = withContext(cardWithEmptyFieldData)
+  describe('optional marker functionality', () => {
+    it('should return empty string for optional undefined field data', () => {
+      const contextReplacer = withContext(mockCard)
 
-      const result = contextReplacer.replace('Priority: #.priority')
-      expect(result).toBe('Priority: undefined')
+      const result = contextReplacer.replace('Non-existent field: #.nonExistentField?')
+      expect(result).toBe('Non-existent field: ')
     })
 
-    it('should handle card with null values', () => {
+    it('should return empty string for optional undefined card fields', () => {
+      const cardWithUndefinedFields: IWorkflowCard = {
+        ...mockCard,
+        description: undefined
+      }
+      const contextReplacer = withContext(cardWithUndefinedFields)
+
+      const result = contextReplacer.replace('Description: $.description?')
+      expect(result).toBe('Description: ')
+    })
+
+    it('should return empty string for optional null values', () => {
       const cardWithNullValues: IWorkflowCard = {
         ...mockCard,
         fieldData: {
@@ -197,8 +209,118 @@ describe('withContext', () => {
       }
       const contextReplacer = withContext(cardWithNullValues)
 
-      const result = contextReplacer.replace('Null field: #.nullField')
-      expect(result).toBe('Null field: null')
+      const result = contextReplacer.replace('Null field: #.nullField?')
+      expect(result).toBe('Null field: ')
+    })
+
+    it('should return actual value for optional fields that have values', () => {
+      const contextReplacer = withContext(mockCard)
+
+      const result = contextReplacer.replace('Title: $.title?, Priority: #.priority?')
+      expect(result).toBe('Title: Test Card Title, Priority: high')
+    })
+
+    it('should handle mixed optional and required placeholders', () => {
+      const cardWithMixedValues: IWorkflowCard = {
+        ...mockCard,
+        description: undefined,
+        fieldData: {
+          ...mockCard.fieldData,
+          optionalField: null
+        }
+      }
+      const contextReplacer = withContext(cardWithMixedValues)
+
+      const result = contextReplacer.replace('Title: $.title, Desc: $.description?, Optional: #.optionalField?, Priority: #.priority')
+      expect(result).toBe('Title: Test Card Title, Desc: , Optional: , Priority: high')
+    })
+
+    it('should handle optional markers in complex strings', () => {
+      const cardWithUndefinedFields: IWorkflowCard = {
+        ...mockCard,
+        description: undefined,
+        fieldData: {
+          ...mockCard.fieldData,
+          missingField: undefined
+        }
+      }
+      const contextReplacer = withContext(cardWithUndefinedFields)
+
+      const result = contextReplacer.replace('Card "$.title" - Desc: [$.description?] - Missing: (#.missingField?) - Priority: #.priority')
+      expect(result).toBe('Card "Test Card Title" - Desc: [] - Missing: () - Priority: high')
+    })
+  })
+
+  describe('required field error handling', () => {
+    it('should throw error when required field is missing from mixed optional/required', () => {
+      const cardWithMixedValues: IWorkflowCard = {
+        ...mockCard,
+        description: undefined,
+        fieldData: {
+          ...mockCard.fieldData,
+          missingField: null
+        }
+      }
+      const contextReplacer = withContext(cardWithMixedValues)
+
+      expect(() => {
+        contextReplacer.replace('Title: $.title?, Desc: $.description, Missing: #.missingField?')
+      }).toThrow('Cannot replace \'$.description\' the value is required')
+    })
+
+    it('should throw error with correct field name for card fields', () => {
+      const cardWithNullTitle: IWorkflowCard = {
+        ...mockCard,
+        title: null as any
+      }
+      const contextReplacer = withContext(cardWithNullTitle)
+
+      expect(() => {
+        contextReplacer.replace('Title: $.title')
+      }).toThrow("Cannot replace '$.title' the value is required")
+    })
+
+    it('should throw error with correct field name for field data', () => {
+      const cardWithNullFieldData: IWorkflowCard = {
+        ...mockCard,
+        fieldData: {
+          ...mockCard.fieldData,
+          requiredField: null
+        }
+      }
+      const contextReplacer = withContext(cardWithNullFieldData)
+
+      expect(() => {
+        contextReplacer.replace('Required: #.requiredField')
+      }).toThrow("Cannot replace '#.requiredField' the value is required")
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should throw error for empty fieldData when required', () => {
+      const cardWithEmptyFieldData: IWorkflowCard = {
+        ...mockCard,
+        fieldData: {}
+      }
+      const contextReplacer = withContext(cardWithEmptyFieldData)
+
+      expect(() => {
+        contextReplacer.replace('Priority: #.priority')
+      }).toThrow('Cannot replace \'#.priority\' the value is required')
+    })
+
+    it('should throw error for null values when required', () => {
+      const cardWithNullValues: IWorkflowCard = {
+        ...mockCard,
+        fieldData: {
+          nullField: null
+        }
+      }
+      const contextReplacer = withContext(cardWithNullValues)
+
+      expect(() => {
+        contextReplacer.replace('Null field: #.nullField')
+      }).toThrow('Cannot replace \'#.nullField\' the value is required')
     })
 
     it('should handle very long replacement strings', () => {
