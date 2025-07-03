@@ -1,7 +1,6 @@
 <script lang="ts">
-  import type { WorkflowConfiguration as PConf } from '@cadence/shared/types'
+  import type { WorkflowConfiguration as PConf, IWorkflowCardEntry } from '@cadence/shared/types'
   import type { IWorkflowConfigurationDynamicStorage } from '$lib/persistent/interface'
-  import type { IWorkflowCardEntry } from '$lib/models/interface'
   import type { PageData } from './$types'
   import { onMount } from 'svelte'
   import { Button, Kbd, Alert, Spinner } from 'flowbite-svelte'

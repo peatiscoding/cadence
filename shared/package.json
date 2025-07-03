@@ -29,11 +29,6 @@
     "typescript": "^5.0.0"
   },
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    },
     "./models": {
       "types": "./dist/models/index.d.ts",
       "import": "./dist/models/index.js",

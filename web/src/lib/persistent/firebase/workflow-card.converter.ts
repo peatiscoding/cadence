@@ -1,4 +1,4 @@
-import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { IWorkflowCardEntry } from '@cadence/shared/types'
 import type { FirestoreDataConverter } from 'firebase/firestore'
 
 // Firestore data converter for IWorkflowCardEntry

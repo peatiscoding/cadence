@@ -1,6 +1,5 @@
-import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { WorkflowConfiguration, IWorkflowCardEntry } from '@cadence/shared/types'
 import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
-import type { WorkflowConfiguration } from '@cadence/shared/types'
 
 /**
  * Storage Interface does not have

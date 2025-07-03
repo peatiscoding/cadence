@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { IWorkflowCardEntry } from '$lib/models/interface'
+  import type { IWorkflowCardEntry } from '@cadence/shared/types'
   import { Card, Badge, P, Heading } from 'flowbite-svelte'
   import { ClockOutline } from 'flowbite-svelte-icons'
 
