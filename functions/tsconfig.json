@@ -9,10 +9,20 @@
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
-    "target": "es2017"
+    "target": "es2017",
+    "baseUrl": ".",
+    "paths": {
+      "@cadence/shared": ["../shared/src"],
+      "@cadence/shared/*": ["../shared/src/*"]
+    }
   },
   "compileOnSave": true,
   "include": [
     "src"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    }
   ]
 }

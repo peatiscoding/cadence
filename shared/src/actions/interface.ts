@@ -1,16 +1,26 @@
 import type { IWorkflowCard, IActionDefiniton } from '../types'
 
-export interface IRunOption {
-  parallel: boolean
+export interface IRunnerOption {
+  /**
+   * Notify the runner to execute all actions in parallel
+   */
+  runInParallel: boolean
+}
+
+export interface IActionExecutor {
+  /**
+   * Perform any action
+   */
+  execute(cardContext: IWorkflowCard, action: IActionDefiniton): Promise<void>
 }
 
 export interface IActionRunner {
   /**
-   * Perform any action
+   * Runner is a logical class that orchestrate running sequence and manage the errornous of the result.
    */
-  execute(
+  run(
     cardContext: IWorkflowCard,
-    action: IActionDefiniton[],
-    runOptions: IRunOption
+    actions: IActionDefiniton[],
+    runOptions: IRunnerOption
   ): Promise<void>
 }
