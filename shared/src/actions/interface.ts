@@ -7,11 +7,19 @@ export interface IRunnerOption {
   runInParallel: boolean
 }
 
-export interface IActionExecutor {
+export interface IActionExecutor<
+  K extends IActionDefiniton['kind'],
+  Def = Extract<IActionDefiniton, { kind: K }>
+> {
+  /**
+   * Get Exeution's kind
+   */
+  get kind(): IActionDefiniton['kind']
+
   /**
    * Perform any action
    */
-  execute(cardContext: IWorkflowCard, action: IActionDefiniton): Promise<void>
+  execute(cardContext: IWorkflowCard, action: Def): Promise<void>
 }
 
 export interface IActionRunner {
