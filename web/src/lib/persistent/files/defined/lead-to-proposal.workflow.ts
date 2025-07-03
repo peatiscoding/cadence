@@ -11,6 +11,14 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
   ],
   fields: [
     {
+      slug: 'year',
+      description: 'Fisical Year of this project',
+      title: 'Year',
+      schema: {
+        kind: 'text'
+      }
+    },
+    {
       slug: 'proposal-link',
       description: 'Google Document Link to active proposal',
       title: 'Proposal Link',
