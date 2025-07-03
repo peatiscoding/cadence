@@ -10,14 +10,14 @@
     SidebarItem,
     SidebarWrapper,
     Avatar,
-    DarkMode
+    DarkMode,
+    Spinner
   } from 'flowbite-svelte'
   import {
     ChartOutline,
     ClipboardOutline as WorkflowOutline,
     GoogleSolid
   } from 'flowbite-svelte-icons'
-  import SpinnerIcon from '$lib/assets/spinner.svg?raw'
   import { impls } from '$lib/impls'
 
   let isLoggedIn = $state(false)
@@ -133,9 +133,7 @@
       <!-- Authentication Section -->
       {#if isInitializing}
         <div class="flex justify-center">
-          <div class="h-4 w-4 animate-spin text-gray-400 dark:text-gray-500">
-            {@html SpinnerIcon}
-          </div>
+          <Spinner color="blue" size="5" /> Please wait,
         </div>
       {:else if isLoggedIn}
         <!-- User Profile Section -->
@@ -171,9 +169,7 @@
         <!-- Login Button -->
         <Button onclick={handleLogin} color="blue" disabled={isLoading} class="w-full" size="xs">
           {#if isLoading}
-            <div class="h-4 w-4 animate-spin">
-              {@html SpinnerIcon}
-            </div>
+            <Spinner color="blue" size="5" />
             &nbsp;Signing in...
           {:else}
             <GoogleSolid class="h-4 w-4" />
