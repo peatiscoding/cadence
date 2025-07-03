@@ -7,4 +7,5 @@
 
 // Re-export all modules for easy access
 export * from './utils/index.js'
+export * from './models/index.js'
 export * from './validation/index.js'

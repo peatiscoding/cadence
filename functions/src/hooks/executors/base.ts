@@ -1,5 +1,4 @@
-import type { IActionDefiniton, IWorkflowCard } from '@cadence/shared/types'
-import type { IActionExecutor } from '@cadence/shared/actions/interface'
+import type { IActionExecutor, IActionDefiniton, IWorkflowCard } from '@cadence/shared/types'
 
 export abstract class AActionExecutor<K extends IActionDefiniton['kind']>
   implements IActionExecutor<K>

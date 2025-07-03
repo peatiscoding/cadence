@@ -1,9 +1,13 @@
 import type {
+  IWorkflowCard,
+  IActionDefiniton,
   IActionExecutor,
   IActionRunner,
   IRunnerOption
-} from '@cadence/shared/actions/interface'
-import type { IActionDefiniton, IWorkflowCard } from '@cadence/shared/types'
+} from '@cadence/shared/types'
+import { withContext } from '@cadence/shared/utils'
+import { Firestore } from 'firebase-admin/firestore'
+import { SetOwnerActionExecutor } from './executors/set-owner'
 
 interface RunTopology {
   (executions: (() => Promise<void>)[]): Promise<void>
@@ -37,8 +41,10 @@ export class ActionRunner implements IActionRunner {
   ): Promise<void> {
     const runTopo = runOptions.runInParallel ? _topologies.runInParallel : _topologies.runInSerial
 
+    const replacer = withContext(cardContext)
+
     await runTopo(
-      actions.map((a) => {
+      actions.map(replacer.replace.bind(replacer)).map((a) => {
         const executor = this.getExecutor(a)
         if (!executor) {
           throw new Error(`Unsupported execution for kind: ${a.kind}`)
@@ -48,7 +54,7 @@ export class ActionRunner implements IActionRunner {
     )
   }
 
-  public static shared(): IActionRunner {
-    throw new Error('Implement meh')
+  public static create(fs: Firestore): IActionRunner {
+    return new ActionRunner([new SetOwnerActionExecutor(fs)])
   }
 }

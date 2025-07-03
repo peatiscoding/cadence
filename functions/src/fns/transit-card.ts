@@ -1,9 +1,7 @@
 import type { CallableRequest } from 'firebase-functions/https'
-import type { IWorkflowCard } from '@cadence/shared/types'
+import type { IActionRunner, IWorkflowCard } from '@cadence/shared/types'
 
 import { supportedWorkflows } from '@cadence/shared/defined'
-
-import { ActionRunner } from '../action-runners/runner'
 
 /**
  * Interface for frontend to ask backend to perform hook execution for it.
@@ -16,13 +14,13 @@ export interface ITransitionRequest {
 }
 
 export const transitCard =
-  () =>
+  (getActionRunner: () => IActionRunner) =>
   async (req: CallableRequest<ITransitionRequest>): Promise<void> => {
+    const runner = getActionRunner()
     const destinationContext = req.data.destinationContext
     const workflow = supportedWorkflows.find(
       (wf) => wf.workflowId === destinationContext.workflowId
     )
-    const runner = ActionRunner.shared()
     try {
       if (!workflow) {
         throw new Error(`Unknown workflow: ${destinationContext.workflowId}.`)
