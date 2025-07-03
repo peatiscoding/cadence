@@ -1,4 +1,4 @@
-import type { WorkflowStatus } from '../types'
+import type { WorkflowStatus } from '../types/index.js'
 
 export const STATUS_DRAFT = 'draft'
 

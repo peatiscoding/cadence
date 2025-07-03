@@ -1,4 +1,4 @@
-import type { IWorkflowCard } from '../types'
+import type { IWorkflowCard } from '../types/index.js'
 
 interface ContextReplacer {
   /**

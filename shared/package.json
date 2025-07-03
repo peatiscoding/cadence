@@ -49,6 +49,11 @@
       "import": "./dist/utils/index.js",
       "require": "./dist/utils/index.js"
     },
+    "./defined": {
+      "types": "./dist/defined/index.d.ts",
+      "import": "./dist/defined/index.js",
+      "require": "./dist/defined/index.js"
+    },
     "./types": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/types/index.js",

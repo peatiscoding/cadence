@@ -1,5 +1,5 @@
 import type { EntryGenerator } from './$types'
-import { supportedWorkflows } from '$lib/persistent/files/defined'
+import { supportedWorkflows } from '@cadence/shared/defined'
 
 export const prerender = true
 

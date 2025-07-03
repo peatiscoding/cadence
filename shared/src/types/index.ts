@@ -23,3 +23,20 @@ export type IWorkflowCard = z.infer<typeof CardSchema>
 export type IActionDefiniton = z.infer<typeof ActionUnionSchema>
 export type ApiError = z.infer<typeof ApiErrorSchema>
 export type User = z.infer<typeof UserSchema>
+
+export interface IWorkflowCardEntry extends IWorkflowCard {
+  /**
+   * Epoch since status changed
+   */
+  statusSince: number
+  createdBy: string
+  /**
+   * Epoch since card was created
+   */
+  createdAt: number
+  updatedBy: string
+  /**
+   * Epoch since card was created
+   */
+  updatedAt: number
+}

@@ -5,7 +5,8 @@ import { FirebaseAuthenticationProvider } from './authentication/firebase/fireba
 import { FirestoreWorkflowCardStorage } from './persistent/firebase/firestore'
 import { WorkflowFactory } from './workflow/factory'
 import { BuildTimeWorkflows } from './persistent/files/build-time-workflows'
-import { supportedWorkflows } from './persistent/files/defined'
+
+import { supportedWorkflows } from '@cadence/shared/defined'
 
 export interface Impls {
   authProvider: IAuthenticationProvider

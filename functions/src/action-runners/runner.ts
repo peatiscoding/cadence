@@ -47,4 +47,8 @@ export class ActionRunner implements IActionRunner {
       })
     )
   }
+
+  public static shared(): IActionRunner {
+    throw new Error('Implement meh')
+  }
 }

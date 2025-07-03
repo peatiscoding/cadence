@@ -1,5 +1,4 @@
-import type { WorkflowConfiguration } from '@cadence/shared/types'
-import type { IWorkflowCardEntry } from '$lib/models/interface'
+import type { WorkflowConfiguration, IWorkflowCardEntry } from '@cadence/shared/types'
 import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 
@@ -18,17 +17,19 @@ import {
   query,
   onSnapshot
 } from 'firebase/firestore'
+
+import { WORKFLOWS, CARDS } from '@cadence/shared/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
 import { workflowConfigurationConverter } from './workflow-configuration.converter'
 
 const REFs = {
-  WORKFLOWS: (fs: Firestore) => collection(fs, `workflows`),
+  WORKFLOWS: (fs: Firestore) => collection(fs, WORKFLOWS),
   WORKFLOW_CONFIGURATION: (fs: Firestore, workflowId: string) =>
     doc(REFs.WORKFLOWS(fs), workflowId).withConverter(workflowConfigurationConverter),
   WORKFLOW_CARDS: (fs: Firestore, workflowId: string) =>
-    collection(REFs.WORKFLOW_CONFIGURATION(fs, workflowId), `cards`),
+    collection(REFs.WORKFLOW_CONFIGURATION(fs, workflowId), CARDS),
   WORKFLOW_CARD: (fs: Firestore, workflowId: string, workflowCardId: string) =>
     doc(REFs.WORKFLOW_CARDS(fs, workflowId), workflowCardId).withConverter(workflowCardConverter)
 }

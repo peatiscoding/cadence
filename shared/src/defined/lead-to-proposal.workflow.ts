@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration } from '@cadence/shared/types'
+import type { WorkflowConfiguration } from '../types/index.js'
 
 const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
   workflowId: 'ld2ppsl',

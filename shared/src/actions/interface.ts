@@ -1,4 +1,4 @@
-import type { IWorkflowCard, IActionDefiniton } from '../types'
+import type { IWorkflowCard, IActionDefiniton } from '../types/index.js'
 
 export interface IRunnerOption {
   /**
