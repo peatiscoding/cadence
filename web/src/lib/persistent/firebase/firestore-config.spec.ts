@@ -1,6 +1,6 @@
-import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 import type { Auth } from 'firebase/auth'
-import type { WorkflowConfiguration } from '@cadence/shared/types'
+import type { IOnCallResponse, WorkflowConfiguration } from '@cadence/shared/types'
+import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 
@@ -15,12 +15,9 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
   beforeAll(async () => {
     // Login firebase
-    const fns = getFunctions(undefined, 'asia-southeast2')
     auth = getAuth()
-    const loginFn = httpsCallable<
-      undefined,
-      { success: true; result: string } | { success: false; reason: Error }
-    >(fns, 'loginFn')
+    const fns = getFunctions(undefined, 'asia-southeast2')
+    const loginFn = httpsCallable<undefined, IOnCallResponse<string>>(fns, 'loginFn')
     const res = await loginFn()
     if (!res.data.success) {
       throw new Error('Unable to initiate test, authentication failed', res.data.reason)

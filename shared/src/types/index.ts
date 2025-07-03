@@ -73,3 +73,16 @@ export interface IActionRunner {
     runOptions: IRunnerOption
   ): Promise<void>
 }
+
+// HttpsOnCall Response & Request
+export interface IOnCallErrorResponse {
+  success: false
+  reason: Error
+}
+
+export interface IOnCallSuccessResponse<T> {
+  success: true
+  result: T
+}
+
+export type IOnCallResponse<T> = IOnCallSuccessResponse<T> | IOnCallErrorResponse
