@@ -1,7 +1,7 @@
 import type { IWorkflowCardStorage, IWorkflowConfigurationStorage } from '$lib/persistent/interface'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 import type { IWorkflowCardEntry } from '$lib/models/interface'
-import type { WorkflowConfiguration } from '@cadence/shared/validation'
+import type { WorkflowConfiguration } from '@cadence/shared/types'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
@@ -9,8 +9,9 @@ import type {
 } from './interface'
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { STATUS_DRAFT } from '@cadence/shared/models/status'
+
 import { WorkflowFactory } from './factory'
-import { STATUS_DRAFT } from '$lib/models/status'
 import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 
 describe('WorkflowCardEngine with Stubbed Storage', () => {

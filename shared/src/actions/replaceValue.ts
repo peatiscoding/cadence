@@ -1,4 +1,4 @@
-import { IWorkflowCard } from '../validation'
+import type { IWorkflowCard } from '../types'
 
 interface ContextReplacer {
   /**

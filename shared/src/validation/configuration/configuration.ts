@@ -12,5 +12,3 @@ export const ConfigurationSchema = z.object({
   types: z.array(TypeSchema),
   statuses: z.array(StatusSchema)
 })
-
-export type WorkflowConfiguration = z.infer<typeof ConfigurationSchema>

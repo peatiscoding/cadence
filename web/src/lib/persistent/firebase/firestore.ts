@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration } from '@cadence/shared/validation'
+import type { WorkflowConfiguration } from '@cadence/shared/types'
 import type { IWorkflowCardEntry } from '$lib/models/interface'
 import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'

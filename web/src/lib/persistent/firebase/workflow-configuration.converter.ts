@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration } from '@cadence/shared/validation'
+import type { WorkflowConfiguration } from '@cadence/shared/types'
 import type { FirestoreDataConverter } from 'firebase/firestore'
 
 // Firestore data converter for IWorkflowCardEntry

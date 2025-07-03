@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration } from '@cadence/shared/validation'
+import type { WorkflowConfiguration } from '@cadence/shared/types'
 import type { IWorkflowConfigurationStorage } from '$lib/persistent/interface'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 

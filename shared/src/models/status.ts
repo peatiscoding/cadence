@@ -1,4 +1,4 @@
-import type { WorkflowStatus } from '../validation'
+import type { WorkflowStatus } from '../types'
 
 export const STATUS_DRAFT = 'draft'
 

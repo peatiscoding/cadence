@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ActionUnion } from '../action/action.js'
+import { ActionUnionSchema } from '../action/action.js'
 
 // Status definition
 export const StatusSchema = z.object({
@@ -14,8 +14,6 @@ export const StatusSchema = z.object({
     required: z.array(z.string()).optional(),
     users: z.array(z.string()).optional()
   }),
-  transition: z.array(ActionUnion).optional(),
-  finally: z.array(ActionUnion).optional()
+  transition: z.array(ActionUnionSchema).optional(),
+  finally: z.array(ActionUnionSchema).optional()
 })
-
-export type WorkflowStatus = z.infer<typeof StatusSchema>

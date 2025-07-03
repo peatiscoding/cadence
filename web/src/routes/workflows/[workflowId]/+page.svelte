@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { WorkflowConfiguration as PConf } from '@cadence/shared/validation'
+  import type { WorkflowConfiguration as PConf } from '@cadence/shared/types'
   import type { IWorkflowConfigurationDynamicStorage } from '$lib/persistent/interface'
   import type { IWorkflowCardEntry } from '$lib/models/interface'
   import type { PageData } from './$types'

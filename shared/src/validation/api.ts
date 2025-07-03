@@ -14,5 +14,3 @@ export const ApiErrorSchema = z.object({
   message: z.string(),
   details: z.record(z.any()).optional()
 })
-
-export type ApiError = z.infer<typeof ApiErrorSchema>

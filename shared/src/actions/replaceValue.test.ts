@@ -1,5 +1,5 @@
+import type { IWorkflowCard } from '../types'
 import { withContext } from './replaceValue'
-import { IWorkflowCard } from '../validation/card/card'
 
 describe('withContext', () => {
   const mockCard: IWorkflowCard = {

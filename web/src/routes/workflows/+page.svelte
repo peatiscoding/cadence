@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { WorkflowConfiguration } from '@cadence/shared/validation'
+  import type { WorkflowConfiguration } from '@cadence/shared/types'
   import { ClipboardListOutline } from 'flowbite-svelte-icons'
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'

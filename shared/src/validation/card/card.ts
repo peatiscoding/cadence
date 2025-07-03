@@ -13,6 +13,3 @@ export const CardSchema = z.object({
   createdBy: z.string().min(1),
   fieldData: z.record(z.any()).default({})
 })
-
-// Type inference helpers
-export type IWorkflowCard = z.infer<typeof CardSchema>

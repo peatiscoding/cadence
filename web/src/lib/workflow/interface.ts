@@ -1,6 +1,6 @@
 import type { IWorkflowCardEntry } from '$lib/models/interface'
 import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
-import type { WorkflowConfiguration, WorkflowStatus } from '@cadence/shared/validation'
+import type { WorkflowConfiguration, WorkflowStatus } from '@cadence/shared/types'
 import type { z } from 'zod'
 
 export type IWorkflowCardEntryCreation = Pick<IWorkflowCardEntry, 'title' | 'description' | 'value'>

@@ -1,5 +1,5 @@
 import type { IWorkflowCardStorage } from '$lib/persistent/interface'
-import type { WorkflowConfiguration, WorkflowStatus } from '@cadence/shared/validation'
+import type { WorkflowConfiguration, WorkflowStatus } from '@cadence/shared/types'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,

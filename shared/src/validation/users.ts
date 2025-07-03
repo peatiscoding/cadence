@@ -6,5 +6,3 @@ export const UserSchema = z.object({
   displayName: z.string().nullable(),
   avatarUrl: z.string().url().nullable()
 })
-
-export type User = z.infer<typeof UserSchema>

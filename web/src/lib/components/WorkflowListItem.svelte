@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { WorkflowConfiguration as WorkflowConfiguration } from '@cadence/shared/validation'
+  import type { WorkflowConfiguration as WorkflowConfiguration } from '@cadence/shared/types'
   import WorkflowIcon from '$lib/assets/workflow.svg?raw'
   import { ChevronRightOutline } from 'flowbite-svelte-icons'
 

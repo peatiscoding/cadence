@@ -53,5 +53,3 @@ export const FieldSchema = z.object({
   description: z.string().optional(),
   schema: FieldSchemaUnion
 })
-
-export type WorkflowField = z.infer<typeof FieldSchema>

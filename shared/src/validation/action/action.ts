@@ -31,10 +31,8 @@ const SendEmailActionSchema = z.object({
   message: z.string()
 })
 
-export const ActionUnion = z.discriminatedUnion('kind', [
+export const ActionUnionSchema = z.discriminatedUnion('kind', [
   SetOwnerActionSchema,
   SendEmailActionSchema,
   SendWebhookActionSchema
 ])
-
-export type IActionDefiniton = z.infer<typeof ActionUnion>

@@ -5,7 +5,7 @@
     WorkflowField,
     WorkflowType,
     WorkflowStatus
-  } from '@cadence/shared/validation'
+  } from '@cadence/shared/types'
   import { draftStatus, unknownStatus, STATUS_DRAFT } from '@cadence/shared/models/status'
   import { z } from 'zod'
   import { onMount } from 'svelte'

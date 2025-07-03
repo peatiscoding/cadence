@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { WorkflowConfiguration } from '@cadence/shared/validation'
+  import type { WorkflowConfiguration } from '@cadence/shared/types'
 
   interface Props {
     workflow: WorkflowConfiguration

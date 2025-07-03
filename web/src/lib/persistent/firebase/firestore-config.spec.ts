@@ -1,6 +1,6 @@
 import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 import type { Auth } from 'firebase/auth'
-import type { WorkflowConfiguration } from '@cadence/shared/validation'
+import type { WorkflowConfiguration } from '@cadence/shared/types'
 import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 

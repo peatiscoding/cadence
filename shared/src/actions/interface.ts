@@ -1,5 +1,4 @@
-import type { IWorkflowCard } from '../validation'
-import type { IActionDefiniton } from '../validation/action/action'
+import type { IWorkflowCard, IActionDefiniton } from '../types'
 
 export interface IRunOption {
   parallel: boolean
