@@ -15,4 +15,4 @@ export const CardSchema = z.object({
 })
 
 // Type inference helpers
-export type WorkflowCard = z.infer<typeof CardSchema>
+export type IWorkflowCard = z.infer<typeof CardSchema>

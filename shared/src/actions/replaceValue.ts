@@ -1,7 +1,13 @@
 import { IWorkflowCard } from '../validation'
 
 interface ContextReplacer {
-  replace(val: string): string
+  /**
+   * Recursively replaces placeholders in nested objects
+   *
+   * @param val - Nested object with string values to replace
+   * @returns New object with placeholders replaced, preserving structure
+   */
+  replace<T extends any>(val: T): T
 }
 
 /**
@@ -14,19 +20,23 @@ interface ContextReplacer {
  * - `$.[field]` or `#.[field]` - Required marker: throws error if value is null/undefined
  *
  * @param card - The workflow card to extract values from
- * @returns ContextReplacer object with replace method
- * 
+ * @returns ContextReplacer object with replace and replaceNested methods
+ *
  * @example
  * ```typescript
  * const replacer = withContext(card)
- * 
- * // Required field - throws error if undefined
- * replacer.replace('Title: $.title') 
- * 
+ *
+ * // String replacement - throws error if undefined
+ * replacer.replace('Title: $.title')
+ *
  * // Optional field - returns empty string if undefined
  * replacer.replace('Description: $.description?')
+ *
+ * // Nested object replacement
+ * const config = { title: '$.title', priority: '#.priority' }
+ * const result = replacer.replaceNested(config)
  * ```
- * 
+ *
  * @throws Error When a required field (without '?' marker) is null or undefined
  */
 export const withContext = (card: IWorkflowCard): ContextReplacer => {
@@ -50,7 +60,7 @@ export const withContext = (card: IWorkflowCard): ContextReplacer => {
     }
     return val
   }
-  const replace = (val: string): string => {
+  const _replaceVal = (val: string): string => {
     return val.replace(/(\$|#)\.([a-zA-Z0-9_]+)(\?)?/g, (wholeStr, type, key, optionalMarker) => {
       const isOptional = optionalMarker === '?'
       if (type === '#') return fieldGetter(key, !isOptional)
@@ -58,7 +68,26 @@ export const withContext = (card: IWorkflowCard): ContextReplacer => {
       else return wholeStr
     })
   }
+  const replaceNested = <T extends any>(val: T): T => {
+    // Replacable types
+    if (typeof val === 'string') {
+      return _replaceVal(val) as any
+    } else if (Array.isArray(val)) {
+      const arr = new Array<any>(val.length)
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = replaceNested(val[i])
+      }
+      return arr as any
+    } else if (typeof val === 'object' && val !== null) {
+      const r: any = {}
+      for (const k of Object.keys(val)) {
+        r[k] = replaceNested((val as any)[k])
+      }
+      return r
+    }
+    return val
+  }
   return {
-    replace
+    replace: replaceNested
   }
 }

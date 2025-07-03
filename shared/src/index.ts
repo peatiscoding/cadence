@@ -7,6 +7,4 @@
 
 // Re-export all modules for easy access
 export * from './utils/index.js'
-export * from './validation/card/card.js'
 export * from './validation/index.js'
-

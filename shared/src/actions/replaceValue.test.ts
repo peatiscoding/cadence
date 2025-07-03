@@ -68,7 +68,7 @@ describe('withContext', () => {
 
       expect(() => {
         contextReplacer.replace('Non-existent field: #.nonExistentField')
-      }).toThrow('Cannot replace \'#.nonExistentField\' the value is required')
+      }).toThrow("Cannot replace '#.nonExistentField' the value is required")
     })
 
     it('should throw error for undefined card fields when required', () => {
@@ -80,7 +80,7 @@ describe('withContext', () => {
 
       expect(() => {
         contextReplacer.replace('Description: $.description')
-      }).toThrow('Cannot replace \'$.description\' the value is required')
+      }).toThrow("Cannot replace '$.description' the value is required")
     })
 
     it('should handle complex strings with special characters', () => {
@@ -231,7 +231,9 @@ describe('withContext', () => {
       }
       const contextReplacer = withContext(cardWithMixedValues)
 
-      const result = contextReplacer.replace('Title: $.title, Desc: $.description?, Optional: #.optionalField?, Priority: #.priority')
+      const result = contextReplacer.replace(
+        'Title: $.title, Desc: $.description?, Optional: #.optionalField?, Priority: #.priority'
+      )
       expect(result).toBe('Title: Test Card Title, Desc: , Optional: , Priority: high')
     })
 
@@ -246,7 +248,9 @@ describe('withContext', () => {
       }
       const contextReplacer = withContext(cardWithUndefinedFields)
 
-      const result = contextReplacer.replace('Card "$.title" - Desc: [$.description?] - Missing: (#.missingField?) - Priority: #.priority')
+      const result = contextReplacer.replace(
+        'Card "$.title" - Desc: [$.description?] - Missing: (#.missingField?) - Priority: #.priority'
+      )
       expect(result).toBe('Card "Test Card Title" - Desc: [] - Missing: () - Priority: high')
     })
   })
@@ -265,7 +269,7 @@ describe('withContext', () => {
 
       expect(() => {
         contextReplacer.replace('Title: $.title?, Desc: $.description, Missing: #.missingField?')
-      }).toThrow('Cannot replace \'$.description\' the value is required')
+      }).toThrow("Cannot replace '$.description' the value is required")
     })
 
     it('should throw error with correct field name for card fields', () => {
@@ -294,6 +298,265 @@ describe('withContext', () => {
         contextReplacer.replace('Required: #.requiredField')
       }).toThrow("Cannot replace '#.requiredField' the value is required")
     })
+
+    it('should replace placeholders in simple nested object', () => {
+      const contextReplacer = withContext(mockCard)
+
+      const input = {
+        title: '$.title',
+        status: '$.status',
+        priority: '#.priority'
+      }
+
+      const result = contextReplacer.replace(input)
+      expect(result).toEqual({
+        title: 'Test Card Title',
+        status: 'in-progress',
+        priority: 'high'
+      })
+    })
+
+    it('should replace placeholders in deeply nested object', () => {
+      const contextReplacer = withContext(mockCard)
+
+      const input = {
+        card: {
+          info: {
+            title: '$.title',
+            details: {
+              status: '$.status',
+              category: '#.category'
+            }
+          },
+          metadata: {
+            owner: '$.owner',
+            tags: '#.tags'
+          }
+        }
+      }
+
+      const result = contextReplacer.replace(input)
+      expect(result).toEqual({
+        card: {
+          info: {
+            title: 'Test Card Title',
+            details: {
+              status: 'in-progress',
+              category: 'development'
+            }
+          },
+          metadata: {
+            owner: 'john.doe@example.com',
+            tags: 'urgent,backend'
+          }
+        }
+      })
+    })
+
+    it('should handle mixed string and non-string values', () => {
+      const contextReplacer = withContext(mockCard)
+
+      const input = {
+        title: '$.title',
+        count: 42,
+        isActive: true,
+        config: {
+          name: '$.title',
+          priority: '#.priority',
+          threshold: 100
+        }
+      }
+
+      const result = contextReplacer.replace(input)
+      expect(result).toEqual({
+        title: 'Test Card Title',
+        count: 42,
+        isActive: true,
+        config: {
+          name: 'Test Card Title',
+          priority: 'high',
+          threshold: 100
+        }
+      })
+    })
+
+    it('should handle optional placeholders in nested structure', () => {
+      const cardWithMissingFields: IWorkflowCard = {
+        ...mockCard,
+        description: undefined,
+        fieldData: {
+          ...mockCard.fieldData,
+          optionalField: null
+        }
+      }
+      const contextReplacer = withContext(cardWithMissingFields)
+
+      const input = {
+        required: {
+          title: '$.title',
+          priority: '#.priority'
+        },
+        optional: {
+          description: '$.description?',
+          optionalField: '#.optionalField?',
+          category: '#.category'
+        }
+      }
+
+      const result = contextReplacer.replace(input)
+      expect(result).toEqual({
+        required: {
+          title: 'Test Card Title',
+          priority: 'high'
+        },
+        optional: {
+          description: '',
+          optionalField: '',
+          category: 'development'
+        }
+      })
+    })
+
+    it('should preserve empty strings and handle null values', () => {
+      const contextReplacer = withContext(mockCard)
+
+      const input = {
+        title: '$.title',
+        empty: '',
+        nullValue: null,
+        nested: {
+          status: '$.status',
+          empty: '',
+          nullValue: null
+        }
+      }
+
+      const result = contextReplacer.replace(input)
+      expect(result).toEqual({
+        title: 'Test Card Title',
+        empty: '',
+        nullValue: null,
+        nested: {
+          status: 'in-progress',
+          empty: '',
+          nullValue: null
+        }
+      })
+    })
+
+    it('should handle arrays of strings (non-recursive)', () => {
+      const contextReplacer = withContext(mockCard)
+
+      const input = {
+        title: '$.title',
+        items: ['$.title', '$.status', '#.priority'],
+        nested: {
+          name: '$.title',
+          list: ['item1', 'item2', '$.status']
+        }
+      }
+
+      const result = contextReplacer.replace(input)
+      expect(result).toEqual({
+        title: 'Test Card Title',
+        items: ['Test Card Title', 'in-progress', 'high'], // Arrays are not processed
+        nested: {
+          name: 'Test Card Title',
+          list: ['item1', 'item2', 'in-progress']
+        }
+      })
+    })
+
+    it('should throw error for required fields in nested structure', () => {
+      const cardWithMissingFields: IWorkflowCard = {
+        ...mockCard,
+        description: undefined
+      }
+      const contextReplacer = withContext(cardWithMissingFields)
+
+      const input = {
+        valid: {
+          title: '$.title'
+        },
+        invalid: {
+          description: '$.description' // This will throw
+        }
+      }
+
+      expect(() => {
+        contextReplacer.replace(input)
+      }).toThrow("Cannot replace '$.description' the value is required")
+    })
+
+    it('should handle complex mixed scenarios', () => {
+      const contextReplacer = withContext(mockCard)
+
+      const input = {
+        message: 'Card $.title has status $.status',
+        config: {
+          email: {
+            subject: 'Update for $.title',
+            body: 'Card $.title ($.status) - Priority: #.priority, Tags: #.tags'
+          },
+          notifications: {
+            slack: {
+              channel: '#notifications',
+              text: '$.title is now $.status'
+            }
+          }
+        },
+        metadata: {
+          processed: true,
+          timestamp: '2023-01-01',
+          source: 'Card $.title'
+        }
+      }
+
+      const result = contextReplacer.replace(input)
+      expect(result).toEqual({
+        message: 'Card Test Card Title has status in-progress',
+        config: {
+          email: {
+            subject: 'Update for Test Card Title',
+            body: 'Card Test Card Title (in-progress) - Priority: high, Tags: urgent,backend'
+          },
+          notifications: {
+            slack: {
+              channel: '#notifications',
+              text: 'Test Card Title is now in-progress'
+            }
+          }
+        },
+        metadata: {
+          processed: true,
+          timestamp: '2023-01-01',
+          source: 'Card Test Card Title'
+        }
+      })
+    })
+
+    it('should handle empty nested objects', () => {
+      const contextReplacer = withContext(mockCard)
+
+      const input = {
+        title: '$.title',
+        empty: {},
+        nested: {
+          status: '$.status',
+          inner: {}
+        }
+      }
+
+      const result = contextReplacer.replace(input)
+      expect(result).toEqual({
+        title: 'Test Card Title',
+        empty: {},
+        nested: {
+          status: 'in-progress',
+          inner: {}
+        }
+      })
+    })
   })
 
   describe('edge cases', () => {
@@ -306,7 +569,7 @@ describe('withContext', () => {
 
       expect(() => {
         contextReplacer.replace('Priority: #.priority')
-      }).toThrow('Cannot replace \'#.priority\' the value is required')
+      }).toThrow("Cannot replace '#.priority' the value is required")
     })
 
     it('should throw error for null values when required', () => {
@@ -320,7 +583,7 @@ describe('withContext', () => {
 
       expect(() => {
         contextReplacer.replace('Null field: #.nullField')
-      }).toThrow('Cannot replace \'#.nullField\' the value is required')
+      }).toThrow("Cannot replace '#.nullField' the value is required")
     })
 
     it('should handle very long replacement strings', () => {
@@ -355,4 +618,3 @@ describe('withContext', () => {
     })
   })
 })
-
