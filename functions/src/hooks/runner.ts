@@ -38,20 +38,27 @@ export class ActionRunner implements IActionRunner {
     cardContext: IWorkflowCard,
     actions: IActionDefiniton[],
     runOptions: IRunnerOption
-  ): Promise<void> {
+  ): Promise<number[]> {
+    const elapsed: number[] = []
     const runTopo = runOptions.runInParallel ? _topologies.runInParallel : _topologies.runInSerial
 
     const replacer = withContext(cardContext)
 
-    await runTopo(
-      actions.map(replacer.replace.bind(replacer)).map((a) => {
-        const executor = this.getExecutor(a)
-        if (!executor) {
-          throw new Error(`Unsupported execution for kind: ${a.kind}`)
-        }
-        return () => executor.execute(cardContext, a)
-      })
-    )
+    const executionFunctions = actions.map(replacer.replace.bind(replacer)).map((a, index) => {
+      const executor = this.getExecutor(a)
+      if (!executor) {
+        throw new Error(`Unsupported execution for kind: ${a.kind}`)
+      }
+      return async () => {
+        const start = new Date().getTime()
+        await executor.execute(cardContext, a)
+        const executionTime = new Date().getTime() - start
+        elapsed[index] = executionTime
+      }
+    })
+
+    await runTopo(executionFunctions)
+    return elapsed
   }
 
   public static create(fs: Firestore): IActionRunner {

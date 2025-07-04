@@ -122,6 +122,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
     // TODO: Run status configuration actions (hooks)
     // - ASK if actions must validate its input first?
+    // TODO: Ask storage to use transit function instead.
 
     // All condition is now validated. Let's write the changes
     await this.storage.updateCard(this.workflowId, workflowCardId, userSsoId, {

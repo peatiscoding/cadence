@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ActionUnionSchema } from '../action/action.js'
+import { ActionUnionSchema } from '../action/action'
 
 // Status definition
 export const StatusSchema = z.object({

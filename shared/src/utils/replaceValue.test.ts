@@ -11,7 +11,6 @@ describe('withContext', () => {
     type: 'task',
     value: 100,
     owner: 'john.doe@example.com',
-    createdBy: 'jane.smith@example.com',
     fieldData: {
       priority: 'high',
       category: 'development',

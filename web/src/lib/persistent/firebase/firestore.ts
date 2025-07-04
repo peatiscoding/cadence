@@ -18,6 +18,7 @@ import {
   onSnapshot
 } from 'firebase/firestore'
 
+import { getFunctions, httpsCallable, type Functions } from 'firebase/functions'
 import { WORKFLOWS, CARDS } from '@cadence/shared/models/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
@@ -39,11 +40,15 @@ export class FirestoreWorkflowCardStorage
 {
   public static shared(): IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage {
     const db = getFirestore(app)
-    return new FirestoreWorkflowCardStorage(db)
+    const fns = getFunctions(app)
+    return new FirestoreWorkflowCardStorage(db, fns)
   }
 
   //
-  private constructor(private readonly fs: Firestore) {}
+  private constructor(
+    private readonly fs: Firestore,
+    private readonly fns: Functions
+  ) {}
 
   isSupportDynamicWorkflows(): boolean {
     return true
@@ -79,6 +84,11 @@ export class FirestoreWorkflowCardStorage
     })
 
     await updateDoc(REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId), updated)
+  }
+
+  async transitCard(workflowId: string, workflowCardId: string, payload: any): Promise<void> {
+    const transitFn = httpsCallable<any, void>(this.fns, 'transitCardFn')
+    throw new Error('Method not implemented.')
   }
 
   async getCard(workflowId: string, workflowCardId: string): Promise<IWorkflowCardEntry> {

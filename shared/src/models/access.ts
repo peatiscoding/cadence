@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration } from '../types/index.js'
+import type { WorkflowConfiguration } from '../types'
 
 const _helpers = {
   evalAclStatement(rawStatement: string, currentUserEmail: string): boolean {

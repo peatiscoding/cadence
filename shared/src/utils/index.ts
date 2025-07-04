@@ -1,1 +1,1 @@
-export * from './replaceValue.js'
+export * from './replaceValue'

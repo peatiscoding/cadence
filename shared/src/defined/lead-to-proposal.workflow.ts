@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration } from '../types/index.js'
+import type { WorkflowConfiguration } from '../types'
 
 const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
   workflowId: 'ld2ppsl',

@@ -1,21 +1,20 @@
 import type { CallableRequest } from 'firebase-functions/https'
-import type { IActionRunner, IWorkflowCard } from '@cadence/shared/types'
+import type {
+  IActionRunner,
+  ITransitWorkflowItemRequest,
+  ITransitWorkflowItemResponse
+} from '@cadence/shared/types'
 
 import { supportedWorkflows } from '@cadence/shared/defined'
 
-/**
- * Interface for frontend to ask backend to perform hook execution for it.
- */
-export interface ITransitionRequest {
-  /**
-   * contextual data of that card as user has entered.
-   */
-  destinationContext: IWorkflowCard
-}
-
 export const transitCard =
   (getActionRunner: () => IActionRunner) =>
-  async (req: CallableRequest<ITransitionRequest>): Promise<void> => {
+  async (
+    req: CallableRequest<ITransitWorkflowItemRequest>
+  ): Promise<ITransitWorkflowItemResponse> => {
+    const start = new Date().getTime()
+    const transitionStats: { executionKind: string; in: number }[] = []
+    const finallyStats: { executionKind: string; in: number }[] = []
     const runner = getActionRunner()
     const destinationContext = req.data.destinationContext
     const workflow = supportedWorkflows.find(
@@ -40,6 +39,12 @@ export const transitCard =
       const afterTransitActions = targetStatus.finally || []
       if (afterTransitActions.length > 0) {
         await runner.run(destinationContext, afterTransitActions, { runInParallel: true })
+      }
+
+      return {
+        doneIn: new Date().getTime() - start,
+        transition: transitionStats,
+        finally: finallyStats
       }
     } catch (e) {
       throw new Error(`Cannot transit card to ${destinationContext.status}: ${e}`)

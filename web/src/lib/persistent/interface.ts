@@ -23,6 +23,11 @@ export interface IWorkflowCardStorage {
   ): Promise<void>
 
   /**
+   * Ask backend to safely transit card from one-status to another
+   */
+  transitCard(workflowId: string, workflowCardId: string, payload: any): Promise<void>
+
+  /**
    * Get Single Card
    */
   getCard(workflowId: string, workflowCardId: string): Promise<IWorkflowCardEntry>
