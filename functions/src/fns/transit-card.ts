@@ -1,3 +1,4 @@
+import type { Firestore } from 'firebase-admin/firestore'
 import type { CallableRequest } from 'firebase-functions/https'
 import type {
   IActionRunner,
@@ -5,13 +6,18 @@ import type {
   ITransitWorkflowItemResponse
 } from '@cadence/shared/types'
 
+import omit from 'lodash/omit'
+import { firestore } from 'firebase-admin'
+import * as logger from 'firebase-functions/logger'
 import { supportedWorkflows } from '@cadence/shared/defined'
+import { paths } from '@cadence/shared/models'
 
 export const transitCard =
-  (getActionRunner: () => IActionRunner) =>
+  (getFirestore: () => Firestore, getActionRunner: () => IActionRunner) =>
   async (
     req: CallableRequest<ITransitWorkflowItemRequest>
   ): Promise<ITransitWorkflowItemResponse> => {
+    const fs = getFirestore()
     const start = new Date().getTime()
     const transitionStats: { executionKind: string; in: number }[] = []
     const finallyStats: { executionKind: string; in: number }[] = []
@@ -20,6 +26,17 @@ export const transitCard =
     const workflow = supportedWorkflows.find(
       (wf) => wf.workflowId === destinationContext.workflowId
     )
+    const docRef = fs.doc(
+      paths.WORKFLOW_CARD(destinationContext.workflowId, destinationContext.workflowCardId)
+    )
+
+    const userEmail = req.auth?.token.email || req.auth?.uid
+    logger.log(
+      `Attempt to transit with user: ${userEmail} on ${destinationContext.workflowId}/${destinationContext.workflowCardId} to ${destinationContext.status}.`
+    )
+    if (!userEmail) {
+      throw new Error(`Invalid session. Login is required`)
+    }
     try {
       if (!workflow) {
         throw new Error(`Unknown workflow: ${destinationContext.workflowId}.`)
@@ -30,12 +47,36 @@ export const transitCard =
         throw new Error(`Unknown workflow's status: ${destinationContext.status}`)
       }
 
-      // list hook actions.
+      const doc = await docRef.get()
+      if (!doc.exists) {
+        throw new Error(`Unknown workflow item`)
+      }
+
+      const currentStatus = doc.data()?.status
+
+      if (destinationContext.status === currentStatus) {
+        throw new Error(
+          `No transition required. Item is already in desire status "${currentStatus}".`
+        )
+      }
+
+      // Validate documents per status' requirement.
+
+      // Pre Transit
       const beforeTransitActions = targetStatus.transition || []
       if (beforeTransitActions.length > 0) {
         await runner.run(destinationContext, beforeTransitActions, { runInParallel: false })
       }
-      // TODO: Apply change to the database.
+
+      // Update database (transit)
+      const f = omit(destinationContext, 'workflowId', 'workflowCardId')
+      await docRef.update({
+        ...f,
+        updatedBy: userEmail,
+        updatedAt: firestore.FieldValue.serverTimestamp()
+      })
+
+      // Post Transit (Finally)
       const afterTransitActions = targetStatus.finally || []
       if (afterTransitActions.length > 0) {
         await runner.run(destinationContext, afterTransitActions, { runInParallel: true })
