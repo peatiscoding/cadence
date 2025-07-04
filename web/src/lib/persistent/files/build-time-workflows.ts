@@ -3,12 +3,16 @@ import type { IWorkflowConfigurationStorage } from '$lib/persistent/interface'
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 
 import { canAccessWorkflow } from '@cadence/shared/models/access'
+import { ConfigurationSchema } from '@cadence/shared/validation'
 
 export class BuildTimeWorkflows implements IWorkflowConfigurationStorage {
   constructor(
     protected readonly workflows: Array<WorkflowConfiguration & { workflowId: string }>,
     protected readonly authProvider: IAuthenticationProvider
-  ) {}
+  ) {
+    // Built-in Type Safety.
+    workflows.map((w) => ConfigurationSchema.parse(w))
+  }
 
   isSupportDynamicWorkflows(): boolean {
     return false

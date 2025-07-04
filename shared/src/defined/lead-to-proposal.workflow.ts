@@ -19,11 +19,19 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       }
     },
     {
-      slug: 'proposal-link',
+      slug: 'proposalLink',
       description: 'Google Document Link to active proposal',
       title: 'Proposal Link',
       schema: {
         kind: 'url'
+      }
+    },
+    {
+      slug: 'contactPoint',
+      description: 'Email to contact once user proposal was sent',
+      title: 'Contact Point',
+      schema: {
+        kind: 'text'
       }
     },
     {
@@ -44,7 +52,7 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       ui: {
         color: '#44FF55'
       },
-      precondition: { from: ['draft'] }
+      precondition: { from: ['draft'], required: ['year'] }
     },
     {
       slug: 'proposal-sent',
@@ -55,8 +63,14 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       },
       precondition: {
         from: ['brewing'],
-        required: ['$.value', 'proposal-link']
-      }
+        required: ['$.value', 'proposalLink', 'contactPoint']
+      },
+      finally: [
+        {
+          kind: 'set-owner',
+          to: '#.contactPoint'
+        }
+      ]
     },
     {
       slug: 'accepted',

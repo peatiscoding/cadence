@@ -6,7 +6,7 @@ import type {
   ITransitWorkflowItemResponse
 } from '@cadence/shared/types'
 
-import omit from 'lodash/omit'
+import { omit } from 'lodash'
 import { firestore } from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { supportedWorkflows } from '@cadence/shared/defined'
@@ -61,6 +61,7 @@ export const transitCard =
       }
 
       // Validate documents per status' requirement.
+      // FIXME: implement the status transitioning validation (required.*)
 
       // Pre Transit
       const beforeTransitActions = targetStatus.transition || []
@@ -72,6 +73,7 @@ export const transitCard =
       const f = omit(destinationContext, 'workflowId', 'workflowCardId')
       await docRef.update({
         ...f,
+        statusSince: firestore.FieldValue.serverTimestamp(),
         updatedBy: userEmail,
         updatedAt: firestore.FieldValue.serverTimestamp()
       })

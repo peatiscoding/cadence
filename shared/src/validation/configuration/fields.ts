@@ -48,7 +48,10 @@ const FieldSchemaUnion = z.discriminatedUnion('kind', [
 
 // Field definition
 export const FieldSchema = z.object({
-  slug: z.string(),
+  slug: z
+    .string()
+    .regex(/^[a-zA-Z0-9_]+$/)
+    .describe("Field's slug can be only `camelCase` or `snake_case`."),
   title: z.string(),
   description: z.string().optional(),
   schema: FieldSchemaUnion
