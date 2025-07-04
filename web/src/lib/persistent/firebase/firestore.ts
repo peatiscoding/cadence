@@ -1,4 +1,9 @@
-import type { WorkflowConfiguration, IWorkflowCardEntry } from '@cadence/shared/types'
+import type {
+  WorkflowConfiguration,
+  IWorkflowCardEntry,
+  ITransitWorkflowItemRequest,
+  ITransitWorkflowItemResponse
+} from '@cadence/shared/types'
 import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
 
@@ -18,7 +23,7 @@ import {
   onSnapshot
 } from 'firebase/firestore'
 
-import { getFunctions, httpsCallable, type Functions } from 'firebase/functions'
+import { getFunctions, httpsCallable, type Functions, type HttpsCallable } from 'firebase/functions'
 import { WORKFLOWS, CARDS } from '@cadence/shared/models/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
@@ -87,8 +92,15 @@ export class FirestoreWorkflowCardStorage
   }
 
   async transitCard(workflowId: string, workflowCardId: string, payload: any): Promise<void> {
-    const transitFn = httpsCallable<any, void>(this.fns, 'transitCardFn')
-    throw new Error('Method not implemented.')
+    // transitFn
+    const fn = this.getFirebaseTransitFn()
+    const res = await fn({
+      ...payload,
+      workflowId,
+      workflowCardId
+    })
+
+    console.info('TRANSITION RESULT:', res)
   }
 
   async getCard(workflowId: string, workflowCardId: string): Promise<IWorkflowCardEntry> {
@@ -189,5 +201,18 @@ export class FirestoreWorkflowCardStorage
         await deleteDoc(ref)
       })
     )
+  }
+
+  // ------------------------------- PRIVATE ------------------------------------ //
+
+  private getFirebaseTransitFn(): HttpsCallable<
+    ITransitWorkflowItemRequest,
+    ITransitWorkflowItemResponse
+  > {
+    const transitFn = httpsCallable<ITransitWorkflowItemRequest, ITransitWorkflowItemResponse>(
+      this.fns,
+      'transitCardFn'
+    )
+    return transitFn
   }
 }
