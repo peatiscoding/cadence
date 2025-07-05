@@ -1,7 +1,7 @@
 import type { IActionDefiniton, IWorkflowCard } from '@cadence/shared/types'
 import type { Firestore } from 'firebase-admin/firestore'
-import { AActionExecutor } from './base'
 import { paths } from '@cadence/shared/models'
+import { AActionExecutor } from './base'
 
 /**
  * Action runner for set an owner to the given card.
