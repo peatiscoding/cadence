@@ -1,5 +1,7 @@
 web/src/firebase.config.js
 .cred
 functions/firebase-debug.log
+functions/lib
 node_modules
 shared/dist
+*.tsbuildinfo
