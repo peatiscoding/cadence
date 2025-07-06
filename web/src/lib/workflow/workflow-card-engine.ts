@@ -120,17 +120,10 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     _helpers.validateRequiredFields(precondition.required || [], currentCard)
     _helpers.validateFromStatus(precondition.from, currentCard.status)
 
-    // TODO: Run status configuration actions (hooks)
-    // - ASK if actions must validate its input first?
-    // TODO: Ask storage to use transit function instead.
-
-    // All condition is now validated. Let's write the changes
-    await this.storage.updateCard(this.workflowId, workflowCardId, userSsoId, {
+    await this.storage.transitCard(this.workflowId, workflowCardId, {
       ...payload,
-      status: toStatus,
-      statusSince: USE_SERVER_TIMESTAMP
+      status: toStatus
     })
-    // TODO: Run post operations
   }
 
   async deleteCard(workflowCardId: string): Promise<void> {

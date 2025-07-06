@@ -1,13 +1,14 @@
-import admin from 'firebase-admin'
+import type { App } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
 import * as logger from 'firebase-functions/logger'
 
 const AUTH_USER_UID = 'bot'
 
-export const login = (adm: typeof admin) => async (): Promise<string> => {
+export const login = (app: App) => async (): Promise<string> => {
   try {
     // Create custom token for hardcoded user "BOT"
     const uid = AUTH_USER_UID
-    const customToken = await adm.auth().createCustomToken(uid, {
+    const customToken = await getAuth(app).createCustomToken(uid, {
       role: 'bot',
       type: 'programmatic'
     })

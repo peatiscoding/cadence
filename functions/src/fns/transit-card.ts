@@ -1,4 +1,4 @@
-import type { Firestore } from 'firebase-admin/firestore'
+import type { App } from 'firebase-admin/app'
 import type { CallableRequest } from 'firebase-functions/https'
 import type {
   IActionRunner,
@@ -6,18 +6,27 @@ import type {
   ITransitWorkflowItemResponse
 } from '@cadence/shared/types'
 
-import { omit } from 'lodash'
-import { firestore } from 'firebase-admin'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import * as logger from 'firebase-functions/logger'
 import { supportedWorkflows } from '@cadence/shared/defined'
 import { paths } from '@cadence/shared/models'
 
+const _helpers = {
+  omit<T>(d: T, ...keys: (keyof T)[]): Partial<T> {
+    const _d: Partial<T> = { ...d }
+    for (const k of keys) {
+      delete _d[k]
+    }
+    return _d
+  }
+}
+
 export const transitCard =
-  (getFirestore: () => Firestore, getActionRunner: () => IActionRunner) =>
+  (app: App, getActionRunner: () => IActionRunner) =>
   async (
     req: CallableRequest<ITransitWorkflowItemRequest>
   ): Promise<ITransitWorkflowItemResponse> => {
-    const fs = getFirestore()
+    const fs = getFirestore(app)
     const start = new Date().getTime()
     const transitionStats: { executionKind: string; in: number }[] = []
     const finallyStats: { executionKind: string; in: number }[] = []
@@ -70,12 +79,12 @@ export const transitCard =
       }
 
       // Update database (transit)
-      const f = omit(destinationContext, 'workflowId', 'workflowCardId')
+      const f = _helpers.omit(destinationContext, 'workflowId', 'workflowCardId')
       await docRef.update({
         ...f,
-        statusSince: firestore.FieldValue.serverTimestamp(),
+        statusSince: FieldValue.serverTimestamp(),
         updatedBy: userEmail,
-        updatedAt: firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       })
 
       // Post Transit (Finally)

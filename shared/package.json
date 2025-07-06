@@ -14,9 +14,6 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "files": [
-    "dist"
-  ],
   "dependencies": {
     "zod": "^3.25.67"
   },

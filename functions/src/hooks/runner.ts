@@ -6,7 +6,8 @@ import type {
   IRunnerOption
 } from '@cadence/shared/types'
 import { withContext } from '@cadence/shared/utils'
-import { Firestore } from 'firebase-admin/firestore'
+import { App } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 import { SetOwnerActionExecutor } from './executors/set-owner'
 
 interface RunTopology {
@@ -61,7 +62,7 @@ export class ActionRunner implements IActionRunner {
     return elapsed
   }
 
-  public static create(fs: Firestore): IActionRunner {
-    return new ActionRunner([new SetOwnerActionExecutor(fs)])
+  public static create(app: App): IActionRunner {
+    return new ActionRunner([new SetOwnerActionExecutor(getFirestore(app))])
   }
 }
