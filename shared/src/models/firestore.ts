@@ -8,3 +8,5 @@ export const paths = {
   WORKFLOW_CARD: (workflowId: string, workflowCardId: string) =>
     `${WORKFLOWS}/${workflowId}/${CARDS}/${workflowCardId}`
 }
+
+export const FIREBASE_REGION = 'asia-southeast2' as const

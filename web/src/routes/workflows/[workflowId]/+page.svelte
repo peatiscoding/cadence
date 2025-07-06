@@ -264,6 +264,7 @@
         delete updatePayload.createdBy
 
         // If we have a target status, this is a transition
+        console.log('Card is being updated with payload', updatePayload)
         if (cardFormTargetStatus) {
           await workflowEngine.attemptToTransitCard(
             editingCard.workflowCardId,

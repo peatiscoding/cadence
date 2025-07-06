@@ -1,8 +1,9 @@
 import type { IActionRunner } from '@cadence/shared/types'
+import { FIREBASE_REGION } from '@cadence/shared/models'
 import { onCall } from 'firebase-functions/v2/https'
 import { initializeApp } from 'firebase-admin/app'
 
-import { transitCard } from './fns/transit-card'
+import { transitWorkflowItem } from './fns/transit-workflow-item'
 import { login } from './fns/login'
 
 import { execute } from './fns/_executor'
@@ -15,8 +16,8 @@ function getActionRunner(): IActionRunner {
 }
 
 // Exported & configure Firebase Function's parameters.
-export const loginFn = onCall({ region: 'asia-southeast2' }, execute(login(app)))
-export const transitCardFn = onCall(
-  { region: 'asia-southeast2' },
-  execute(transitCard(app, getActionRunner))
+export const loginFn = onCall({ region: FIREBASE_REGION }, execute(login(app)))
+export const transitWorkflowItemFn = onCall(
+  { region: FIREBASE_REGION },
+  execute(transitWorkflowItem(app, getActionRunner))
 )

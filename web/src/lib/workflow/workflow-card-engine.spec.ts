@@ -26,6 +26,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     mockStorage = {
       createCard: vi.fn(),
       updateCard: vi.fn(),
+      transitCard: vi.fn(),
       getCard: vi.fn(),
       deleteCard: vi.fn(),
       listenForCards: vi.fn()

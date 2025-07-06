@@ -24,7 +24,7 @@ import {
 } from 'firebase/firestore'
 
 import { getFunctions, httpsCallable, type Functions, type HttpsCallable } from 'firebase/functions'
-import { WORKFLOWS, CARDS } from '@cadence/shared/models/firestore'
+import { WORKFLOWS, CARDS, FIREBASE_REGION } from '@cadence/shared/models/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
@@ -45,7 +45,7 @@ export class FirestoreWorkflowCardStorage
 {
   public static shared(): IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage {
     const db = getFirestore(app)
-    const fns = getFunctions(app)
+    const fns = getFunctions(app, FIREBASE_REGION)
     return new FirestoreWorkflowCardStorage(db, fns)
   }
 
@@ -93,11 +93,14 @@ export class FirestoreWorkflowCardStorage
 
   async transitCard(workflowId: string, workflowCardId: string, payload: any): Promise<void> {
     // transitFn
+    console.info('TRANSITION FROM:', payload)
     const fn = this.getFirebaseTransitFn()
     const res = await fn({
-      ...payload,
-      workflowId,
-      workflowCardId
+      destinationContext: {
+        ...payload,
+        workflowId,
+        workflowCardId
+      }
     })
 
     console.info('TRANSITION RESULT:', res)
@@ -211,7 +214,7 @@ export class FirestoreWorkflowCardStorage
   > {
     const transitFn = httpsCallable<ITransitWorkflowItemRequest, ITransitWorkflowItemResponse>(
       this.fns,
-      'transitCardFn'
+      'transitWorkflowItemFn'
     )
     return transitFn
   }

@@ -21,7 +21,7 @@ const _helpers = {
   }
 }
 
-export const transitCard =
+export const transitWorkflowItem =
   (app: App, getActionRunner: () => IActionRunner) =>
   async (
     req: CallableRequest<ITransitWorkflowItemRequest>

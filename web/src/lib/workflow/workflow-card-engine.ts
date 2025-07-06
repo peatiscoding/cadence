@@ -13,9 +13,10 @@ import { z } from 'zod'
 const _helpers = {
   validateRequiredFields<T>(requiredFields: (keyof T)[], data: { fieldData: T }) {
     const missingFields: (keyof T)[] = []
-
+    console.log('Validating Required Fields', requiredFields, data)
     for (const requiredField of requiredFields) {
       if (requiredField.toString().startsWith('$')) {
+        // Validate fields that lead with '$'
       } else {
         if (data.fieldData[requiredField] === null || data.fieldData[requiredField] === undefined) {
           missingFields.push(requiredField)
@@ -113,12 +114,20 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
     // Get current card to validate preconditions
     const currentCard = await this.storage.getCard(this.workflowId, workflowCardId)
+    const newData = {
+      ...currentCard,
+      ...payload,
+      fieldData: {
+        ...currentCard.fieldData,
+        ...(payload.fieldData || {})
+      }
+    }
 
     // Validate its precondition
     const precondition = newStatusConfig.precondition
-    _helpers.validateUser(precondition.users || [], userSsoId)
-    _helpers.validateRequiredFields(precondition.required || [], currentCard)
     _helpers.validateFromStatus(precondition.from, currentCard.status)
+    _helpers.validateUser(precondition.users || [], userSsoId)
+    _helpers.validateRequiredFields(precondition.required || [], newData)
 
     await this.storage.transitCard(this.workflowId, workflowCardId, {
       ...payload,

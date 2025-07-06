@@ -1,6 +1,7 @@
 import type { Auth } from 'firebase/auth'
 import type { IOnCallResponse, WorkflowConfiguration } from '@cadence/shared/types'
 import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
+import { FIREBASE_REGION } from '@cadence/shared/models/firestore'
 import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 
@@ -16,7 +17,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
   beforeAll(async () => {
     // Login firebase
     auth = getAuth()
-    const fns = getFunctions(undefined, 'asia-southeast2')
+    const fns = getFunctions(undefined, FIREBASE_REGION)
     const loginFn = httpsCallable<undefined, IOnCallResponse<string>>(fns, 'loginFn')
     const res = await loginFn()
     if (!res.data.success) {
