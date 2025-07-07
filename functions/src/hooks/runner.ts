@@ -9,6 +9,7 @@ import { withContext } from '@cadence/shared/utils'
 import { App } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { SetOwnerActionExecutor } from './executors/set-owner'
+import { SendWebhookActionExecutor } from './executors/send-webhook'
 
 interface RunTopology {
   (executions: (() => Promise<void>)[]): Promise<void>
@@ -63,6 +64,9 @@ export class ActionRunner implements IActionRunner {
   }
 
   public static create(app: App): IActionRunner {
-    return new ActionRunner([new SetOwnerActionExecutor(getFirestore(app))])
+    return new ActionRunner([
+      new SetOwnerActionExecutor(getFirestore(app)),
+      new SendWebhookActionExecutor()
+    ])
   }
 }
