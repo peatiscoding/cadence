@@ -4,6 +4,10 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
   workflowId: 'ld2ppsl',
   name: 'Lead to Proposal',
   access: ['@muze.co.th'],
+  nouns: {
+    singular: 'Lead',
+    plural: 'Leads'
+  },
   types: [
     { slug: 'ma', title: 'MA', ui: { color: '#8866FF' } },
     { slug: 'sprint-based', title: 'Sprint Based', ui: { color: '#33FF88' } },
