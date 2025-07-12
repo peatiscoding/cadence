@@ -58,6 +58,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const testConfig: WorkflowConfiguration = {
         name: 'Test Workflow',
+        nouns: { singular: 'Task', plural: 'Tasks' },
         description: 'A test workflow for configuration testing',
         types: [
           {
@@ -159,6 +160,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const initialConfig: WorkflowConfiguration = {
         name: 'Initial Config',
+        nouns: { singular: 'Item', plural: 'Items' },
         description: 'Initial description',
         types: [],
         fields: [
@@ -187,6 +189,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
       // Act - Update with partial configuration (should merge)
       const updateConfig: WorkflowConfiguration = {
         name: 'Updated Config Name',
+        nouns: { singular: 'Item', plural: 'Items' },
         description: 'Updated description',
         types: [
           {
@@ -227,6 +230,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const minimalConfig: WorkflowConfiguration = {
         name: 'Minimal Workflow',
+        nouns: { singular: 'Item', plural: 'Items' },
         description: 'A minimal workflow configuration',
         types: [],
         fields: [],
@@ -252,6 +256,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const complexConfig: WorkflowConfiguration = {
         name: 'Complex Workflow',
+        nouns: { singular: 'Item', plural: 'Items' },
         description: 'A complex workflow with various field types',
         types: [
           {
@@ -406,6 +411,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const config1: WorkflowConfiguration = {
         name: 'Software Development',
+        nouns: { singular: 'Task', plural: 'Tasks' },
         description: 'Workflow for software development tasks',
         types: [
           { slug: 'feature', title: 'Feature', ui: { color: '#10B981' } },
@@ -432,6 +438,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const config2: WorkflowConfiguration = {
         name: 'Marketing Campaign',
+        nouns: { singular: 'Campaign', plural: 'Campaigns' },
         description: 'Workflow for marketing campaign management',
         types: [
           { slug: 'campaign', title: 'Campaign', ui: { color: '#F59E0B' } },
@@ -498,6 +505,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const config1: WorkflowConfiguration = {
         name: 'List Test Workflow 1',
+        nouns: { singular: 'Item', plural: 'Items' },
         description: 'First test workflow for listing',
         types: [],
         fields: [
@@ -521,6 +529,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const config2: WorkflowConfiguration = {
         name: 'List Test Workflow 2',
+        nouns: { singular: 'Item', plural: 'Items' },
         description: 'Second test workflow for listing',
         types: [{ slug: 'type-2', title: 'Type 2', ui: { color: '#000002' } }],
         fields: [],
@@ -537,6 +546,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const config3: WorkflowConfiguration = {
         name: 'List Test Workflow 3',
+        nouns: { singular: 'Item', plural: 'Items' },
         description: 'Third test workflow for listing',
         types: [
           { slug: 'type-3a', title: 'Type 3A', ui: { color: '#000003' } },
@@ -625,6 +635,7 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
       const testConfig: WorkflowConfiguration = {
         name: 'Properties Test Workflow',
+        nouns: { singular: 'Item', plural: 'Items' },
         description: 'Testing all workflow properties',
         types: [{ slug: 'test-type', title: 'Test Type', ui: { color: '#123456' } }],
         fields: [

@@ -54,6 +54,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     // Create WorkflowEngine using factory
     const mockConfig: WorkflowConfiguration = {
       name: 'Test Workflow',
+      nouns: { singular: 'Card', plural: 'Cards' },
       fields: [],
       types: [],
       statuses: [
@@ -734,6 +735,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     beforeEach(() => {
       mockConfig = {
         name: 'Test Workflow',
+        nouns: { singular: 'Card', plural: 'Cards' },
         fields: [
           { slug: 'priority', title: 'Priority', schema: { kind: 'text' } },
           { slug: 'assignee', title: 'Assignee', schema: { kind: 'text' } }
@@ -1000,6 +1002,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     beforeEach(() => {
       schemaTestConfig = {
         name: 'Schema Test Workflow',
+        nouns: { singular: 'Task', plural: 'Tasks' },
         fields: [
           {
             slug: 'priority',
@@ -1427,6 +1430,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       // Arrange
       const strictConfig: WorkflowConfiguration = {
         ...schemaTestConfig,
+        nouns: { singular: 'Item', plural: 'Items' },
         types: [],
         statuses: [
           {
@@ -1456,6 +1460,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       // Arrange
       const configWithEmptyChoices: WorkflowConfiguration = {
         ...schemaTestConfig,
+        nouns: { singular: 'Item', plural: 'Items' },
         fields: [
           {
             slug: 'empty_choice',

@@ -77,6 +77,9 @@
     return config.statuses.find((s) => s.slug === targetSlug) || unknownStatus(targetSlug)
   })
 
+  // Derived noun values for cleaner usage
+  const nouns = $derived(config.nouns)
+
   // Get required fields for current status
   const requiredFields = $derived(() => {
     if (!config || !config.statuses || effectiveStatus === 'draft') return []
@@ -270,11 +273,11 @@
       <div class="flex items-center gap-3">
         <h2 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-gray-100">
           {#if formMode() === 'create'}
-            Create New Card
+            Create New {nouns.singular}
           {:else if formMode() === 'transition'}
-            Transition Card
+            Transition {nouns.singular}
           {:else}
-            Edit Card
+            Edit {nouns.singular}
           {/if}
         </h2>
 
@@ -348,11 +351,14 @@
   <!-- Modal Content -->
   <p class="my-0 text-sm text-gray-500 dark:text-gray-400">
     {#if formMode() === 'create'}
-      Create a new workflow item. Fields marked with <span class="text-red-500">*</span> are required.
+      Create a new {nouns.singular}. Fields marked with
+      <span class="text-red-500">*</span> are required.
     {:else if formMode() === 'transition'}
-      Update card to transition to "{targetStatusConfig().title}" status.
+      Update {nouns.singular} to transition to "{targetStatusConfig()
+        .title}" status.
     {:else}
-      Edit the workflow item. Fields marked with <span class="text-red-500">*</span> are required.
+      Edit the {nouns.singular}. Fields marked with
+      <span class="text-red-500">*</span> are required.
     {/if}
   </p>
   <form id="card-form" onsubmit={handleSubmit} method="dialog" action="#" class="mt-2">
@@ -413,7 +419,7 @@
             id="title"
             type="text"
             bind:value={formData.title}
-            placeholder="Name of this card"
+            placeholder="Name of this {nouns.singular}"
             onblur={() => validateField('title', formData.title)}
             class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             class:border-red-500={errors.title}
@@ -434,7 +440,7 @@
           </label>
           <textarea
             id="description"
-            placeholder="Details of this Card information"
+            placeholder="Details of this {nouns.singular} information"
             bind:value={formData.description}
             onblur={() => validateField('description', formData.description)}
             rows="3"
@@ -602,7 +608,7 @@
       {#if isSubmitting}
         Saving...
       {:else if formMode() === 'create'}
-        Create Card
+        Create {nouns.singular}
       {:else if formMode() === 'transition'}
         Transition to&nbsp;<b>{targetStatusConfig().title}</b>
       {:else}

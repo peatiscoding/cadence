@@ -48,6 +48,9 @@
     return undefined
   }
 
+  // Derived noun values for cleaner usage
+  const nouns = $derived(editableWorkflow?.nouns || { singular: 'Item', plural: 'Items' })
+
   // Group cards by status
   const cardsByStatus = $derived(
     cards.reduce(
@@ -291,7 +294,9 @@
       // Show user-friendly error message
       const errorMessage =
         err instanceof Error ? err.message : 'An unexpected error occurred while saving the card'
-      const errorTitle = editingCard ? 'Failed to Update Card' : 'Failed to Create Card'
+      const errorTitle = editingCard
+        ? `Failed to Update ${nouns.singular}`
+        : `Failed to Create ${nouns.singular}`
       showError(errorTitle, errorMessage)
     } finally {
       cardFormSubmitting = false
@@ -361,7 +366,9 @@
       console.error('Failed to process drop:', error)
       showError(
         'Drop Failed',
-        error instanceof Error ? error.message : 'Failed to process card drop'
+        error instanceof Error
+          ? error.message
+          : `Failed to process ${nouns.singular} drop`
       )
     }
   }
@@ -403,7 +410,7 @@
       </div>
       <p class="mt-2 text-gray-600 dark:text-gray-400">
         {editableWorkflow.description ||
-          'Track and manage your workflow items through different stages'}
+          `Track and manage your ${nouns.plural} through different stages`}
       </p>
     </div>
 
@@ -443,7 +450,7 @@
           ondragleave={(e) => handleDragLeave(e, 'draft')}
           ondrop={(e) => handleDrop(e, 'draft')}
           role="region"
-          aria-label="Draft cards drop zone"
+          aria-label="Draft {nouns.plural} drop zone"
         >
           {#if cardsByStatus['draft'] && cardsByStatus['draft'].length > 0}
             {#each cardsByStatus['draft'] as card}
@@ -456,7 +463,9 @@
               />
             {/each}
           {:else}
-            <p class="mt-6 mb-4 text-center text-gray-400">No draft items</p>
+            <p class="mt-6 mb-4 text-center text-gray-400">
+              No draft {nouns.plural}
+            </p>
           {/if}
           <!-- Add Card Button at bottom -->
           <Button
@@ -464,7 +473,9 @@
             outline
             size="lg"
             class="border-2 border-dashed"
-            onclick={openCardFormModal}>+ Add new item <Kbd class="ml-2 px-2 py-1">N</Kbd></Button
+            onclick={openCardFormModal}
+            >+ Add new {nouns.singular}
+            <Kbd class="ml-2 px-2 py-1">N</Kbd></Button
           >
         </div>
       </div>
@@ -507,7 +518,7 @@
             ondragleave={(e) => handleDragLeave(e, status.slug)}
             ondrop={(e) => handleDrop(e, status.slug)}
             role="region"
-            aria-label="{status.title} cards drop zone"
+            aria-label="{status.title} {nouns.plural} drop zone"
           >
             {#if cardsByStatus[status.slug]}
               {#each cardsByStatus[status.slug] as card}
@@ -521,7 +532,7 @@
               {/each}
             {:else}
               <div class="py-8 text-center text-gray-500 dark:text-gray-400">
-                <p>No items in this status</p>
+                <p>No {nouns.plural} in this status</p>
               </div>
             {/if}
           </div>
