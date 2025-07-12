@@ -107,7 +107,7 @@ export const _helpers = {
 /**
  * Compute the update stats object
  */
-export class UpdateStatisticsDiffer {
+export class UpdateTransitionTracker {
   public constructor(
     public batch: FirebaseFirestore.WriteBatch,
     public db: FirebaseFirestore.Firestore,
@@ -116,41 +116,34 @@ export class UpdateStatisticsDiffer {
   ) {}
 
   public compute(
+    action: ActivityAction,
     beforeData: IWorkflowCardEntry | null,
     afterData: IWorkflowCardEntry | null,
-    action: ActivityAction,
-    userId: string
+    authorUserId: string
   ) {
     const now = Timestamp.now()
+    const fromStatus = (!!beforeData && beforeData.status) || null
+    const toStatus = (!!afterData && afterData.status) || null
 
-    switch (action) {
-      case 'create':
-        if (afterData) {
-          this.updateStatsForCreate(afterData, userId, now)
-        }
-        break
+    // nothing to do here
+    if (fromStatus === toStatus) {
+      return
+    }
 
-      case 'update':
-        if (beforeData && afterData) {
-          this.updateStatsForUpdate(beforeData, afterData, userId, now)
-        }
-        break
+    if (toStatus && afterData) {
+      this.updateStatsForTransitIn(afterData, authorUserId, now)
+    }
 
-      case 'transit':
-        if (beforeData && afterData) {
-          this.updateStatsForTransit(beforeData, afterData, userId, now)
-        }
-        break
-
-      case 'delete':
-        if (beforeData) {
-          this.updateStatsForDelete(beforeData, now)
-        }
-        break
+    if (fromStatus && beforeData) {
+      this.updateStatsForTransitOut(beforeData, now)
     }
   }
 
-  private updateStatsForCreate(cardData: IWorkflowCardEntry, userId: string, timestamp: Timestamp) {
+  private updateStatsForTransitIn(
+    cardData: IWorkflowCardEntry,
+    userId: string,
+    timestamp: Timestamp
+  ) {
     const db = this.db
     const workflowId = this.workflowId
     const cardId = this.cardId
@@ -168,123 +161,14 @@ export class UpdateStatisticsDiffer {
       statsRef,
       {
         workflowId,
-        totalTransitionTime: 0,
-        totalTransitionCount: 0,
         lastUpdated: timestamp,
-        currentPendings: [newPending]
+        currentPendings: FieldValue.arrayUnion(newPending)
       },
       { merge: true }
     )
-
-    this.batch.update(statsRef, {
-      currentPendings: FieldValue.arrayUnion(newPending),
-      lastUpdated: timestamp
-    })
   }
 
-  private updateStatsForUpdate(
-    beforeData: IWorkflowCardEntry,
-    afterData: IWorkflowCardEntry,
-    userId: string,
-    timestamp: Timestamp
-  ) {
-    const db = this.db
-    const workflowId = this.workflowId
-    const cardId = this.cardId
-    // Only update if value changed and status remained the same
-    if (beforeData.value !== afterData.value && beforeData.status === afterData.status) {
-      const statsPath = paths.STATS_PER_STATUS(workflowId, afterData.status)
-      const statsRef = db.doc(statsPath)
-
-      // Remove old pending entry
-      const oldPending: StatusPending = {
-        cardId,
-        statusSince: Timestamp.fromMillis(beforeData.statusSince),
-        value: beforeData.value || 0,
-        userId: beforeData.updatedBy || userId
-      }
-
-      // Add new pending entry
-      const newPending: StatusPending = {
-        cardId,
-        statusSince: Timestamp.fromMillis(beforeData.statusSince), // Keep original status time
-        value: afterData.value || 0,
-        userId
-      }
-
-      this.batch.update(statsRef, {
-        currentPendings: FieldValue.arrayRemove(oldPending),
-        lastUpdated: timestamp
-      })
-
-      this.batch.update(statsRef, {
-        currentPendings: FieldValue.arrayUnion(newPending),
-        lastUpdated: timestamp
-      })
-    }
-  }
-
-  private updateStatsForTransit(
-    beforeData: IWorkflowCardEntry,
-    afterData: IWorkflowCardEntry,
-    userId: string,
-    timestamp: Timestamp
-  ) {
-    const db = this.db
-    const workflowId = this.workflowId
-    const cardId = this.cardId
-    const oldStatsPath = paths.STATS_PER_STATUS(workflowId, beforeData.status)
-    const newStatsPath = paths.STATS_PER_STATUS(workflowId, afterData.status)
-
-    const oldStatsRef = db.doc(oldStatsPath)
-    const newStatsRef = db.doc(newStatsPath)
-
-    // Calculate time spent in old status
-    const timeSpent = timestamp.toMillis() - beforeData.statusSince
-
-    // Remove from old status stats
-    const oldPending: StatusPending = {
-      cardId,
-      statusSince: Timestamp.fromMillis(beforeData.statusSince),
-      value: beforeData.value || 0,
-      userId: beforeData.updatedBy || userId
-    }
-
-    this.batch.update(oldStatsRef, {
-      totalTransitionTime: FieldValue.increment(timeSpent),
-      totalTransitionCount: FieldValue.increment(1),
-      currentPendings: FieldValue.arrayRemove(oldPending),
-      lastUpdated: timestamp
-    })
-
-    // Add to new status stats
-    const newPending: StatusPending = {
-      cardId,
-      statusSince: timestamp,
-      value: afterData.value || 0,
-      userId
-    }
-
-    // Initialize new stats document if it doesn't exist
-    this.batch.set(
-      newStatsRef,
-      {
-        workflowId,
-        totalTransitionTime: 0,
-        totalTransitionCount: 0,
-        lastUpdated: timestamp,
-        currentPendings: []
-      },
-      { merge: true }
-    )
-
-    this.batch.update(newStatsRef, {
-      currentPendings: FieldValue.arrayUnion(newPending),
-      lastUpdated: timestamp
-    })
-  }
-
-  private async updateStatsForDelete(
+  private async updateStatsForTransitOut(
     beforeData: IWorkflowCardEntry,
     timestamp: Timestamp
   ): Promise<void> {
@@ -352,8 +236,8 @@ export function createCardActivityLogger(app: App) {
       batch.set(activityRef, activityLog)
 
       // Update statistics
-      const differ = new UpdateStatisticsDiffer(batch, db, workflowId, cardId)
-      differ.compute(beforeData, afterData, action, userId)
+      const differ = new UpdateTransitionTracker(batch, db, workflowId, cardId)
+      differ.compute(action, beforeData, afterData, userId)
 
       // Commit all changes atomically
       await batch.commit()

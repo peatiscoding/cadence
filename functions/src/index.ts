@@ -37,6 +37,6 @@ export const cardActivityLoggerFn = onDocumentWritten(
     const beforeData = event.data?.before?.data() as IWorkflowCardEntry | undefined
     const afterData = event.data?.after?.data() as IWorkflowCardEntry | undefined
 
-    return handleCardChange(workflowId, cardId, beforeData, afterData)
+    return handleCardChange(workflowId, cardId, beforeData || null, afterData || null)
   }
 )

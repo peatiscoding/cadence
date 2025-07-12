@@ -15,8 +15,8 @@ export function createCardActivityTrigger(app: App) {
   return async function handleCardChange(
     workflowId: string,
     cardId: string,
-    beforeData: IWorkflowCardEntry | undefined,
-    afterData: IWorkflowCardEntry | undefined
+    beforeData: IWorkflowCardEntry | null,
+    afterData: IWorkflowCardEntry | null
   ): Promise<void> {
     try {
       // Extract userId from the card data or use system default
@@ -27,7 +27,7 @@ export function createCardActivityTrigger(app: App) {
         userId = beforeData.updatedBy
       }
 
-      await logCardActivity(workflowId, cardId, beforeData || null, afterData || null, userId)
+      await logCardActivity(workflowId, cardId, beforeData, afterData, userId)
 
       console.log(`Activity logged for card ${cardId} in workflow ${workflowId}`)
     } catch (error) {

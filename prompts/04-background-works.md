@@ -197,16 +197,12 @@ export const logCardActivity = onDocumentWritten(
 1. **Action Detection Logic**:
    - `create`: beforeData is null, afterData exists
      - **Stats Updates**: Add card to initial status stats
-       - Target document: `/stats/{workflowId}/per/{newStatus}`
+       - Target document: `/stats/{workflowId}/per/{item.status}` (draft)
        - `arrayUnion('currentPendings', { cardId, statusSince: NOW(), value: cardValue, userId })`
        - Update `lastUpdated` timestamp
    
-   - `update`: both beforeData and afterData exist, status unchanged  
-     - **Stats Updates**: Update current pending entry if value changed
-       - Target document: `/stats/{workflowId}/per/{currentStatus}`
-       - Remove old pending entry, add updated entry with new value
-       - Update `lastUpdated` timestamp
-   
+   - `update`: both beforeData and afterData exist, status unchanged (no stats update is computed for this event)
+    - **Stats Updates** no update needed
    - `transit`: both exist, status field changed
      - **Stats Updates**: Move card between status collections
        - **From Status** (`/stats/{workflowId}/per/{oldStatus}`):
