@@ -139,6 +139,13 @@ export class UpdateTransitionTracker {
     }
   }
 
+  /**
+   * Tasks
+   * ==
+   *
+   * * Add `currentPendings` record
+   * * set timestamp
+   */
   private updateStatsForTransitIn(
     cardData: IWorkflowCardEntry,
     userId: string,
@@ -168,6 +175,12 @@ export class UpdateTransitionTracker {
     )
   }
 
+  /**
+   * TASKS
+   *
+   * compare time left
+   * - set timestamp
+   */
   private async updateStatsForTransitOut(
     beforeData: IWorkflowCardEntry,
     timestamp: Timestamp
@@ -177,13 +190,20 @@ export class UpdateTransitionTracker {
     const statsPath = paths.STATS_PER_STATUS(workflowId, beforeData.status)
     const statsRef = this.db.doc(statsPath)
 
+    // Handle statusSince - it could be a Timestamp object or a number (epoch)
+    // Check if it has toMillis method (indicating it's a Timestamp object)
+    const statusSinceValue = beforeData.statusSince as any
+    const statusSinceTimestamp = (statusSinceValue && typeof statusSinceValue.toMillis === 'function')
+      ? statusSinceValue as Timestamp
+      : Timestamp.fromMillis(beforeData.statusSince as number)
+
     // Calculate time spent in status
-    const timeSpent = timestamp.toMillis() - beforeData.statusSince
+    const timeSpent = timestamp.toMillis() - statusSinceTimestamp.toMillis()
 
     // Remove from current pendings
     const oldPending: StatusPending = {
       cardId,
-      statusSince: Timestamp.fromMillis(beforeData.statusSince),
+      statusSince: statusSinceTimestamp,
       value: beforeData.value || 0,
       userId: beforeData.updatedBy || 'system'
     }

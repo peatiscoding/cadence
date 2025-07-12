@@ -375,12 +375,12 @@ describe('UpdateTransitionTracker', () => {
   })
 
   describe('updateStatsForTransitOut', () => {
-    it('should calculate correct time spent and create pending entry', async () => {
+    it('should calculate correct time spent when statusSince is a number', async () => {
       const startTime = Date.now() - 180000 // 3 minutes ago
       const beforeCard = createMockCard({ 
         status: 'draft', 
         value: 1500,
-        statusSince: startTime,
+        statusSince: startTime, // number (epoch)
         updatedBy: 'user1'
       })
       const timestamp = Timestamp.now()
@@ -413,9 +413,50 @@ describe('UpdateTransitionTracker', () => {
       )
     })
 
+    it('should calculate correct time spent when statusSince is a Timestamp', async () => {
+      const startTime = Date.now() - 240000 // 4 minutes ago
+      const statusSinceTimestamp = Timestamp.fromMillis(startTime)
+      const beforeCard = createMockCard({ 
+        status: 'draft', 
+        value: 2000,
+        statusSince: statusSinceTimestamp as any, // Timestamp object (as it comes from Firestore)
+        updatedBy: 'user2'
+      })
+      const timestamp = Timestamp.now()
+
+      // Access private method for testing
+      await (tracker as any).updateStatsForTransitOut(beforeCard, timestamp)
+
+      const expectedTimeSpent = timestamp.toMillis() - startTime
+
+      expect(mockBatch.update).toHaveBeenCalledWith(
+        { path: 'stats/test-workflow/per/draft' },
+        {
+          totalTransitionTime: expect.objectContaining({
+            operand: expectedTimeSpent
+          }),
+          totalTransitionCount: expect.objectContaining({
+            operand: 1
+          }),
+          currentPendings: expect.objectContaining({
+            elements: expect.arrayContaining([
+              expect.objectContaining({
+                cardId: 'test-card',
+                userId: 'user2',
+                value: 2000
+              })
+            ])
+          }),
+          lastUpdated: timestamp
+        }
+      )
+    })
+
     it('should handle missing updatedBy with system fallback', async () => {
+      const startTime = Date.now() - 120000 // 2 minutes ago
       const beforeCard = createMockCard({ 
         status: 'draft',
+        statusSince: Timestamp.fromMillis(startTime) as any, // Use Timestamp object
         updatedBy: undefined as any
       })
 
