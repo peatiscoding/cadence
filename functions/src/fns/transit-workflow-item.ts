@@ -40,6 +40,7 @@ export const transitWorkflowItem =
     )
 
     const userEmail = req.auth?.token.email || req.auth?.uid
+    const userId = req.auth?.uid || 'unknown-user'
     logger.log(
       `Attempt to transit with user: ${userEmail} on ${destinationContext.workflowId}/${destinationContext.workflowCardId} to ${destinationContext.status}.`
     )
@@ -83,7 +84,7 @@ export const transitWorkflowItem =
       await docRef.update({
         ...f,
         statusSince: FieldValue.serverTimestamp(),
-        updatedBy: userEmail,
+        updatedBy: userId,
         updatedAt: FieldValue.serverTimestamp()
       })
 
