@@ -241,6 +241,7 @@ export class UpdateTransitionTracker {
       {
         workflowId,
         lastUpdated: timestamp,
+        createdAt: timestamp,
         currentPendings: {
           [cardId]: newPending
         }

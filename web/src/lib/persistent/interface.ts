@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration, IWorkflowCardEntry, ActivityLog } from '@cadence/shared/types'
+import type { WorkflowConfiguration, IWorkflowCardEntry, ActivityLog, StatusStats } from '@cadence/shared/types'
 import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 
 /**
@@ -91,4 +91,16 @@ export interface IActivityStorage {
    * Listen for recent activities across all workflows
    */
   listenForRecentActivities(limitCount?: number): ILiveUpdateListenerBuilder<ActivityLog>
+}
+
+export interface IStatsStorage {
+  /**
+   * Get statistics documents for a specific workflow
+   */
+  getWorkflowStats(workflowId: string): Promise<Record<string, StatusStats | null>>
+  
+  /**
+   * Get statistics documents for all workflows
+   */
+  getAllWorkflowStats(workflowIds: string[]): Promise<Record<string, Record<string, StatusStats | null>>>
 }

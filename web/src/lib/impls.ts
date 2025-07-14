@@ -2,7 +2,8 @@ import type { IAuthenticationProvider } from './authentication/interface'
 import type {
   IWorkflowConfigurationStorage,
   IWorkflowCardStorage,
-  IActivityStorage
+  IActivityStorage,
+  IStatsStorage
 } from './persistent/interface'
 
 import { FirebaseAuthenticationProvider } from './authentication/firebase/firebase-authen'
@@ -15,7 +16,7 @@ import { supportedWorkflows } from '@cadence/shared/defined'
 export interface Impls {
   authProvider: IAuthenticationProvider
   configurationStore: IWorkflowConfigurationStorage
-  storage: IWorkflowCardStorage & IActivityStorage
+  storage: IWorkflowCardStorage & IActivityStorage & IStatsStorage
   workflowEngineFactory: WorkflowFactory
 }
 

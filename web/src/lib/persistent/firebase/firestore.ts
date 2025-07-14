@@ -3,13 +3,15 @@ import type {
   IWorkflowCardEntry,
   ITransitWorkflowItemRequest,
   ITransitWorkflowItemResponse,
-  ActivityLog
+  ActivityLog,
+  StatusStats
 } from '@cadence/shared/types'
 import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 import type {
   IWorkflowCardStorage,
   IWorkflowConfigurationDynamicStorage,
-  IActivityStorage
+  IActivityStorage,
+  IStatsStorage
 } from '../interface'
 
 import {
@@ -31,29 +33,61 @@ import {
 } from 'firebase/firestore'
 
 import { getFunctions, httpsCallable, type Functions, type HttpsCallable } from 'firebase/functions'
-import { WORKFLOWS, CARDS, ACTIVITIES, FIREBASE_REGION } from '@cadence/shared/models/firestore'
+import {
+  WORKFLOWS,
+  CARDS,
+  STATS,
+  PER_STATUS,
+  ACTIVITIES,
+  FIREBASE_REGION
+} from '@cadence/shared/models/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
 import { workflowConfigurationConverter } from './workflow-configuration.converter'
 
+interface ICollectionKeys {
+  WORKFLOWS: string
+  CARDS: string
+  ACTIVITIES: string
+  STATS: string
+  PER_STATUS: string
+}
+
 export class FirestoreWorkflowCardStorage
-  implements IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage, IActivityStorage
+  implements
+    IWorkflowCardStorage,
+    IWorkflowConfigurationDynamicStorage,
+    IActivityStorage,
+    IStatsStorage
 {
   public static shared(
-    collectionKeys: { WORKFLOWS: string; CARDS: string; ACTIVITIES: string } = {
+    collectionKeys: ICollectionKeys = {
       WORKFLOWS,
       CARDS,
-      ACTIVITIES
+      ACTIVITIES,
+      STATS,
+      PER_STATUS
     }
-  ): IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage & IActivityStorage {
+  ): IWorkflowCardStorage &
+    IWorkflowConfigurationDynamicStorage &
+    IActivityStorage &
+    IStatsStorage {
     const db = getFirestore(app)
     const fns = getFunctions(app, FIREBASE_REGION)
     return new FirestoreWorkflowCardStorage(db, fns, collectionKeys)
   }
 
+  /**
+   * Reference maker
+   */
   private get rf() {
-    const { WORKFLOWS: PATH_WORKFLOWS, CARDS: PATH_CARDS } = this.collectionKeys
+    const {
+      WORKFLOWS: PATH_WORKFLOWS,
+      CARDS: PATH_CARDS,
+      STATS: PATH_STATS,
+      PER_STATUS: PATH_PER_STATUS
+    } = this.collectionKeys
     return {
       WORKFLOWS: (fs: Firestore) => collection(fs, PATH_WORKFLOWS),
       WORKFLOW_CONFIGURATION: (fs: Firestore, workflowId: string) =>
@@ -64,7 +98,11 @@ export class FirestoreWorkflowCardStorage
         doc(fs, `${PATH_WORKFLOWS}/${workflowId}/${PATH_CARDS}/${workflowCardId}`).withConverter(
           workflowCardConverter
         ),
-      ACTIVITIES: (fs: Firestore) => collection(fs, this.collectionKeys.ACTIVITIES)
+      ACTIVITIES: (fs: Firestore) => collection(fs, this.collectionKeys.ACTIVITIES),
+      STATS_PER_STATUSES: (fs: Firestore, workflowId: string) =>
+        collection(fs, `${PATH_STATS}/${workflowId}/${PATH_PER_STATUS}`),
+      STATS_PER_STATUS: (fs: Firestore, workflowId: string, status: string) =>
+        doc(fs, `${PATH_STATS}/${workflowId}/${PATH_PER_STATUS}/${status}`)
     }
   }
 
@@ -72,7 +110,7 @@ export class FirestoreWorkflowCardStorage
   private constructor(
     private readonly fs: Firestore,
     private readonly fns: Functions,
-    public collectionKeys: { WORKFLOWS: string; CARDS: string; ACTIVITIES: string }
+    public readonly collectionKeys: ICollectionKeys
   ) {}
 
   isSupportDynamicWorkflows(): boolean {
@@ -253,6 +291,48 @@ export class FirestoreWorkflowCardStorage
       }
     }
     return o
+  }
+
+  /**
+   *  Query workflow stats (raw objects) from Persistent storage
+   *
+   *  @returns all available StatusStats per 'status'
+   */
+  async getWorkflowStats(workflowId: string): Promise<Record<string, StatusStats | null>> {
+    const statsCollection = this.rf.STATS_PER_STATUSES(this.fs, workflowId)
+    const snapshot = await getDocs(statsCollection)
+
+    const stats: Record<string, StatusStats | null> = {}
+    snapshot.forEach((doc) => {
+      const data = doc.data()
+      if (data) {
+        stats[doc.id] = data as StatusStats
+      } else {
+        stats[doc.id] = null
+      }
+    })
+
+    return stats
+  }
+
+  async getAllWorkflowStats(
+    workflowIds: string[]
+  ): Promise<Record<string, Record<string, StatusStats | null>>> {
+    const allStats: Record<string, Record<string, StatusStats | null>> = {}
+
+    // Fetch stats for each workflow in parallel
+    await Promise.all(
+      workflowIds.map(async (workflowId) => {
+        try {
+          allStats[workflowId] = await this.getWorkflowStats(workflowId)
+        } catch (error) {
+          console.warn(`Failed to fetch stats for workflow ${workflowId}:`, error)
+          allStats[workflowId] = {}
+        }
+      })
+    )
+
+    return allStats
   }
 
   // ------------------------------- PRIVATE ------------------------------------ //

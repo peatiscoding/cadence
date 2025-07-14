@@ -34,6 +34,7 @@ export interface StatusStats {
   workflowId: string
   totalTransitionTime: number
   totalTransitionCount: number
+  createdAt: Timestamp
   lastUpdated: Timestamp
   currentPendings: Record<string, StatusPending>
 }

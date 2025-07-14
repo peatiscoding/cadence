@@ -2,6 +2,7 @@ export const WORKFLOWS = 'workflows'
 export const CARDS = 'cards'
 export const ACTIVITIES = 'activities'
 export const STATS = 'stats'
+export const PER_STATUS = 'per'
 
 export const paths = {
   WORKFLOWS: WORKFLOWS,
@@ -10,7 +11,8 @@ export const paths = {
   WORKFLOW_CARD: (workflowId: string, workflowCardId: string) =>
     `${WORKFLOWS}/${workflowId}/${CARDS}/${workflowCardId}`,
   ACTIVITIES: ACTIVITIES,
-  STATS_PER_STATUS: (workflowId: string, status: string) => `${STATS}/${workflowId}/per/${status}`
+  STATS_PER_STATUS: (workflowId: string, status: string) =>
+    `${STATS}/${workflowId}/${PER_STATUS}/${status}`
 }
 
 export const FIREBASE_REGION = 'asia-southeast2' as const
