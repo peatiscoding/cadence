@@ -197,16 +197,49 @@ export class UpdateTransitionTracker {
 
     // nothing to do here
     if (fromStatus === toStatus) {
+      // cascade changes to currentPendings[cardId] to update [value], and [userId]
+      if (toStatus && afterData) {
+        this.updateStatsForModification(afterData, authorUserId, now)
+      }
       return
+    } else {
+      if (toStatus && afterData) {
+        this.updateStatsForTransitIn(afterData, authorUserId, now)
+      }
+
+      if (fromStatus && beforeData) {
+        this.updateStatsForTransitOut(beforeData, now)
+      }
+    }
+  }
+
+  private updateStatsForModification(
+    afterData: IWorkflowCardEntry,
+    userId: string,
+    timestamp: Timestamp
+  ) {
+    const db = this.db
+    const workflowId = this.workflowId
+    const cardId = this.cardId
+    const statsPath = paths.STATS_PER_STATUS(workflowId, afterData.status)
+    const statsRef = db.doc(statsPath)
+
+    const newPending: Partial<StatusPending> = {
+      value: afterData.value || 0,
+      userId
     }
 
-    if (toStatus && afterData) {
-      this.updateStatsForTransitIn(afterData, authorUserId, now)
-    }
-
-    if (fromStatus && beforeData) {
-      this.updateStatsForTransitOut(beforeData, now)
-    }
+    this.batch.set(
+      statsRef,
+      {
+        workflowId,
+        lastUpdated: timestamp,
+        currentPendings: {
+          [cardId]: newPending
+        }
+      },
+      { merge: true }
+    )
   }
 
   /**
