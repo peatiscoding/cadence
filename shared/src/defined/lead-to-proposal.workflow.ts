@@ -85,7 +85,7 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       },
       precondition: {
         from: ['brewing', 'proposal-sent'],
-        required: ['$.value', 'proposal-link']
+        required: ['$.value', 'proposalLink']
       }
     },
     {
