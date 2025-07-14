@@ -51,4 +51,3 @@ export interface ComputedStats {
   currentTotalDuration: number
   averageTransitionTime: number
 }
-

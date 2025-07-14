@@ -39,6 +39,7 @@ export class UserDirectory {
   static async getUserInfo(uid: string): Promise<CachedUserInfo> {
     // Try cache first
     if (this.isCacheValid() && this.cache.has(uid)) {
+      console.debug(`🎯 UserDirectory cache hit: ${uid} -> ${this.cache.get(uid)!.displayName}`)
       return this.cache.get(uid)!
     }
 
@@ -49,10 +50,14 @@ export class UserDirectory {
 
     // Check cache again after loading from storage
     if (this.cache.has(uid)) {
+      console.debug(
+        `📂 UserDirectory localStorage cache hit: ${uid} -> ${this.cache.get(uid)!.displayName}`
+      )
       return this.cache.get(uid)!
     }
 
     // Fetch from Firestore
+    console.debug(`🔍 UserDirectory cache miss, fetching from Firestore: ${uid}`)
     try {
       const fs = getFirestore(app)
       const userDoc = await getDoc(doc(fs, 'users', uid))
@@ -66,6 +71,7 @@ export class UserDirectory {
         }
         this.cache.set(uid, cachedInfo)
         this.saveCacheToStorage()
+        console.debug(`✅ UserDirectory fetched and cached: ${uid} -> ${userData.displayName}`)
         return cachedInfo
       }
     } catch (error) {
@@ -160,6 +166,7 @@ export class UserDirectory {
     for (const uid of uids) {
       if (this.isCacheValid() && this.cache.has(uid)) {
         result[uid] = this.cache.get(uid)!.displayName
+        console.debug(`🎯 UserDirectory batch cache hit: ${uid} -> ${result[uid]}`)
       } else {
         uncachedUids.push(uid)
       }
@@ -167,6 +174,9 @@ export class UserDirectory {
 
     // Batch fetch uncached users
     if (uncachedUids.length > 0) {
+      console.debug(
+        `🔍 UserDirectory batch cache miss, fetching ${uncachedUids.length} users: [${uncachedUids.join(', ')}]`
+      )
       try {
         const fs = getFirestore(app)
 
@@ -184,9 +194,11 @@ export class UserDirectory {
               }
               this.cache.set(uid, cachedInfo)
               result[uid] = userData.displayName
+              console.debug(`✅ UserDirectory batch fetched: ${uid} -> ${userData.displayName}`)
             } else {
               // User not found, use UID as fallback
               result[uid] = uid
+              console.debug(`❌ UserDirectory user not found, using fallback: ${uid}`)
             }
           } catch (docError) {
             console.warn(`Failed to fetch user ${uid}:`, docError)

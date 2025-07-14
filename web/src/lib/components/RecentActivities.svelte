@@ -17,7 +17,7 @@
   }
 
   let { recentActivities, loading = false }: Props = $props()
-  
+
   // User display name cache
   let userDisplayNames = $state<Record<string, string>>({})
   let loadingUserNames = $state(false)
@@ -33,8 +33,8 @@
     loadingUserNames = true
     try {
       // Extract unique user IDs from activities
-      const userIds = [...new Set(recentActivities.map(activity => activity.userId))]
-      
+      const userIds = [...new Set(recentActivities.map((activity) => activity.userId))]
+
       // Batch fetch display names
       const displayNames = await UserDirectory.batchGetDisplayNames(userIds)
       userDisplayNames = displayNames
@@ -188,7 +188,9 @@
               <p class="text-sm text-gray-900 dark:text-gray-100">
                 {getActionText(activity)}
                 {#if userDisplayNames[activity.userId]}
-                  <span class="text-gray-500 dark:text-gray-400">by {userDisplayNames[activity.userId]}</span>
+                  <span class="text-gray-500 dark:text-gray-400"
+                    >by {userDisplayNames[activity.userId]}</span
+                  >
                 {:else if loadingUserNames}
                   <span class="text-gray-400 dark:text-gray-500">by ...</span>
                 {:else}
@@ -208,4 +210,3 @@
     {/if}
   </div>
 </div>
-

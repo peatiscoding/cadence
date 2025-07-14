@@ -9,4 +9,3 @@ export interface ProvisionUserResponse {
   userInfo: UserInfo
   wasCreated: boolean // true if user document was created, false if already existed
 }
-

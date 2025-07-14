@@ -354,8 +354,7 @@
       Create a new {nouns.singular}. Fields marked with
       <span class="text-red-500">*</span> are required.
     {:else if formMode() === 'transition'}
-      Update {nouns.singular} to transition to "{targetStatusConfig()
-        .title}" status.
+      Update {nouns.singular} to transition to "{targetStatusConfig().title}" status.
     {:else}
       Edit the {nouns.singular}. Fields marked with
       <span class="text-red-500">*</span> are required.

@@ -366,9 +366,7 @@
       console.error('Failed to process drop:', error)
       showError(
         'Drop Failed',
-        error instanceof Error
-          ? error.message
-          : `Failed to process ${nouns.singular} drop`
+        error instanceof Error ? error.message : `Failed to process ${nouns.singular} drop`
       )
     }
   }

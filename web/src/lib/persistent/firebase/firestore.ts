@@ -6,7 +6,11 @@ import type {
   ActivityLog
 } from '@cadence/shared/types'
 import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/live-update'
-import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage, IActivityStorage } from '../interface'
+import type {
+  IWorkflowCardStorage,
+  IWorkflowConfigurationDynamicStorage,
+  IActivityStorage
+} from '../interface'
 
 import {
   type Firestore,
@@ -47,7 +51,9 @@ const REFs = {
 export class FirestoreWorkflowCardStorage
   implements IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage, IActivityStorage
 {
-  public static shared(): IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage & IActivityStorage {
+  public static shared(): IWorkflowCardStorage &
+    IWorkflowConfigurationDynamicStorage &
+    IActivityStorage {
     const db = getFirestore(app)
     const fns = getFunctions(app, FIREBASE_REGION)
     return new FirestoreWorkflowCardStorage(db, fns)
@@ -211,13 +217,9 @@ export class FirestoreWorkflowCardStorage
   }
 
   listenForRecentActivities(limitCount: number = 5): ILiveUpdateListenerBuilder<ActivityLog> {
-    const q = query(
-      REFs.ACTIVITIES(this.fs),
-      orderBy('timestamp', 'desc'),
-      limit(limitCount)
-    )
+    const q = query(REFs.ACTIVITIES(this.fs), orderBy('timestamp', 'desc'), limit(limitCount))
     let observer: (changes: ILiveUpdateChange<ActivityLog>[]) => any
-    
+
     const o: ILiveUpdateListenerBuilder<ActivityLog> = {
       onDataChanges: (_ob) => {
         observer = _ob
