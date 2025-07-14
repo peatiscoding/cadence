@@ -310,6 +310,7 @@ To provide meaningful display names in activities and avoid duplicating user dat
    - `uid` - String: Firebase Authentication UID (matches document ID)
    - `email` - String: User's email address from Firebase Auth
    - `displayName` - String: User-customizable display name (defaults to email prefix)
+   - `role` - String: User role, either 'user' or 'admin' (defaults to 'user')
    - `createdAt` - Timestamp: When the user document was first created
    - `lastUpdated` - Timestamp: Last time user data was modified
 
@@ -320,6 +321,7 @@ To provide meaningful display names in activities and avoid duplicating user dat
   "uid": "firebase_auth_uid_123",
   "email": "john.doe@company.com", 
   "displayName": "John Doe",
+  "role": "user",
   "createdAt": "2024-01-15T10:00:00Z",
   "lastUpdated": "2024-01-20T14:30:00Z"
 }
@@ -392,6 +394,7 @@ To provide meaningful display names in activities and avoid duplicating user dat
          uid,
          email,
          displayName: defaultDisplayName,
+         role: 'user',
          createdAt: Timestamp.now(),
          lastUpdated: Timestamp.now()
        })
@@ -413,6 +416,8 @@ To provide meaningful display names in activities and avoid duplicating user dat
 3. **User Settings Page**:
    - Allow users to edit their displayName
    - Show email (read-only)
+   - Show current role (read-only for regular users)
+   - Admin interface for role management
    - Update lastUpdated timestamp on changes
 
 ### Performance Considerations
