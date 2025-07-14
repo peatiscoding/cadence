@@ -370,7 +370,7 @@ To provide meaningful display names in activities and avoid duplicating user dat
    ```
 
 3. **User Document Creation**:
-   - Auto-create user documents on first activity
+   - Auto-create user documents when users first authenticate
    - Default displayName to email prefix (before @)
    - Allow users to customize displayName in settings
 
@@ -381,25 +381,46 @@ To provide meaningful display names in activities and avoid duplicating user dat
    - Frontend resolves displayName using UserDirectory
    - No changes needed to existing activity logging functions
 
-2. **User Document Auto-Creation**:
+2. **User Document Provisioning via Firebase Functions**:
    ```typescript
-   // In Firebase Functions or frontend auth handler
-   export async function ensureUserDocument(uid: string, email: string): Promise<void> {
-     const userRef = firestore.doc(`users/${uid}`)
-     const userDoc = await userRef.get()
-     
-     if (!userDoc.exists) {
-       const defaultDisplayName = email.split('@')[0]
-       await userRef.set({
-         uid,
-         email,
-         displayName: defaultDisplayName,
-         role: 'user',
-         createdAt: Timestamp.now(),
-         lastUpdated: Timestamp.now()
-       })
+   // Backend: /functions/src/fns/provision-user.ts
+   export function createProvisionUser(app: App) {
+     return async (request: CallableRequest<ProvisionUserRequest>): Promise<ProvisionUserResponse> => {
+       const uid = request.auth.uid
+       const userRef = db.collection('users').doc(uid)
+       const userDoc = await userRef.get()
+       
+       if (!userDoc.exists) {
+         const authUser = await auth.getUser(uid)
+         const userInfo: UserInfo = {
+           uid,
+           email: authUser.email,
+           displayName: authUser.displayName || authUser.email.split('@')[0],
+           role: 'user',
+           createdAt: Timestamp.now(),
+           lastUpdated: Timestamp.now()
+         }
+         await userRef.set(userInfo)
+         return { success: true, userInfo, wasCreated: true }
+       }
+       
+       return { success: true, userInfo: userDoc.data(), wasCreated: false }
      }
    }
+   ```
+
+3. **Frontend Auto-Provisioning**:
+   ```typescript
+   // Frontend: Called automatically on auth state changes
+   onAuthStateChanged(this.auth, async (user) => {
+     if (user && user.uid) {
+       try {
+         await UserDirectory.provisionCurrentUser()
+       } catch (error) {
+         console.warn('Failed to provision user:', error)
+       }
+     }
+   })
    ```
 
 ### Frontend UI Updates

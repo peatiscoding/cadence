@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth'
 
 import { app } from '../../firebase-app'
+import { UserDirectory } from '../../users/directory'
 
 const _helpers = {
   mapFirebaseUserToSession(user: User): ICurrentSession {
@@ -57,11 +58,25 @@ export class FirebaseAuthenticationProvider implements IAuthenticationProvider {
     return signOut(this.auth)
   }
 
+  get currentUser() {
+    return this.auth.currentUser
+  }
+
   onAuthStateChanged(callback: (user: ICurrentSession | null) => void): () => void {
-    return onAuthStateChanged(this.auth, (user) => {
+    return onAuthStateChanged(this.auth, async (user) => {
       if (user && user.uid) {
+        // Provision user document when authenticated
+        try {
+          await UserDirectory.provisionCurrentUser()
+        } catch (error) {
+          console.warn('Failed to provision user on auth state change:', error)
+          // Don't block auth flow if provisioning fails
+        }
+
         callback(_helpers.mapFirebaseUserToSession(user))
       } else {
+        // Clear cache when user logs out
+        UserDirectory.clearCache()
         callback(null)
       }
     })

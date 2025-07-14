@@ -48,6 +48,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       }),
       login: vi.fn(),
       logout: vi.fn(),
+      currentUser: { uid: testUserId },
       onAuthStateChanged: vi.fn()
     }
 

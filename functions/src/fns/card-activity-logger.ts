@@ -98,9 +98,69 @@ export const _helpers = {
     beforeValue: any,
     afterValue: any
   ): void {
-    if (beforeValue !== afterValue) {
+    if (!_helpers.isEquivalentValue(beforeValue, afterValue)) {
       _helpers.addChange(changes, key, beforeValue, afterValue)
     }
+  },
+
+  /**
+   * Compare two values for equivalence, treating undefined and empty arrays as equivalent
+   */
+  isEquivalentValue(a: any, b: any): boolean {
+    // Direct equality check first
+    if (a === b) {
+      return true
+    }
+
+    // Handle null/undefined vs empty array equivalence (but not empty objects)
+    const aIsEmptyValue = a === null || a === undefined || (Array.isArray(a) && a.length === 0)
+    const bIsEmptyValue = b === null || b === undefined || (Array.isArray(b) && b.length === 0)
+
+    if (aIsEmptyValue && bIsEmptyValue) {
+      return true
+    }
+
+    // Handle array comparison
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) {
+        return false
+      }
+
+      for (let i = 0; i < a.length; i++) {
+        if (!_helpers.isEquivalentValue(a[i], b[i])) {
+          return false
+        }
+      }
+
+      return true
+    }
+
+    // Handle object comparison (shallow) - but only if both are objects and neither is an array
+    if (
+      typeof a === 'object' &&
+      typeof b === 'object' &&
+      a !== null &&
+      b !== null &&
+      !Array.isArray(a) &&
+      !Array.isArray(b)
+    ) {
+      const aKeys = Object.keys(a)
+      const bKeys = Object.keys(b)
+
+      if (aKeys.length !== bKeys.length) {
+        return false
+      }
+
+      for (const key of aKeys) {
+        if (!bKeys.includes(key) || !_helpers.isEquivalentValue(a[key], b[key])) {
+          return false
+        }
+      }
+
+      return true
+    }
+
+    return false
   }
 }
 
@@ -116,7 +176,6 @@ export class UpdateTransitionTracker {
   ) {}
 
   public compute(
-    action: ActivityAction,
     beforeData: IWorkflowCardEntry | null,
     afterData: IWorkflowCardEntry | null,
     authorUserId: string
@@ -193,9 +252,10 @@ export class UpdateTransitionTracker {
     // Handle statusSince - it could be a Timestamp object or a number (epoch)
     // Check if it has toMillis method (indicating it's a Timestamp object)
     const statusSinceValue = beforeData.statusSince as any
-    const statusSinceTimestamp = (statusSinceValue && typeof statusSinceValue.toMillis === 'function')
-      ? statusSinceValue as Timestamp
-      : Timestamp.fromMillis(beforeData.statusSince as number)
+    const statusSinceTimestamp =
+      statusSinceValue && typeof statusSinceValue.toMillis === 'function'
+        ? (statusSinceValue as Timestamp)
+        : Timestamp.fromMillis(beforeData.statusSince as number)
 
     // Calculate time spent in status
     const timeSpent = timestamp.toMillis() - statusSinceTimestamp.toMillis()
@@ -261,7 +321,7 @@ export function createCardActivityLogger(app: App) {
 
       // Update statistics
       const differ = new UpdateTransitionTracker(batch, db, workflowId, cardId)
-      differ.compute(action, beforeData, afterData, userId)
+      differ.compute(beforeData, afterData, userId)
 
       // Commit all changes atomically
       await batch.commit()

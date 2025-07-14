@@ -23,6 +23,10 @@ export interface IAuthenticationProvider {
    */
   logout(): Promise<void>
   /**
+   * Current user (may be null)
+   */
+  currentUser: any | null
+  /**
    * Listen to auth state changes
    */
   onAuthStateChanged(callback: (user: ICurrentSession | null) => void): () => void
