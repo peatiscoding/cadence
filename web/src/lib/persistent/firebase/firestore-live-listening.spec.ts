@@ -30,7 +30,11 @@ describe('FirestoreWorkflowCardStorage - Live Listening', () => {
 
   beforeEach(() => {
     // Use shared instance for integration tests
-    storage = FirestoreWorkflowCardStorage.shared()
+    storage = FirestoreWorkflowCardStorage.shared({
+      WORKFLOWS: 'test-workflows',
+      CARDS: 'cards',
+      ACTIVITIES: 'test-activities'
+    })
   })
 
   const testCards: string[] = []

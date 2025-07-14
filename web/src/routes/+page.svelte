@@ -1,10 +1,11 @@
 <script lang="ts">
+  import type { ActivityLog } from '@cadence/shared/types'
+  import type { ILiveUpdateChange } from '$lib/models/live-update'
   import { onMount, onDestroy } from 'svelte'
   import { Spinner } from 'flowbite-svelte'
   import { impls } from '$lib/impls'
   import RecentActivities from '$lib/components/RecentActivities.svelte'
-  import type { ActivityLog } from '@cadence/shared/types'
-  import type { ILiveUpdateChange } from '$lib/models/live-update'
+  import WorkflowStatistics from '$lib/components/WorkflowStatistics.svelte'
 
   let isLoggedIn = $state(false)
   let userUid = $state('')
@@ -128,101 +129,8 @@
           Welcome back! Here's what's happening with your projects.
         </p>
       </div>
-
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500 text-white"
-              >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Projects</p>
-              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">12</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-md bg-green-500 text-white"
-              >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed Tasks</p>
-              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">84</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-md bg-yellow-500 text-white"
-              >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</p>
-              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">23</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-md bg-red-500 text-white"
-              >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Overdue</p>
-              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">5</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Workflow Statistics -->
+      <WorkflowStatistics />
 
       <!-- Recent Activity -->
       <RecentActivities {recentActivities} loading={activitiesLoading} />

@@ -29,7 +29,11 @@ describe('FirestoreWorkflowCardStorage - Configuration Operations', () => {
 
   beforeEach(() => {
     // Use shared instance for integration tests
-    storage = FirestoreWorkflowCardStorage.shared()
+    storage = FirestoreWorkflowCardStorage.shared({
+      WORKFLOWS: 'test-workflows',
+      CARDS: 'cards',
+      ACTIVITIES: 'test-activities'
+    })
   })
 
   const createdWorkflowIds: string[] = []

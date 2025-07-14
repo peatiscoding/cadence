@@ -37,32 +37,42 @@ import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
 import { workflowConfigurationConverter } from './workflow-configuration.converter'
 
-const REFs = {
-  WORKFLOWS: (fs: Firestore) => collection(fs, WORKFLOWS),
-  WORKFLOW_CONFIGURATION: (fs: Firestore, workflowId: string) =>
-    doc(REFs.WORKFLOWS(fs), workflowId).withConverter(workflowConfigurationConverter),
-  WORKFLOW_CARDS: (fs: Firestore, workflowId: string) =>
-    collection(REFs.WORKFLOW_CONFIGURATION(fs, workflowId), CARDS),
-  WORKFLOW_CARD: (fs: Firestore, workflowId: string, workflowCardId: string) =>
-    doc(REFs.WORKFLOW_CARDS(fs, workflowId), workflowCardId).withConverter(workflowCardConverter),
-  ACTIVITIES: (fs: Firestore) => collection(fs, ACTIVITIES)
-}
-
 export class FirestoreWorkflowCardStorage
   implements IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage, IActivityStorage
 {
-  public static shared(): IWorkflowCardStorage &
-    IWorkflowConfigurationDynamicStorage &
-    IActivityStorage {
+  public static shared(
+    collectionKeys: { WORKFLOWS: string; CARDS: string; ACTIVITIES: string } = {
+      WORKFLOWS,
+      CARDS,
+      ACTIVITIES
+    }
+  ): IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage & IActivityStorage {
     const db = getFirestore(app)
     const fns = getFunctions(app, FIREBASE_REGION)
-    return new FirestoreWorkflowCardStorage(db, fns)
+    return new FirestoreWorkflowCardStorage(db, fns, collectionKeys)
+  }
+
+  private get rf() {
+    const { WORKFLOWS: PATH_WORKFLOWS, CARDS: PATH_CARDS } = this.collectionKeys
+    return {
+      WORKFLOWS: (fs: Firestore) => collection(fs, PATH_WORKFLOWS),
+      WORKFLOW_CONFIGURATION: (fs: Firestore, workflowId: string) =>
+        doc(fs, `${PATH_WORKFLOWS}/${workflowId}`).withConverter(workflowConfigurationConverter),
+      WORKFLOW_CARDS: (fs: Firestore, workflowId: string) =>
+        collection(fs, `${PATH_WORKFLOWS}/${workflowId}/${PATH_CARDS}`),
+      WORKFLOW_CARD: (fs: Firestore, workflowId: string, workflowCardId: string) =>
+        doc(fs, `${PATH_WORKFLOWS}/${workflowId}/${PATH_CARDS}/${workflowCardId}`).withConverter(
+          workflowCardConverter
+        ),
+      ACTIVITIES: (fs: Firestore) => collection(fs, this.collectionKeys.ACTIVITIES)
+    }
   }
 
   //
   private constructor(
     private readonly fs: Firestore,
-    private readonly fns: Functions
+    private readonly fns: Functions,
+    public collectionKeys: { WORKFLOWS: string; CARDS: string; ACTIVITIES: string }
   ) {}
 
   isSupportDynamicWorkflows(): boolean {
@@ -70,7 +80,7 @@ export class FirestoreWorkflowCardStorage
   }
 
   async createCard(workflowId: string, author: string, payload: any): Promise<string> {
-    const res = await addDoc(REFs.WORKFLOW_CARDS(this.fs, workflowId), {
+    const res = await addDoc(this.rf.WORKFLOW_CARDS(this.fs, workflowId), {
       ...payload,
       statusSince: serverTimestamp(),
       createdBy: author,
@@ -98,12 +108,11 @@ export class FirestoreWorkflowCardStorage
       }
     })
 
-    await updateDoc(REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId), updated)
+    await updateDoc(this.rf.WORKFLOW_CARD(this.fs, workflowId, workflowCardId), updated)
   }
 
   async transitCard(workflowId: string, workflowCardId: string, payload: any): Promise<void> {
     // transitFn
-    console.info('TRANSITION FROM:', payload)
     const fn = this.getFirebaseTransitFn()
     const res = await fn({
       destinationContext: {
@@ -112,12 +121,11 @@ export class FirestoreWorkflowCardStorage
         workflowCardId
       }
     })
-
     console.info('TRANSITION RESULT:', res)
   }
 
   async getCard(workflowId: string, workflowCardId: string): Promise<IWorkflowCardEntry> {
-    const ref = REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId)
+    const ref = this.rf.WORKFLOW_CARD(this.fs, workflowId, workflowCardId)
     const docSnap = await getDoc(ref)
     if (docSnap.exists()) {
       const card = docSnap.data()
@@ -129,7 +137,9 @@ export class FirestoreWorkflowCardStorage
   }
 
   listenForCards(workflowId: string): ILiveUpdateListenerBuilder<IWorkflowCardEntry> {
-    const q = query(REFs.WORKFLOW_CARDS(this.fs, workflowId).withConverter(workflowCardConverter))
+    const q = query(
+      this.rf.WORKFLOW_CARDS(this.fs, workflowId).withConverter(workflowCardConverter)
+    )
     let observer: (changes: ILiveUpdateChange<IWorkflowCardEntry>[]) => any
     //
     const o: ILiveUpdateListenerBuilder<IWorkflowCardEntry> = {
@@ -161,12 +171,12 @@ export class FirestoreWorkflowCardStorage
   }
 
   async deleteCard(workflowId: string, workflowCardId: string): Promise<void> {
-    const ref = REFs.WORKFLOW_CARD(this.fs, workflowId, workflowCardId)
+    const ref = this.rf.WORKFLOW_CARD(this.fs, workflowId, workflowCardId)
     await deleteDoc(ref)
   }
 
   async loadConfig(workflowId: string): Promise<WorkflowConfiguration> {
-    const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
+    const ref = this.rf.WORKFLOW_CONFIGURATION(this.fs, workflowId)
     const docSnap = await getDoc(ref)
     if (docSnap.exists()) {
       const config = docSnap.data()
@@ -177,14 +187,14 @@ export class FirestoreWorkflowCardStorage
   }
 
   async setConfig(workflowId: string, configuration: WorkflowConfiguration): Promise<void> {
-    const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
+    const ref = this.rf.WORKFLOW_CONFIGURATION(this.fs, workflowId)
     await setDoc(ref, configuration, { merge: true })
   }
 
   async listWorkflows(): Promise<{
     workflows: Array<WorkflowConfiguration & { workflowId: string }>
   }> {
-    const workflowsRef = REFs.WORKFLOWS(this.fs)
+    const workflowsRef = this.rf.WORKFLOWS(this.fs)
     const querySnapshot = await getDocs(workflowsRef)
 
     const workflows: Array<WorkflowConfiguration & { workflowId: string }> = []
@@ -210,14 +220,14 @@ export class FirestoreWorkflowCardStorage
     // Delete all workflow configurations in parallel
     await Promise.all(
       allWorkflowIds.map(async (workflowId) => {
-        const ref = REFs.WORKFLOW_CONFIGURATION(this.fs, workflowId)
+        const ref = this.rf.WORKFLOW_CONFIGURATION(this.fs, workflowId)
         await deleteDoc(ref)
       })
     )
   }
 
   listenForRecentActivities(limitCount: number = 5): ILiveUpdateListenerBuilder<ActivityLog> {
-    const q = query(REFs.ACTIVITIES(this.fs), orderBy('timestamp', 'desc'), limit(limitCount))
+    const q = query(this.rf.ACTIVITIES(this.fs), orderBy('timestamp', 'desc'), limit(limitCount))
     let observer: (changes: ILiveUpdateChange<ActivityLog>[]) => any
 
     const o: ILiveUpdateListenerBuilder<ActivityLog> = {
