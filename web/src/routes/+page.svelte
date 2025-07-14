@@ -52,30 +52,53 @@
       unsubscribeActivities()
     }
 
+    let isInitialLoad = true
+
     const listener = storage.listenForRecentActivities(5)
       .onDataChanges((changes: ILiveUpdateChange<ActivityLog>[]) => {
         // Handle real-time updates to activities
-        changes.forEach(change => {
-          if (change.type === 'added') {
-            // Add new activity to the beginning of the list
-            recentActivities = [change.data, ...recentActivities].slice(0, 5)
-          } else if (change.type === 'modified') {
-            // Update existing activity
-            const index = recentActivities.findIndex(a => 
-              a.workflowCardId === change.data.workflowCardId && 
-              a.timestamp === change.data.timestamp
-            )
-            if (index !== -1) {
-              recentActivities[index] = change.data
+        if (isInitialLoad) {
+          // On initial load, collect all 'added' items and sort them properly
+          const addedActivities = changes
+            .filter(change => change.type === 'added')
+            .map(change => change.data)
+            .sort((a, b) => {
+              // Sort by timestamp descending (newest first)
+              const aTime = a.timestamp && typeof a.timestamp.toMillis === 'function' 
+                ? a.timestamp.toMillis() 
+                : new Date(a.timestamp as any).getTime()
+              const bTime = b.timestamp && typeof b.timestamp.toMillis === 'function'
+                ? b.timestamp.toMillis()
+                : new Date(b.timestamp as any).getTime()
+              return bTime - aTime
+            })
+          
+          recentActivities = addedActivities.slice(0, 5)
+          isInitialLoad = false
+        } else {
+          // For subsequent real-time updates, handle changes individually
+          changes.forEach(change => {
+            if (change.type === 'added') {
+              // Add new activity to the beginning of the list
+              recentActivities = [change.data, ...recentActivities].slice(0, 5)
+            } else if (change.type === 'modified') {
+              // Update existing activity
+              const index = recentActivities.findIndex(a => 
+                a.workflowCardId === change.data.workflowCardId && 
+                a.timestamp === change.data.timestamp
+              )
+              if (index !== -1) {
+                recentActivities[index] = change.data
+              }
+            } else if (change.type === 'removed') {
+              // Remove activity
+              recentActivities = recentActivities.filter(a => 
+                !(a.workflowCardId === change.data.workflowCardId && 
+                  a.timestamp === change.data.timestamp)
+              )
             }
-          } else if (change.type === 'removed') {
-            // Remove activity
-            recentActivities = recentActivities.filter(a => 
-              !(a.workflowCardId === change.data.workflowCardId && 
-                a.timestamp === change.data.timestamp)
-            )
-          }
-        })
+          })
+        }
         activitiesLoading = false
       })
     
