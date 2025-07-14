@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { IWorkflowCardEntry } from '@cadence/shared/types'
+  import { formatAmount } from '$lib/utils/format'
   import { Card, Badge, P, Heading } from 'flowbite-svelte'
   import { ClockOutline } from 'flowbite-svelte-icons'
 
@@ -109,7 +110,7 @@
           {#if card.value > 0}
             <div class="flex items-center gap-2">
               <Badge color="orange" rounded>
-                {(card.value || 0).toLocaleString() + '฿'}
+                {formatAmount(card.value)}
               </Badge>
             </div>
           {/if}

@@ -6,6 +6,7 @@
     WorkflowType,
     WorkflowStatus
   } from '@cadence/shared/types'
+  import { formatAmount } from '$lib/utils/format'
   import { draftStatus, unknownStatus, STATUS_DRAFT } from '@cadence/shared/models/status'
   import { z } from 'zod'
   import { onMount } from 'svelte'
@@ -242,8 +243,8 @@
   }
 
   function handleTypeSelect(typeSlug: string) {
-    validateField('type', formData.type)
     formData.type = typeSlug
+    validateField('type', formData.type)
     isTypeDropdownOpen = false
   }
 
@@ -457,7 +458,9 @@
             for="value"
             class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Value
+            Value {#if formData.value}
+              <code class="ml-3">{formatAmount(formData.value)}</code>
+            {/if}
           </label>
           <input
             id="value"
