@@ -18,13 +18,13 @@ Whenever document is updated, it is critical to create an Audit Log and we can u
 3. **Document Fields**:
    - `totalTransitionTime` - Number: Total milliseconds cards have spent in this status (only for cards that have left)
    - `totalTransitionCount` - Number: Count of cards that have transitioned through this status (completed transitions only)
-   - `currentPendings` - Array: Cards currently in this status with metadata
+   - `currentPendings` - Object: Cards currently in this status with metadata, keyed by cardId
    - `lastUpdated` - Timestamp: Last time this stats document was modified
    - `workflowId` - String: Reference to parent workflow for validation
 
-#### Current Pendings Array Structure
+#### Current Pendings Object Structure
 
-Each item in `currentPendings` contains:
+Each value in `currentPendings` (keyed by cardId) contains:
 - `cardId` - String: Reference to the card document ID
 - `statusSince` - Timestamp: When the card entered this status
 - `value` - Number: Card's current value field (for aggregation)
@@ -33,7 +33,7 @@ Each item in `currentPendings` contains:
 #### Computed/Derived Fields (calculated client-side)
 
 - `currentNetValue` - Number: Sum of all `value` fields in `currentPendings`
-- `currentCount` - Number: Length of `currentPendings` array
+- `currentCount` - Number: Number of entries in `currentPendings` object
 - `currentTotalDuration` - Number: Total milliseconds all current cards have spent in this status
 - `averageTransitionTime` - Number: `totalTransitionTime / totalTransitionCount` (if count > 0)
 
@@ -45,20 +45,20 @@ Each item in `currentPendings` contains:
     "totalTransitionTime": 3050000,
     "totalTransitionCount": 2,
     "lastUpdated": "2024-01-16T14:30:00Z",
-    "currentPendings": [
-        {
+    "currentPendings": {
+        "mts-gold": {
             "cardId": "mts-gold",
             "statusSince": "2024-01-16T09:00:00Z",
             "value": 3000000,
             "userId": "user_123"
         },
-        {
+        "small-project": {
             "cardId": "small-project",
             "statusSince": "2024-01-16T12:15:00Z", 
             "value": 50000,
             "userId": "user_456"
         }
-    ]
+    }
 }
 ```
 
@@ -203,7 +203,7 @@ export const logCardActivity = onDocumentWritten(
    - `create`: beforeData is null, afterData exists
      - **Stats Updates**: Add card to initial status stats
        - Target document: `/stats/{workflowId}/per/{item.status}` (draft)
-       - `arrayUnion('currentPendings', { cardId, statusSince: NOW(), value: cardValue, userId })`
+       - `set('currentPendings.{cardId}', { cardId, statusSince: NOW(), value: cardValue, userId })`
        - Update `lastUpdated` timestamp
    
    - `update`: both beforeData and afterData exist, status unchanged (no stats update is computed for this event)
@@ -213,9 +213,9 @@ export const logCardActivity = onDocumentWritten(
        - **From Status** (`/stats/{workflowId}/per/{oldStatus}`):
          - `increment('totalTransitionTime', NOW() - originalStatusSince)`
          - `increment('totalTransitionCount', 1)`
-         - `arrayRemove('currentPendings', oldPendingItem)`
+         - `delete('currentPendings.{cardId}')`
        - **To Status** (`/stats/{workflowId}/per/{newStatus}`):
-         - `arrayUnion('currentPendings', { cardId, statusSince: NOW(), value: cardValue, userId })`
+         - `set('currentPendings.{cardId}', { cardId, statusSince: NOW(), value: cardValue, userId })`
        - Update `lastUpdated` on both documents
    
    - `delete`: beforeData exists, afterData is null
@@ -223,7 +223,7 @@ export const logCardActivity = onDocumentWritten(
        - Target document: `/stats/{workflowId}/per/{currentStatus}`
        - `increment('totalTransitionTime', NOW() - originalStatusSince)`
        - `increment('totalTransitionCount', 1)`
-       - `arrayRemove('currentPendings', currentPendingItem)`
+       - `delete('currentPendings.{cardId}')`
        - Update `lastUpdated` timestamp
 
 2. **Change Detection**:
@@ -292,7 +292,7 @@ interface ActivityChange {
 
 // Stats operations for Firebase Functions
 interface StatsOperation {
-  type: 'increment' | 'arrayUnion' | 'arrayRemove' | 'set'
+  type: 'increment' | 'set' | 'delete'
   field: string
   value: any
   document: string // document path
@@ -490,7 +490,7 @@ To provide meaningful display names in activities and avoid duplicating user dat
 3. **Monitoring & Logging**:
    - Log function execution metrics to Firebase console
    - Track success/failure rates for both activity creation and stats updates
-   - Monitor stats document sizes and currentPendings array lengths
+   - Monitor stats document sizes and currentPendings object sizes
    - Alert on high failure rates or unusual activity patterns
    - Track performance metrics for batch operations
 
@@ -499,7 +499,7 @@ To provide meaningful display names in activities and avoid duplicating user dat
    - Stats updates use Firestore transactions for atomic operations
    - Implement periodic reconciliation jobs to fix stats inconsistencies
    - Consider implementing cleanup for orphaned currentPendings entries
-   - Add validation to ensure currentPendings arrays don't grow unbounded
+   - Add validation to ensure currentPendings objects don't grow unbounded
 
 5. **Performance Considerations**:
    - Batch multiple stats operations when possible

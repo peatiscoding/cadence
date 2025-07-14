@@ -16,6 +16,7 @@ import type {
 } from '@cadence/shared/types'
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { paths } from '@cadence/shared/models'
+import { logger } from 'firebase-functions/v2'
 
 export const _helpers = {
   determineActionType(
@@ -50,7 +51,10 @@ export const _helpers = {
       _helpers.addChange(changes, 'status', undefined, afterData.status)
       _helpers.addChange(changes, 'value', undefined, afterData.value)
       _helpers.addChange(changes, 'type', undefined, afterData.type)
+      _helpers.addChange(changes, 'owner', undefined, afterData.owner)
+      _helpers.addChange(changes, 'description', undefined, afterData.description)
 
+      // Handle field datas
       // Add field data changes
       Object.entries(afterData.fieldData || {}).forEach(([key, value]) => {
         _helpers.addChange(changes, `fieldData.${key}`, undefined, value)
@@ -66,7 +70,14 @@ export const _helpers = {
       _helpers.compareAndAddChange(changes, 'title', beforeData.title, afterData.title)
       _helpers.compareAndAddChange(changes, 'status', beforeData.status, afterData.status)
       _helpers.compareAndAddChange(changes, 'value', beforeData.value, afterData.value)
+      _helpers.compareAndAddChange(changes, 'owner', beforeData.owner, afterData.owner)
       _helpers.compareAndAddChange(changes, 'type', beforeData.type, afterData.type)
+      _helpers.compareAndAddChange(
+        changes,
+        'description',
+        beforeData.description,
+        afterData.description
+      )
 
       // Compare field data
       const beforeFieldData = beforeData.fieldData || {}
@@ -223,12 +234,14 @@ export class UpdateTransitionTracker {
       userId
     }
 
+    logger.info(`TransitIn(${workflowId}, ${cardId}) to ${cardData.status}. By ${userId}`)
+
     this.batch.set(
       statsRef,
       {
         workflowId,
         lastUpdated: timestamp,
-        currentPendings: FieldValue.arrayUnion(newPending)
+        [`currentPendings.${cardId}`]: newPending
       },
       { merge: true }
     )
@@ -259,19 +272,17 @@ export class UpdateTransitionTracker {
 
     // Calculate time spent in status
     const timeSpent = timestamp.toMillis() - statusSinceTimestamp.toMillis()
+    const userId = beforeData.updatedBy || 'system'
 
-    // Remove from current pendings
-    const oldPending: StatusPending = {
-      cardId,
-      statusSince: statusSinceTimestamp,
-      value: beforeData.value || 0,
-      userId: beforeData.updatedBy || 'system'
-    }
+    // Remove from current pendings using FieldValue.delete()
+    logger.info(
+      `TransitOut(${workflowId}, ${cardId}) from ${beforeData.status} -- ${timeSpent}ms. By ${userId}.`
+    )
 
     this.batch.update(statsRef, {
       totalTransitionTime: FieldValue.increment(timeSpent),
       totalTransitionCount: FieldValue.increment(1),
-      currentPendings: FieldValue.arrayRemove(oldPending),
+      [`currentPendings.${cardId}`]: FieldValue.delete(),
       lastUpdated: timestamp
     })
   }

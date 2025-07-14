@@ -176,6 +176,8 @@ describe('_helpers', () => {
         { key: 'status', to: 'draft' },
         { key: 'value', to: 5000 },
         { key: 'type', to: 'bug' },
+        { key: 'owner', to: 'user1' },
+        { key: 'description' },
         { key: 'fieldData.priority', to: 'high' },
         { key: 'fieldData.assignee', to: 'user1' }
       ])
@@ -397,14 +399,10 @@ describe('UpdateTransitionTracker', () => {
         expect.objectContaining({
           workflowId: 'test-workflow',
           lastUpdated: expect.any(Timestamp),
-          currentPendings: expect.objectContaining({
-            elements: expect.arrayContaining([
-              expect.objectContaining({
-                cardId: 'test-card',
-                userId: 'user1',
-                value: 1000
-              })
-            ])
+          'currentPendings.test-card': expect.objectContaining({
+            cardId: 'test-card',
+            userId: 'user1',
+            value: 1000
           })
         }),
         { merge: true }
@@ -435,14 +433,7 @@ describe('UpdateTransitionTracker', () => {
           totalTransitionCount: expect.objectContaining({
             operand: 1
           }),
-          currentPendings: expect.objectContaining({
-            elements: expect.arrayContaining([
-              expect.objectContaining({
-                cardId: 'test-card',
-                userId: 'user1'
-              })
-            ])
-          }),
+          'currentPendings.test-card': expect.any(Object),
           lastUpdated: expect.any(Timestamp)
         })
       )
@@ -452,13 +443,9 @@ describe('UpdateTransitionTracker', () => {
         expect.objectContaining({
           workflowId: 'test-workflow',
           lastUpdated: expect.any(Timestamp),
-          currentPendings: expect.objectContaining({
-            elements: expect.arrayContaining([
-              expect.objectContaining({
-                cardId: 'test-card',
-                userId: 'user1'
-              })
-            ])
+          'currentPendings.test-card': expect.objectContaining({
+            cardId: 'test-card',
+            userId: 'user1'
           })
         }),
         { merge: true }
@@ -484,14 +471,7 @@ describe('UpdateTransitionTracker', () => {
           totalTransitionCount: expect.objectContaining({
             operand: 1
           }),
-          currentPendings: expect.objectContaining({
-            elements: expect.arrayContaining([
-              expect.objectContaining({
-                cardId: 'test-card',
-                userId: 'user1'
-              })
-            ])
-          }),
+          'currentPendings.test-card': expect.any(Object),
           lastUpdated: expect.any(Timestamp)
         })
       )
@@ -524,14 +504,10 @@ describe('UpdateTransitionTracker', () => {
         {
           workflowId: 'test-workflow',
           lastUpdated: timestamp,
-          currentPendings: expect.objectContaining({
-            elements: expect.arrayContaining([
-              expect.objectContaining({
-                cardId: 'test-card',
-                userId: 'user2',
-                value: 2500
-              })
-            ])
+          'currentPendings.test-card': expect.objectContaining({
+            cardId: 'test-card',
+            userId: 'user2',
+            value: 2500
           })
         },
         { merge: true }
@@ -564,15 +540,7 @@ describe('UpdateTransitionTracker', () => {
           totalTransitionCount: expect.objectContaining({
             operand: 1
           }),
-          currentPendings: expect.objectContaining({
-            elements: expect.arrayContaining([
-              expect.objectContaining({
-                cardId: 'test-card',
-                userId: 'user1',
-                value: 1500
-              })
-            ])
-          }),
+          'currentPendings.test-card': expect.any(Object),
           lastUpdated: timestamp
         }
       )
@@ -603,15 +571,7 @@ describe('UpdateTransitionTracker', () => {
           totalTransitionCount: expect.objectContaining({
             operand: 1
           }),
-          currentPendings: expect.objectContaining({
-            elements: expect.arrayContaining([
-              expect.objectContaining({
-                cardId: 'test-card',
-                userId: 'user2',
-                value: 2000
-              })
-            ])
-          }),
+          'currentPendings.test-card': expect.any(Object),
           lastUpdated: timestamp
         }
       )
@@ -627,10 +587,9 @@ describe('UpdateTransitionTracker', () => {
 
       await (tracker as any).updateStatsForTransitOut(beforeCard, Timestamp.now())
 
-      // Verify that system user is used when updatedBy is missing
+      // Verify that the field is properly deleted when updatedBy is missing
       const updateCall = mockBatch.update.mock.calls[0]
-      const pendingItem = updateCall[1].currentPendings.elements[0]
-      expect(pendingItem.userId).toBe('system')
+      expect(updateCall[1]['currentPendings.test-card']).toEqual(expect.any(Object))
     })
   })
 })

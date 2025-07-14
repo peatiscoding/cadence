@@ -35,7 +35,7 @@ export interface StatusStats {
   totalTransitionTime: number
   totalTransitionCount: number
   lastUpdated: Timestamp
-  currentPendings: StatusPending[]
+  currentPendings: Record<string, StatusPending>
 }
 
 export interface StatsOperation {

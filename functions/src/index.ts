@@ -32,7 +32,7 @@ export const provisionUserFn = onCall(
 )
 
 // Card activity logger - triggers on any card document changes
-export const cardActivityLoggerFn = onDocumentWritten(
+export const onCardWrittenHook = onDocumentWritten(
   {
     document: `${WORKFLOWS}/{workflowId}/${CARDS}/{cardId}`,
     region: FIREBASE_REGION
