@@ -299,12 +299,150 @@ interface StatsOperation {
 }
 ```
 
+## User Management System
+
+To provide meaningful display names in activities and avoid duplicating user data, the application maintains a centralized users collection.
+
+### Users Collection Structure
+
+1. **Location**: `/users/{uid}` (Firebase Auth UID as document key)
+2. **Document Fields**:
+   - `uid` - String: Firebase Authentication UID (matches document ID)
+   - `email` - String: User's email address from Firebase Auth
+   - `displayName` - String: User-customizable display name (defaults to email prefix)
+   - `createdAt` - Timestamp: When the user document was first created
+   - `lastUpdated` - Timestamp: Last time user data was modified
+
+#### Example User Document
+
+```json
+{
+  "uid": "firebase_auth_uid_123",
+  "email": "john.doe@company.com", 
+  "displayName": "John Doe",
+  "createdAt": "2024-01-15T10:00:00Z",
+  "lastUpdated": "2024-01-20T14:30:00Z"
+}
+```
+
+### User Directory Management
+
+#### Frontend Implementation
+
+1. **Local Storage Caching**:
+   - Cache user directory in browser localStorage
+   - Key: `cadence_user_directory_v1`
+   - Structure: `Record<string, { displayName: string, email: string }>`
+   - Invalidate cache after 1 hour for fresh data
+
+2. **Centralized User Resolution Function**:
+   ```typescript
+   // /web/src/lib/users/directory.ts
+   export class UserDirectory {
+     private static cache: Map<string, UserInfo> = new Map()
+     private static cacheTimestamp: number = 0
+     private static CACHE_DURATION = 60 * 60 * 1000 // 1 hour
+     
+     static async getDisplayName(uid: string): Promise<string> {
+       // Try cache first
+       if (this.isCacheValid() && this.cache.has(uid)) {
+         return this.cache.get(uid)!.displayName
+       }
+       
+       // Fetch from Firestore and update cache
+       const userDoc = await firestore.doc(`users/${uid}`).get()
+       if (userDoc.exists) {
+         const userData = userDoc.data() as UserInfo
+         this.cache.set(uid, userData)
+         return userData.displayName
+       }
+       
+       // Fallback to UID if user not found
+       return uid
+     }
+     
+     static async batchGetDisplayNames(uids: string[]): Promise<Record<string, string>> {
+       // Batch fetch multiple users for efficiency
+     }
+   }
+   ```
+
+3. **User Document Creation**:
+   - Auto-create user documents on first activity
+   - Default displayName to email prefix (before @)
+   - Allow users to customize displayName in settings
+
+#### Backend Integration
+
+1. **Activity Logging Enhancement**:
+   - Continue storing userId (Firebase UID) in ActivityLog
+   - Frontend resolves displayName using UserDirectory
+   - No changes needed to existing activity logging functions
+
+2. **User Document Auto-Creation**:
+   ```typescript
+   // In Firebase Functions or frontend auth handler
+   export async function ensureUserDocument(uid: string, email: string): Promise<void> {
+     const userRef = firestore.doc(`users/${uid}`)
+     const userDoc = await userRef.get()
+     
+     if (!userDoc.exists) {
+       const defaultDisplayName = email.split('@')[0]
+       await userRef.set({
+         uid,
+         email,
+         displayName: defaultDisplayName,
+         createdAt: Timestamp.now(),
+         lastUpdated: Timestamp.now()
+       })
+     }
+   }
+   ```
+
+### Frontend UI Updates
+
+1. **Activity Display**:
+   - Replace `activity.userId` with resolved displayName
+   - Show "by John Doe" instead of "by firebase_auth_uid_123"
+   - Add loading states for user resolution
+
+2. **Card Ownership**:
+   - Display card owners with displayNames
+   - Update card forms to show current user's displayName
+
+3. **User Settings Page**:
+   - Allow users to edit their displayName
+   - Show email (read-only)
+   - Update lastUpdated timestamp on changes
+
+### Performance Considerations
+
+1. **Batch User Lookups**:
+   - Fetch multiple user documents in single request for activity lists
+   - Use Firestore's `getAll()` method for efficiency
+
+2. **Cache Management**:
+   - Implement cache warming for frequently accessed users
+   - Use reactive stores for real-time displayName updates
+   - Clear cache on user logout
+
+3. **Firestore Rules**:
+   ```javascript
+   // firestore.rules
+   match /users/{uid} {
+     allow read: if request.auth != null; // Any authenticated user can read
+     allow write: if request.auth != null && request.auth.uid == uid; // Only owner can write
+   }
+   ```
+
 ### Security & Permissions
 
 - Function service account needs read access to card documents
 - Function service account needs write access to activities collection  
 - Function service account needs write access to stats collection
-- No additional user permissions required (runs as admin)
+- Function service account needs read/write access to users collection (for auto-creation)
+- Frontend users need read access to all user documents (for displayName resolution)
+- Frontend users can only write to their own user document
 
 ### Error Handling & Reliability
 
