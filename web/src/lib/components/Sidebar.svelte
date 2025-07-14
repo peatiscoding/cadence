@@ -9,9 +9,10 @@
     SidebarGroup,
     SidebarItem,
     SidebarWrapper,
-    Avatar,
+    SidebarButton,
     DarkMode,
-    Spinner
+    Spinner,
+    uiHelpers
   } from 'flowbite-svelte'
   import {
     ChartOutline,
@@ -19,6 +20,16 @@
     GoogleSolid
   } from 'flowbite-svelte-icons'
   import { impls } from '$lib/impls'
+
+  const sidebarUi = uiHelpers()
+  let { sidebarOpen = $bindable(), closeSidebar } = $props()
+  let isOpen = $state(false)
+  const closeSidebarInternal = sidebarUi.close
+
+  $effect(() => {
+    isOpen = sidebarUi.isOpen
+    sidebarOpen = isOpen
+  })
 
   let isLoggedIn = $state(false)
   let currentSession = $state<ICurrentSession | null>(null)
@@ -42,8 +53,18 @@
       isInitializing = false
     })
 
-    // Close user menu when clicking outside
-    return () => {}
+    // Global keyboard event handler for mobile menu
+    const handleGlobalKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        closeSidebarInternal()
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKeydown)
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeydown)
+    }
   })
 
   onDestroy(() => {
@@ -75,11 +96,21 @@
       isLoading = false
     }
   }
+
+  function handleSidebarItemClick() {
+    closeSidebarInternal()
+  }
 </script>
 
+<SidebarButton onclick={sidebarUi.toggle} class="fixed top-4 left-4 z-50 lg:hidden" />
+
 <Sidebar
-  class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg dark:bg-gray-800"
   activeUrl={$page.url.pathname}
+  backdrop={false}
+  {isOpen}
+  closeSidebar={closeSidebarInternal}
+  params={{ x: -50, duration: 50 }}
+  class="z-40 h-screen w-64 lg:fixed lg:z-0 lg:translate-x-0"
 >
   <SidebarWrapper>
     <!-- Logo Section -->
@@ -97,24 +128,30 @@
       <SidebarItem
         label="Dashboard"
         href="/"
+        onclick={handleSidebarItemClick}
         class={$page.url.pathname === '/'
           ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
           : 'text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100'}
       >
         {#snippet icon()}
-          <ChartOutline class="h-5 w-5" />
+          <ChartOutline
+            class="h-5 w-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+          />
         {/snippet}
         Dashboard
       </SidebarItem>
       <SidebarItem
         label="Workflows"
         href="/workflows"
+        onclick={handleSidebarItemClick}
         class={$page.url.pathname.startsWith('/workflows')
           ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
           : 'text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100'}
       >
         {#snippet icon()}
-          <WorkflowOutline class="h-5 w-5" />
+          <WorkflowOutline
+            class="h-5 w-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+          />
         {/snippet}
       </SidebarItem>
     </SidebarGroup>
