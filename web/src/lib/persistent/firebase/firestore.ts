@@ -2,10 +2,11 @@ import type {
   WorkflowConfiguration,
   IWorkflowCardEntry,
   ITransitWorkflowItemRequest,
-  ITransitWorkflowItemResponse
+  ITransitWorkflowItemResponse,
+  ActivityLog
 } from '@cadence/shared/types'
 import type { ILiveUpdateChange, ILiveUpdateListenerBuilder } from '$lib/models/live-update'
-import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage } from '../interface'
+import type { IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage, IActivityStorage } from '../interface'
 
 import {
   type Firestore,
@@ -20,11 +21,13 @@ import {
   setDoc,
   serverTimestamp,
   query,
-  onSnapshot
+  onSnapshot,
+  orderBy,
+  limit
 } from 'firebase/firestore'
 
 import { getFunctions, httpsCallable, type Functions, type HttpsCallable } from 'firebase/functions'
-import { WORKFLOWS, CARDS, FIREBASE_REGION } from '@cadence/shared/models/firestore'
+import { WORKFLOWS, CARDS, ACTIVITIES, FIREBASE_REGION } from '@cadence/shared/models/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
@@ -37,13 +40,14 @@ const REFs = {
   WORKFLOW_CARDS: (fs: Firestore, workflowId: string) =>
     collection(REFs.WORKFLOW_CONFIGURATION(fs, workflowId), CARDS),
   WORKFLOW_CARD: (fs: Firestore, workflowId: string, workflowCardId: string) =>
-    doc(REFs.WORKFLOW_CARDS(fs, workflowId), workflowCardId).withConverter(workflowCardConverter)
+    doc(REFs.WORKFLOW_CARDS(fs, workflowId), workflowCardId).withConverter(workflowCardConverter),
+  ACTIVITIES: (fs: Firestore) => collection(fs, ACTIVITIES)
 }
 
 export class FirestoreWorkflowCardStorage
-  implements IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage
+  implements IWorkflowCardStorage, IWorkflowConfigurationDynamicStorage, IActivityStorage
 {
-  public static shared(): IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage {
+  public static shared(): IWorkflowCardStorage & IWorkflowConfigurationDynamicStorage & IActivityStorage {
     const db = getFirestore(app)
     const fns = getFunctions(app, FIREBASE_REGION)
     return new FirestoreWorkflowCardStorage(db, fns)
@@ -204,6 +208,39 @@ export class FirestoreWorkflowCardStorage
         await deleteDoc(ref)
       })
     )
+  }
+
+  listenForRecentActivities(limitCount: number = 5): ILiveUpdateListenerBuilder<ActivityLog> {
+    const q = query(
+      REFs.ACTIVITIES(this.fs),
+      orderBy('timestamp', 'desc'),
+      limit(limitCount)
+    )
+    let observer: (changes: ILiveUpdateChange<ActivityLog>[]) => any
+    
+    const o: ILiveUpdateListenerBuilder<ActivityLog> = {
+      onDataChanges: (_ob) => {
+        observer = _ob
+        return o
+      },
+      listen() {
+        if (!observer) {
+          console.error('WARNING: OBSERVER IS NOT DEFINED', o)
+        }
+        const unsubscribe = onSnapshot(q, (changes) => {
+          return observer(
+            changes.docChanges().map((c): ILiveUpdateChange<ActivityLog> => {
+              return {
+                type: c.type,
+                data: c.doc.data() as ActivityLog
+              }
+            })
+          )
+        })
+        return () => unsubscribe()
+      }
+    }
+    return o
   }
 
   // ------------------------------- PRIVATE ------------------------------------ //

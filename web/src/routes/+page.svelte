@@ -2,13 +2,20 @@
   import { onMount, onDestroy } from 'svelte'
   import { Spinner } from 'flowbite-svelte'
   import { impls } from '$lib/impls'
+  import RecentActivities from '$lib/components/RecentActivities.svelte'
+  import type { ActivityLog } from '@cadence/shared/types'
+  import type { ILiveUpdateChange } from '$lib/models/live-update'
 
   let isLoggedIn = $state(false)
   let userUid = $state('')
   let isInitializing = $state(true)
+  let recentActivities = $state<ActivityLog[]>([])
+  let activitiesLoading = $state(true)
 
   const authProvider = impls.authProvider
+  const storage = impls.storage
   let unsubscribeAuth: (() => void) | null = null
+  let unsubscribeActivities: (() => void) | null = null
 
   onMount(() => {
     // Listen to auth state changes for session persistence
@@ -16,9 +23,16 @@
       if (user) {
         userUid = user.uid
         isLoggedIn = true
+        setupActivityListener()
       } else {
         userUid = ''
         isLoggedIn = false
+        if (unsubscribeActivities) {
+          unsubscribeActivities()
+          unsubscribeActivities = null
+        }
+        recentActivities = []
+        activitiesLoading = true
       }
       isInitializing = false
     })
@@ -28,7 +42,45 @@
     if (unsubscribeAuth) {
       unsubscribeAuth()
     }
+    if (unsubscribeActivities) {
+      unsubscribeActivities()
+    }
   })
+
+  function setupActivityListener() {
+    if (unsubscribeActivities) {
+      unsubscribeActivities()
+    }
+
+    const listener = storage.listenForRecentActivities(5)
+      .onDataChanges((changes: ILiveUpdateChange<ActivityLog>[]) => {
+        // Handle real-time updates to activities
+        changes.forEach(change => {
+          if (change.type === 'added') {
+            // Add new activity to the beginning of the list
+            recentActivities = [change.data, ...recentActivities].slice(0, 5)
+          } else if (change.type === 'modified') {
+            // Update existing activity
+            const index = recentActivities.findIndex(a => 
+              a.workflowCardId === change.data.workflowCardId && 
+              a.timestamp === change.data.timestamp
+            )
+            if (index !== -1) {
+              recentActivities[index] = change.data
+            }
+          } else if (change.type === 'removed') {
+            // Remove activity
+            recentActivities = recentActivities.filter(a => 
+              !(a.workflowCardId === change.data.workflowCardId && 
+                a.timestamp === change.data.timestamp)
+            )
+          }
+        })
+        activitiesLoading = false
+      })
+    
+    unsubscribeActivities = listener.listen()
+  }
 </script>
 
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -143,73 +195,7 @@
       </div>
 
       <!-- Recent Activity -->
-      <div class="rounded-lg bg-white shadow dark:bg-gray-800">
-        <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-          <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Recent Activity</h2>
-        </div>
-        <div class="p-6">
-          <div class="space-y-4">
-            <div class="flex items-start space-x-3">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <svg class="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm text-gray-900 dark:text-gray-100">
-                  <span class="font-medium">You</span> created a new task in
-                  <span class="font-medium">Website Redesign</span>
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">2 hours ago</p>
-              </div>
-            </div>
-            <div class="flex items-start space-x-3">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                  <svg class="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm text-gray-900 dark:text-gray-100">
-                  Task <span class="font-medium">"Update user interface"</span> was completed
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">4 hours ago</p>
-              </div>
-            </div>
-            <div class="flex items-start space-x-3">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100">
-                  <svg class="h-4 w-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm text-gray-900 dark:text-gray-100">
-                  Task <span class="font-medium">"Database migration"</span> is overdue
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">1 day ago</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <RecentActivities {recentActivities} loading={activitiesLoading} />
     </div>
   {:else}
     <!-- Welcome Screen for Non-authenticated Users -->

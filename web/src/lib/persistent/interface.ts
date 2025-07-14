@@ -1,4 +1,4 @@
-import type { WorkflowConfiguration, IWorkflowCardEntry } from '@cadence/shared/types'
+import type { WorkflowConfiguration, IWorkflowCardEntry, ActivityLog } from '@cadence/shared/types'
 import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 
 /**
@@ -84,4 +84,11 @@ export interface IWorkflowConfigurationDynamicStorage extends IWorkflowConfigura
    */
   deleteConfig(workflowId: string): Promise<void>
   deleteConfig(...allWorkflowIds: string[]): Promise<void>
+}
+
+export interface IActivityStorage {
+  /**
+   * Listen for recent activities across all workflows
+   */
+  listenForRecentActivities(limitCount?: number): ILiveUpdateListenerBuilder<ActivityLog>
 }

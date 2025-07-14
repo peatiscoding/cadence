@@ -1,5 +1,5 @@
 import type { IAuthenticationProvider } from './authentication/interface'
-import type { IWorkflowConfigurationStorage } from './persistent/interface'
+import type { IWorkflowConfigurationStorage, IWorkflowCardStorage, IActivityStorage } from './persistent/interface'
 
 import { FirebaseAuthenticationProvider } from './authentication/firebase/firebase-authen'
 import { FirestoreWorkflowCardStorage } from './persistent/firebase/firestore'
@@ -11,6 +11,7 @@ import { supportedWorkflows } from '@cadence/shared/defined'
 export interface Impls {
   authProvider: IAuthenticationProvider
   configurationStore: IWorkflowConfigurationStorage
+  storage: IWorkflowCardStorage & IActivityStorage
   workflowEngineFactory: WorkflowFactory
 }
 
@@ -26,6 +27,7 @@ export const impls: Impls = (() => {
   return {
     authProvider,
     configurationStore,
+    storage: firestore,
     workflowEngineFactory
   }
 })()
