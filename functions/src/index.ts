@@ -6,7 +6,7 @@ import { initializeApp } from 'firebase-admin/app'
 
 import { transitWorkflowItem } from './fns/transit-workflow-item'
 import { login } from './fns/login'
-import { createCardActivityTrigger } from './fns/card-activity-trigger'
+import { createOnCardWrittenHandler } from './fns/on-card-written'
 import { createProvisionUser } from './fns/provision-user'
 
 import { execute } from './fns/_executor'
@@ -18,7 +18,7 @@ function getActionRunner(): IActionRunner {
   return ActionRunner.create(app)
 }
 
-const handleCardChange = createCardActivityTrigger(app)
+const handleCardWritten = createOnCardWrittenHandler(app)
 
 // Exported & configure Firebase Function's parameters.
 export const loginFn = onCall({ region: FIREBASE_REGION }, execute(login(app)))
@@ -42,6 +42,6 @@ export const cardActivityLoggerFn = onDocumentWritten(
     const beforeData = event.data?.before?.data() as IWorkflowCardEntry | undefined
     const afterData = event.data?.after?.data() as IWorkflowCardEntry | undefined
 
-    return handleCardChange(workflowId, cardId, beforeData || null, afterData || null)
+    return handleCardWritten(workflowId, cardId, beforeData || null, afterData || null)
   }
 )

@@ -5,3 +5,4 @@ functions/lib
 node_modules
 shared/dist
 *.tsbuildinfo
+.firebase

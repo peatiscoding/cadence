@@ -390,7 +390,7 @@ describe('UpdateTransitionTracker', () => {
     it('should handle create action', () => {
       const card = createMockCard({ status: 'draft', value: 1000 })
 
-      tracker.compute('create', null, card, 'user1')
+      tracker.compute(null, card, 'user1')
 
       expect(mockBatch.set).toHaveBeenCalledWith(
         { path: 'stats/test-workflow/per/draft' },
@@ -423,7 +423,7 @@ describe('UpdateTransitionTracker', () => {
         value: 1000
       })
 
-      tracker.compute('transit', beforeCard, afterCard, 'user1')
+      tracker.compute(beforeCard, afterCard, 'user1')
 
       // Should call both transitOut and transitIn
       expect(mockBatch.update).toHaveBeenCalledWith(
@@ -473,7 +473,7 @@ describe('UpdateTransitionTracker', () => {
         updatedBy: 'user1'
       })
 
-      tracker.compute('delete', beforeCard, null, 'user1')
+      tracker.compute(beforeCard, null, 'user1')
 
       expect(mockBatch.update).toHaveBeenCalledWith(
         { path: 'stats/test-workflow/per/draft' },
@@ -501,7 +501,7 @@ describe('UpdateTransitionTracker', () => {
       const beforeCard = createMockCard({ title: 'Old' })
       const afterCard = createMockCard({ title: 'New' })
 
-      tracker.compute('update', beforeCard, afterCard, 'user1')
+      tracker.compute(beforeCard, afterCard, 'user1')
 
       expect(mockBatch.set).not.toHaveBeenCalled()
       expect(mockBatch.update).not.toHaveBeenCalled()
@@ -634,4 +634,3 @@ describe('UpdateTransitionTracker', () => {
     })
   })
 })
-

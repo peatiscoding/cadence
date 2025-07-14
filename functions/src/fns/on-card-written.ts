@@ -7,9 +7,9 @@
 
 import type { App } from 'firebase-admin/app'
 import type { IWorkflowCardEntry } from '@cadence/shared/types'
-import { createCardActivityLogger } from './card-activity-logger'
+import { createCardActivityLogger } from './card-written-handler/card-activity-logger'
 
-export function createCardActivityTrigger(app: App) {
+export function createOnCardWrittenHandler(app: App) {
   const logCardActivity = createCardActivityLogger(app)
 
   return async function handleCardChange(
@@ -36,4 +36,3 @@ export function createCardActivityTrigger(app: App) {
     }
   }
 }
-
