@@ -238,10 +238,14 @@ export function createCardActivityLogger(app: App) {
         return // No changes to log
       }
 
+      // Extract card title - prefer afterData, fallback to beforeData
+      const cardTitle = afterData?.title || beforeData?.title || 'Untitled Card'
+
       // Create activity log entry
       const activityLog: ActivityLog = {
         workflowId,
         workflowCardId: cardId,
+        cardTitle,
         userId,
         timestamp: Timestamp.now(),
         action,

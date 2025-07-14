@@ -70,6 +70,7 @@ Each item in `currentPendings` contains:
     1. `id` - Auto-generated Firebase document ID
     1. `workflowId` - String: The workflow this activity belongs to
     1. `workflowCardId` - String: The card that was modified
+    1. `cardTitle` - String: The title of the card for better display in UI
     1. `userId` - String: ID of the user who performed the action
     1. `timestamp` - Timestamp: When the activity occurred (server timestamp)
     1. `action` - String: Type of action performed:
@@ -91,6 +92,7 @@ Each item in `currentPendings` contains:
     { /* document key is auto generated from firebase */
         "workflowId": "lead-to-proposal",
         "workflowCardId": "mts-gold",
+        "cardTitle": "MTS Gold",
         "userId": "user_123",
         "timestamp": "2024-01-15T10:30:00Z",
         "action": "create",
@@ -116,6 +118,7 @@ Each item in `currentPendings` contains:
     { /* document key is auto generated from firebase */
         "workflowId": "lead-to-proposal",
         "workflowCardId": "mts-gold",
+        "cardTitle": "MTS Gold",
         "userId": "user_123",
         "timestamp": "2024-01-15T14:45:00Z",
         "action": "transit",
@@ -134,6 +137,7 @@ Each item in `currentPendings` contains:
     { /* document key is auto generated from firebase */
         "workflowId": "lead-to-proposal",
         "workflowCardId": "mts-gold",
+        "cardTitle": "MTS Gold",
         "userId": "user_456",
         "timestamp": "2024-01-16T09:20:00Z",
         "action": "update",
@@ -148,6 +152,7 @@ Each item in `currentPendings` contains:
     { /* document key is auto generated from firebase */
         "workflowId": "lead-to-proposal",
         "workflowCardId": "mts-gold",
+        "cardTitle": "MTS Gold",
         "userId": "user_123",
         "timestamp": "2024-01-20T16:00:00Z",
         "action": "delete",

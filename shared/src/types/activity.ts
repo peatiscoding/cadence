@@ -16,6 +16,7 @@ export interface ActivityChange {
 export interface ActivityLog {
   workflowId: string
   workflowCardId: string
+  cardTitle: string
   userId: string
   timestamp: Timestamp
   action: ActivityAction
