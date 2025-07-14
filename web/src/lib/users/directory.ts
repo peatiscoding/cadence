@@ -5,10 +5,11 @@
  */
 import type { UserInfo, ProvisionUserRequest, ProvisionUserResponse } from '@cadence/shared/types'
 import { getFunctions, httpsCallable } from 'firebase/functions'
-import { getFirestore, doc, getDoc, getDocs } from 'firebase/firestore'
+import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import { FIREBASE_REGION } from '@cadence/shared/models'
 import { app } from '../firebase-app'
 import { impls } from '../impls'
+import { ProvisioningCache } from './provisioning-cache'
 
 interface CachedUserInfo {
   displayName: string
@@ -84,6 +85,7 @@ export class UserDirectory {
   /**
    * Provision current authenticated user
    * Ensures user document exists in Firestore
+   * Uses cookie caching to avoid unnecessary server calls
    */
   static async provisionCurrentUser(): Promise<UserInfo> {
     const user = impls.authProvider.currentUser
@@ -91,13 +93,35 @@ export class UserDirectory {
       throw new Error('No authenticated user found')
     }
 
+    // Check if user is already provisioned (cached in cookie)
+    if (ProvisioningCache.isUserProvisioned(user.uid)) {
+      console.debug(`User ${user.uid} already provisioned (cached), skipping server call`)
+
+      // Try to get user info from local cache first
+      try {
+        const cachedInfo = await this.getUserInfo(user.uid)
+        return {
+          uid: user.uid,
+          email: cachedInfo.email || user.email || '',
+          displayName: cachedInfo.displayName,
+          role: cachedInfo.role,
+          createdAt: null as any, // We don't cache these timestamps
+          lastUpdated: null as any
+        }
+      } catch (error) {
+        console.warn('Failed to get cached user info, will call server:', error)
+        // Fall through to server call if local cache fails
+      }
+    }
+
     try {
       // Call the backend provision function
+      console.debug(`Calling provisionUserFn for user ${user.uid}`)
       const request: ProvisionUserRequest = {}
       const response = await this.callProvisionFunction(request)
 
       if (response.success) {
-        // Update cache with fresh user info
+        // Update local cache with fresh user info
         const cachedInfo: CachedUserInfo = {
           displayName: response.userInfo.displayName,
           email: response.userInfo.email,
@@ -106,6 +130,9 @@ export class UserDirectory {
         }
         this.cache.set(user.uid, cachedInfo)
         this.saveCacheToStorage()
+
+        // Mark user as provisioned in cookie to avoid future calls
+        ProvisioningCache.markUserProvisioned(user.uid)
 
         console.log(
           `User provisioned: ${response.wasCreated ? 'created' : 'found'} - ${response.userInfo.displayName}`
@@ -189,6 +216,49 @@ export class UserDirectory {
     this.cache.clear()
     this.cacheTimestamp = 0
     localStorage.removeItem(this.CACHE_KEY)
+
+    // Also clear provisioning cookies
+    ProvisioningCache.clearAllProvisioningCache()
+  }
+
+  /**
+   * Force re-provisioning for a specific user (clears cache)
+   * Useful for testing or when user data might be stale
+   */
+  static forceReprovisionUser(uid: string): void {
+    // Clear from display name cache
+    this.cache.delete(uid)
+    this.saveCacheToStorage()
+
+    // Clear provisioning cookie
+    ProvisioningCache.clearUserProvisioning(uid)
+
+    console.debug(`Forced reprovisioning for user ${uid}`)
+  }
+
+  /**
+   * Debug helpers for development
+   */
+  static debug = {
+    /**
+     * Check if a user is marked as provisioned
+     */
+    isUserProvisioned: (uid: string) => ProvisioningCache.isUserProvisioned(uid),
+
+    /**
+     * List all provisioning cookies
+     */
+    listProvisioningCookies: () => ProvisioningCache.debugListProvisioningCookies(),
+
+    /**
+     * Get current cache state
+     */
+    getCacheState: () => ({
+      size: UserDirectory.cache.size,
+      timestamp: UserDirectory.cacheTimestamp,
+      isValid: UserDirectory.isCacheValid(),
+      entries: Object.fromEntries(UserDirectory.cache.entries())
+    })
   }
 
   /**
@@ -198,13 +268,11 @@ export class UserDirectory {
     request: ProvisionUserRequest
   ): Promise<ProvisionUserResponse> {
     const functions = getFunctions(app, FIREBASE_REGION)
-    const provisionFn = httpsCallable<ProvisionUserRequest, ProvisionUserResponse>(
-      functions,
-      'provisionUserFn'
-    )
+    const provisionFn = httpsCallable<ProvisionUserRequest, any>(functions, 'provisionUserFn')
 
     const result = await provisionFn(request)
-    return result.data
+    console.log('FN > RESULT', result.data.result as ProvisionUserResponse)
+    return result.data.result
   }
 
   /**
@@ -248,4 +316,3 @@ export class UserDirectory {
     }
   }
 }
-

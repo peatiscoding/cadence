@@ -8,6 +8,8 @@
     QuestionCircleOutline,
     ClipboardListOutline
   } from 'flowbite-svelte-icons'
+  import { UserDirectory } from '../users/directory'
+  import { onMount } from 'svelte'
 
   interface Props {
     recentActivities: ActivityLog[]
@@ -15,6 +17,39 @@
   }
 
   let { recentActivities, loading = false }: Props = $props()
+  
+  // User display name cache
+  let userDisplayNames = $state<Record<string, string>>({})
+  let loadingUserNames = $state(false)
+
+  // Load user display names when activities change
+  $effect(() => {
+    if (recentActivities.length > 0) {
+      loadUserDisplayNames()
+    }
+  })
+
+  async function loadUserDisplayNames() {
+    loadingUserNames = true
+    try {
+      // Extract unique user IDs from activities
+      const userIds = [...new Set(recentActivities.map(activity => activity.userId))]
+      
+      // Batch fetch display names
+      const displayNames = await UserDirectory.batchGetDisplayNames(userIds)
+      userDisplayNames = displayNames
+    } catch (error) {
+      console.warn('Failed to load user display names:', error)
+      // Fallback: use UIDs as display names
+      const fallbackNames: Record<string, string> = {}
+      for (const activity of recentActivities) {
+        fallbackNames[activity.userId] = activity.userId
+      }
+      userDisplayNames = fallbackNames
+    } finally {
+      loadingUserNames = false
+    }
+  }
 
   function getActionConfig(action: string) {
     switch (action) {
@@ -152,6 +187,13 @@
             <div class="min-w-0 flex-1">
               <p class="text-sm text-gray-900 dark:text-gray-100">
                 {getActionText(activity)}
+                {#if userDisplayNames[activity.userId]}
+                  <span class="text-gray-500 dark:text-gray-400">by {userDisplayNames[activity.userId]}</span>
+                {:else if loadingUserNames}
+                  <span class="text-gray-400 dark:text-gray-500">by ...</span>
+                {:else}
+                  <span class="text-gray-500 dark:text-gray-400">by {activity.userId}</span>
+                {/if}
                 {#if activity.workflowId}
                   <span class="text-gray-500 dark:text-gray-400">in {activity.workflowId}</span>
                 {/if}
