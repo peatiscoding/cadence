@@ -42,6 +42,7 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       slug: 'reason',
       description: 'Why this lead is terminated?',
       title: 'Termination Reason',
+      hiddenUnlessDefinedOrRequired: true,
       schema: {
         kind: 'multi-choice',
         choices: ['Timeline', 'Pricing/Budget', 'Politics']

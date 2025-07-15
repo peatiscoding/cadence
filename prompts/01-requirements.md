@@ -49,6 +49,7 @@ The Workflow Configuration's File:
             "slug": "field-key",    // required, Field's key
             "title": "Name of the field", // required
             "description": "description of the field", // optional
+            "hiddenUnlessDefinedOrRequired": boolean?, // optional, if true, field is hidden in forms unless it has a value or is required by a status precondition
             "schema": {             // required
                 "kind": "number",
                 "default": number?,

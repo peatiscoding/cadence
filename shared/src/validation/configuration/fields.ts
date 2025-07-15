@@ -54,5 +54,6 @@ export const FieldSchema = z.object({
     .describe("Field's slug can be only `camelCase` or `snake_case`."),
   title: z.string(),
   description: z.string().optional(),
+  hiddenUnlessDefinedOrRequired: z.boolean().optional(),
   schema: FieldSchemaUnion
 })

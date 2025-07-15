@@ -90,6 +90,23 @@
     return Array.isArray(required) ? required : []
   })
 
+  // Helper function to determine if a field should be visible
+  const shouldShowField = $derived((field: WorkflowField) => {
+    // If hiddenUnlessDefinedOrRequired is not set or false, always show the field
+    if (!field.hiddenUnlessDefinedOrRequired) return true
+
+    // If hiddenUnlessDefinedOrRequired is true, show the field only if:
+    // 1. The field is required by the current status, OR
+    // 2. The field has a value (is defined), including value of 0 for numbers
+    const isRequired = requiredFields().includes(field.slug)
+    const hasValue =
+      formData.fieldData[field.slug] !== undefined &&
+      formData.fieldData[field.slug] !== null &&
+      formData.fieldData[field.slug] !== ''
+
+    return isRequired || hasValue
+  })
+
   let mounted = $state(false)
 
   // Load schema when effective status changes
@@ -498,108 +515,114 @@
 
         <!-- Dynamic Fields -->
         {#if config.fields.length > 0}
-          <div class="border-t border-gray-200 pt-6 md:col-span-12 dark:border-gray-700">
-            <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">Custom Fields</h3>
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-12">
-              {#each config.fields as field}
-                {@const fieldProps = renderField(field)}
-                {@const fieldError = errors[`fieldData.${field.slug}`]}
-                <div
-                  class={fieldProps.type === 'multi-select' ? 'md:col-span-12' : 'md:col-span-6'}
-                >
-                  <label
-                    for={field.slug}
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          {@const visibleFields = config.fields.filter(shouldShowField)}
+          {#if visibleFields.length > 0}
+            <div class="border-t border-gray-200 pt-6 md:col-span-12 dark:border-gray-700">
+              <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">
+                Custom Fields
+              </h3>
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-12">
+                {#each visibleFields as field}
+                  {@const fieldProps = renderField(field)}
+                  {@const fieldError = errors[`fieldData.${field.slug}`]}
+                  <div
+                    class={fieldProps.type === 'multi-select' ? 'md:col-span-12' : 'md:col-span-6'}
                   >
-                    {field.title}
-                    {#if requiredFields().includes(field.slug)}
-                      <span class="text-red-500">*</span>
-                    {/if}
-                    {#if field.description}
-                      <span class="block text-xs text-gray-500 dark:text-gray-400"
-                        >{field.description}</span
-                      >
-                    {/if}
-                  </label>
+                    <label
+                      for={field.slug}
+                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      {field.title}
+                      {#if requiredFields().includes(field.slug)}
+                        <span class="text-red-500">*</span>
+                      {/if}
+                      {#if field.description}
+                        <span class="block text-xs text-gray-500 dark:text-gray-400"
+                          >{field.description}</span
+                        >
+                      {/if}
+                    </label>
 
-                  {#if fieldProps.type === 'checkbox'}
-                    <label class="flex items-center space-x-2">
-                      <input
+                    {#if fieldProps.type === 'checkbox'}
+                      <label class="flex items-center space-x-2">
+                        <input
+                          id={field.slug}
+                          type="checkbox"
+                          bind:checked={formData.fieldData[field.slug]}
+                          onchange={() =>
+                            validateFieldData(field.slug, formData.fieldData[field.slug])}
+                          class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                        />
+                        <span class="text-sm text-gray-700 dark:text-gray-300">{field.title}</span>
+                      </label>
+                    {:else if fieldProps.type === 'select'}
+                      <select
                         id={field.slug}
-                        type="checkbox"
-                        bind:checked={formData.fieldData[field.slug]}
+                        bind:value={formData.fieldData[field.slug]}
                         onchange={() =>
                           validateFieldData(field.slug, formData.fieldData[field.slug])}
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                        class:border-red-500={fieldError}
+                      >
+                        <option value="">Select {field.title}</option>
+                        {#each fieldProps.choices || [] as choice}
+                          <option value={choice}>{choice}</option>
+                        {/each}
+                      </select>
+                    {:else if fieldProps.type === 'multi-select'}
+                      <div class="space-y-2">
+                        {#each fieldProps.choices || [] as choice}
+                          <label class="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              value={choice}
+                              checked={formData.fieldData[field.slug]?.includes(choice)}
+                              onchange={(e: Event) => {
+                                const target = e.target as HTMLInputElement
+                                if (!formData.fieldData[field.slug]) {
+                                  formData.fieldData[field.slug] = []
+                                }
+                                if (target.checked) {
+                                  formData.fieldData[field.slug] = [
+                                    ...formData.fieldData[field.slug],
+                                    choice
+                                  ]
+                                } else {
+                                  formData.fieldData[field.slug] = formData.fieldData[
+                                    field.slug
+                                  ].filter((v: any) => v !== choice)
+                                }
+                                validateFieldData(field.slug, formData.fieldData[field.slug])
+                              }}
+                              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                            />
+                            <span class="text-sm text-gray-700 dark:text-gray-300">{choice}</span>
+                          </label>
+                        {/each}
+                      </div>
+                    {:else}
+                      <input
+                        id={field.slug}
+                        type={fieldProps.type}
+                        min={fieldProps.min}
+                        max={fieldProps.max}
+                        minlength={fieldProps.minlength}
+                        maxlength={fieldProps.maxlength}
+                        bind:value={formData.fieldData[field.slug]}
+                        onblur={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                        class:border-red-500={fieldError}
                       />
-                      <span class="text-sm text-gray-700 dark:text-gray-300">{field.title}</span>
-                    </label>
-                  {:else if fieldProps.type === 'select'}
-                    <select
-                      id={field.slug}
-                      bind:value={formData.fieldData[field.slug]}
-                      onchange={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
-                      class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                      class:border-red-500={fieldError}
-                    >
-                      <option value="">Select {field.title}</option>
-                      {#each fieldProps.choices || [] as choice}
-                        <option value={choice}>{choice}</option>
-                      {/each}
-                    </select>
-                  {:else if fieldProps.type === 'multi-select'}
-                    <div class="space-y-2">
-                      {#each fieldProps.choices || [] as choice}
-                        <label class="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            value={choice}
-                            checked={formData.fieldData[field.slug]?.includes(choice)}
-                            onchange={(e: Event) => {
-                              const target = e.target as HTMLInputElement
-                              if (!formData.fieldData[field.slug]) {
-                                formData.fieldData[field.slug] = []
-                              }
-                              if (target.checked) {
-                                formData.fieldData[field.slug] = [
-                                  ...formData.fieldData[field.slug],
-                                  choice
-                                ]
-                              } else {
-                                formData.fieldData[field.slug] = formData.fieldData[
-                                  field.slug
-                                ].filter((v: any) => v !== choice)
-                              }
-                              validateFieldData(field.slug, formData.fieldData[field.slug])
-                            }}
-                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                          />
-                          <span class="text-sm text-gray-700 dark:text-gray-300">{choice}</span>
-                        </label>
-                      {/each}
-                    </div>
-                  {:else}
-                    <input
-                      id={field.slug}
-                      type={fieldProps.type}
-                      min={fieldProps.min}
-                      max={fieldProps.max}
-                      minlength={fieldProps.minlength}
-                      maxlength={fieldProps.maxlength}
-                      bind:value={formData.fieldData[field.slug]}
-                      onblur={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
-                      class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                      class:border-red-500={fieldError}
-                    />
-                  {/if}
+                    {/if}
 
-                  {#if fieldError}
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{fieldError}</p>
-                  {/if}
-                </div>
-              {/each}
+                    {#if fieldError}
+                      <p class="mt-1 text-sm text-red-600 dark:text-red-400">{fieldError}</p>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
             </div>
-          </div>
+          {/if}
         {/if}
       </div>
     </div>
