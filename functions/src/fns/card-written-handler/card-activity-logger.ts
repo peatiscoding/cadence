@@ -19,6 +19,16 @@ import { paths } from '@cadence/shared/models'
 import { logger } from 'firebase-functions/v2'
 
 export const _helpers = {
+  /**
+   * Convert a timestamp value (which could be a Timestamp object or epoch number) to Timestamp
+   */
+  toTimestamp(value: any): Timestamp {
+    // Check if it has toMillis method (indicating it's a Timestamp object)
+    return value && typeof value.toMillis === 'function'
+      ? (value as Timestamp)
+      : Timestamp.fromMillis(value as number)
+  },
+
   determineActionType(
     beforeData: IWorkflowCardEntry | null,
     afterData: IWorkflowCardEntry | null
@@ -260,11 +270,15 @@ export class UpdateTransitionTracker {
     const statsPath = paths.STATS_PER_STATUS(workflowId, cardData.status)
     const statsRef = db.doc(statsPath)
 
+    // Convert card's createdAt to Timestamp using utility
+    const cardCreatedAt = _helpers.toTimestamp(cardData.createdAt)
+
     const newPending: StatusPending = {
       cardId,
       statusSince: timestamp,
       value: cardData.value || 0,
-      userId
+      userId,
+      createdAt: cardCreatedAt
     }
 
     logger.info(`TransitIn(${workflowId}, ${cardId}) to ${cardData.status}. By ${userId}`)
@@ -289,22 +303,14 @@ export class UpdateTransitionTracker {
    * compare time left
    * - set timestamp
    */
-  private async updateStatsForTransitOut(
-    beforeData: IWorkflowCardEntry,
-    timestamp: Timestamp
-  ): Promise<void> {
+  private updateStatsForTransitOut(beforeData: IWorkflowCardEntry, timestamp: Timestamp) {
     const workflowId = this.workflowId
     const cardId = this.cardId
     const statsPath = paths.STATS_PER_STATUS(workflowId, beforeData.status)
     const statsRef = this.db.doc(statsPath)
 
-    // Handle statusSince - it could be a Timestamp object or a number (epoch)
-    // Check if it has toMillis method (indicating it's a Timestamp object)
-    const statusSinceValue = beforeData.statusSince as any
-    const statusSinceTimestamp =
-      statusSinceValue && typeof statusSinceValue.toMillis === 'function'
-        ? (statusSinceValue as Timestamp)
-        : Timestamp.fromMillis(beforeData.statusSince as number)
+    // Handle statusSince using utility
+    const statusSinceTimestamp = _helpers.toTimestamp(beforeData.statusSince)
 
     // Calculate time spent in status
     const timeSpent = timestamp.toMillis() - statusSinceTimestamp.toMillis()

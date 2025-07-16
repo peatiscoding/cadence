@@ -77,13 +77,15 @@ export function computeWorkflowStatisticsFromStats(
     const cardIds: string[] = []
 
     pendings.forEach((pending) => {
-      const statusSinceMs =
-        typeof pending.statusSince === 'object' &&
-        pending.statusSince &&
-        'toMillis' in pending.statusSince
-          ? (pending.statusSince as any).toMillis()
-          : (pending.statusSince as unknown as number)
-      totalElapsedTime += now - statusSinceMs
+      // For terminal statuses, use createdAt to show total elapsed time from creation
+      // For non-terminal statuses, use statusSince to show time in current status
+      const timestampToUse = status.terminal ? pending.createdAt : pending.statusSince
+
+      const timestampMs =
+        typeof timestampToUse === 'object' && timestampToUse && 'toMillis' in timestampToUse
+          ? (timestampToUse as any).toMillis()
+          : (timestampToUse as unknown as number)
+      totalElapsedTime += now - timestampMs
       totalValue += pending.value
       cardIds.push(pending.cardId)
 

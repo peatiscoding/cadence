@@ -40,6 +40,35 @@ const createMockDb = () => ({
 })
 
 describe('_helpers', () => {
+  describe('toTimestamp', () => {
+    it('should return the same Timestamp object if input has toMillis method', () => {
+      const timestamp = Timestamp.now()
+      const result = _helpers.toTimestamp(timestamp)
+      expect(result).toBe(timestamp)
+    })
+
+    it('should convert epoch number to Timestamp', () => {
+      const epoch = Date.now()
+      const result = _helpers.toTimestamp(epoch)
+      expect(result).toBeInstanceOf(Timestamp)
+      expect(result.toMillis()).toBe(epoch)
+    })
+
+    it('should handle Timestamp-like objects with toMillis method', () => {
+      const mockTimestamp = {
+        toMillis: () => 1234567890000
+      }
+      const result = _helpers.toTimestamp(mockTimestamp)
+      expect(result).toBe(mockTimestamp)
+    })
+
+    it('should convert zero epoch to Timestamp', () => {
+      const result = _helpers.toTimestamp(0)
+      expect(result).toBeInstanceOf(Timestamp)
+      expect(result.toMillis()).toBe(0)
+    })
+  })
+
   describe('isEquivalentValue', () => {
     it('should return true for identical primitive values', () => {
       expect(_helpers.isEquivalentValue(5, 5)).toBe(true)
@@ -399,10 +428,13 @@ describe('UpdateTransitionTracker', () => {
         expect.objectContaining({
           workflowId: 'test-workflow',
           lastUpdated: expect.any(Timestamp),
-          'currentPendings.test-card': expect.objectContaining({
-            cardId: 'test-card',
-            userId: 'user1',
-            value: 1000
+          currentPendings: expect.objectContaining({
+            'test-card': expect.objectContaining({
+              cardId: 'test-card',
+              userId: 'user1',
+              value: 1000,
+              createdAt: expect.any(Timestamp)
+            })
           })
         }),
         { merge: true }
@@ -443,9 +475,12 @@ describe('UpdateTransitionTracker', () => {
         expect.objectContaining({
           workflowId: 'test-workflow',
           lastUpdated: expect.any(Timestamp),
-          'currentPendings.test-card': expect.objectContaining({
-            cardId: 'test-card',
-            userId: 'user1'
+          currentPendings: expect.objectContaining({
+            'test-card': expect.objectContaining({
+              cardId: 'test-card',
+              userId: 'user1',
+              createdAt: expect.any(Timestamp)
+            })
           })
         }),
         { merge: true }
@@ -477,13 +512,27 @@ describe('UpdateTransitionTracker', () => {
       )
     })
 
-    it('should not perform operations for update action', () => {
+    it('should call updateStatsForModification for update action', () => {
       const beforeCard = createMockCard({ title: 'Old' })
       const afterCard = createMockCard({ title: 'New' })
 
       tracker.compute(beforeCard, afterCard, 'user1')
 
-      expect(mockBatch.set).not.toHaveBeenCalled()
+      // Should call set with modification (updates the currentPendings value/userId)
+      expect(mockBatch.set).toHaveBeenCalledWith(
+        { path: 'stats/test-workflow/per/draft' },
+        expect.objectContaining({
+          workflowId: 'test-workflow',
+          lastUpdated: expect.any(Timestamp),
+          currentPendings: expect.objectContaining({
+            'test-card': expect.objectContaining({
+              value: 1000,
+              userId: 'user1'
+            })
+          })
+        }),
+        { merge: true }
+      )
       expect(mockBatch.update).not.toHaveBeenCalled()
     })
   })
@@ -504,14 +553,55 @@ describe('UpdateTransitionTracker', () => {
         {
           workflowId: 'test-workflow',
           lastUpdated: timestamp,
-          'currentPendings.test-card': expect.objectContaining({
-            cardId: 'test-card',
-            userId: 'user2',
-            value: 2500
-          })
+          createdAt: timestamp,
+          currentPendings: {
+            'test-card': expect.objectContaining({
+              cardId: 'test-card',
+              userId: 'user2',
+              value: 2500,
+              createdAt: expect.any(Timestamp)
+            })
+          }
         },
         { merge: true }
       )
+    })
+
+    it('should include card createdAt timestamp in pending entry', () => {
+      const cardCreatedAt = Date.now() - 86400000 // 1 day ago
+      const card = createMockCard({
+        status: 'in-progress',
+        value: 1500,
+        createdAt: cardCreatedAt
+      })
+      const timestamp = Timestamp.now()
+
+      // Access private method for testing
+      ;(tracker as any).updateStatsForTransitIn(card, 'user3', timestamp)
+
+      const call = mockBatch.set.mock.calls[0]
+      const pendingEntry = call[1].currentPendings['test-card']
+      
+      expect(pendingEntry.createdAt).toBeInstanceOf(Timestamp)
+      expect(pendingEntry.createdAt.toMillis()).toBe(cardCreatedAt)
+    })
+
+    it('should handle createdAt when it is already a Timestamp object', () => {
+      const cardCreatedAtTimestamp = Timestamp.fromMillis(Date.now() - 172800000) // 2 days ago
+      const card = createMockCard({
+        status: 'in-progress',
+        value: 3000,
+        createdAt: cardCreatedAtTimestamp as any
+      })
+      const timestamp = Timestamp.now()
+
+      // Access private method for testing
+      ;(tracker as any).updateStatsForTransitIn(card, 'user4', timestamp)
+
+      const call = mockBatch.set.mock.calls[0]
+      const pendingEntry = call[1].currentPendings['test-card']
+      
+      expect(pendingEntry.createdAt).toBe(cardCreatedAtTimestamp)
     })
   })
 

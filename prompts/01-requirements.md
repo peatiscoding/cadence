@@ -238,6 +238,15 @@ class Card {
 
 Logs are recorded as a Firestore's Document.
 
+### Elapsed Time Tracking
+
+The system tracks the total elapsed time from card creation to termination by storing card creation timestamps in the statistics documents:
+
+1. When a card is created, its `createdAt` timestamp is stored in the `currentPending` entry for the initial status in `/stats/{workflowId}/per/{status}`
+2. As cards move between statuses, the `createdAt` value is preserved in each new `currentPending` entry
+3. When a card reaches a terminal status, the frontend can calculate the total elapsed time by comparing the current time with the stored `createdAt` value
+4. This enables tracking of the complete lifecycle duration from creation to completion for workflow analytics
+
 ## Firestore Document Storage
 
 ```

@@ -139,10 +139,10 @@
                     {(status.currentCardCount > 0 && formatAmount(status.currentTotalValue)) || '-'}
                   </div>
                   <div class="text-xs text-gray-500 dark:text-gray-400">
-                    {#if !isTerminalStatus(status.statusId, workflow.workflowId)}
+                    {#if isTerminalStatus(status.statusId, workflow.workflowId)}
+                      Total: {formatElapsedTime(status.currentAverageElapsedTime)}
+                    {:else if status.currentCardCount > 0}
                       Avg: {formatElapsedTime(status.currentAverageElapsedTime)}
-                    {:else}
-                      Terminal status
                     {/if}
                   </div>
                 </div>

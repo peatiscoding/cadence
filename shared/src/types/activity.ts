@@ -28,6 +28,7 @@ export interface StatusPending {
   statusSince: Timestamp
   value: number
   userId: string
+  createdAt: Timestamp
 }
 
 export interface StatusStats {
