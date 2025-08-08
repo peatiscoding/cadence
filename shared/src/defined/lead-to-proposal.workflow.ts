@@ -23,9 +23,9 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       }
     },
     {
-      slug: 'proposalLink',
-      description: 'Google Document Link to active proposal',
-      title: 'Proposal Link',
+      slug: 'budgetLink',
+      description: 'Google Sheet described Budget Link',
+      title: 'Budget Link',
       schema: {
         kind: 'url'
       }
@@ -60,15 +60,15 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       precondition: { from: ['draft'], required: ['year'] }
     },
     {
-      slug: 'proposal-sent',
-      title: 'Proposal Sent',
+      slug: 'proposal-approved',
+      title: 'Approved',
       terminal: false,
       ui: {
         color: '#44EE11'
       },
       precondition: {
         from: ['brewing'],
-        required: ['$.value', 'proposalLink', 'contactPoint']
+        required: ['$.value', 'budgetLink', 'contactPoint']
       },
       finally: [
         {
@@ -85,8 +85,8 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
         color: '#4455FF'
       },
       precondition: {
-        from: ['brewing', 'proposal-sent'],
-        required: ['$.value', 'proposalLink']
+        from: ['brewing', 'proposal-approved'],
+        required: ['$.value', 'budgetLink']
       }
     },
     {
