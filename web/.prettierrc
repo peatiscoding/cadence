@@ -4,7 +4,6 @@
   "trailingComma": "none",
   "semi": false,
   "printWidth": 100,
-  "indent_size": 2,
   "tabWidth": 2,
   "plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
   "overrides": [
