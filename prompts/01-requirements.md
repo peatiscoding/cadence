@@ -61,12 +61,49 @@ The Workflow Configuration's File:
                 "max": number?,
                 "min": number?,
                 "choices": string[]?,
+                "lov": {, // List of value provider
+                    "cacheKey": string,
+                    "provider": {
+                        "kind": "api",
+                        "url": string,
+                        "headers": Record<string, string>,
+                        "listOfValueSelector": string, // dot (.) separated string pointed to an array.
+                        "valueSelector": string, // from the array instance select the string | number to represent value.
+                        "keySelector": string, // from the array instance select the string | number to represent key.
+                    } | {
+                        "kind": "googlesheet",
+                        "sheetId": string, // google sheet' id
+                        "dir": "LR" | "TB", // LR = Left to Right, TB = Top to Bottom range selection shold has only size of 1 on the respected orientation.
+                        "keyRange": string,  // A1N range that select the key
+                        "valueRange": string, // A1N range that select the value array
+                    }
+                }?,
                 "regex": "regex-string" // to validate
             } | {
                 "kind": "bool",
                 "default": bool?
             } | {
                 "kind": "url"
+            } | {
+                "kind": "list",
+                "itemSchema": {
+                    "kind": "number",
+                    "default": number?,
+                    "max": number,
+                    "min": number
+                } | {
+                    "kind": "text",
+                    "default": string?,
+                    "max": number?,
+                    "min": number?,
+                    "choices": string[]?,
+                    "regex": "regex-string" // to validate
+                } | {
+                    "kind": "bool",
+                    "default": bool?
+                } | {
+                    "kind": "url"
+                }
             }
         },
         ...

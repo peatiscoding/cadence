@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { LovDefinitionSchema } from './lovs'
 
 // Field schema definitions
 const NumberFieldSchema = z.object({
@@ -13,6 +14,8 @@ const TextFieldSchema = z.object({
   default: z.string().optional(),
   max: z.number().optional(),
   min: z.number().optional(),
+  choices: z.array(z.string()).optional(),
+  lov: LovDefinitionSchema.optional(),
   regex: z.string().optional()
 })
 
@@ -37,13 +40,42 @@ const UrlFieldSchema = z.object({
   kind: z.literal('url')
 })
 
+// List field schema that can contain items of various types
+const ListFieldSchema = z.object({
+  kind: z.literal('list'),
+  itemSchema: z.discriminatedUnion('kind', [
+    z.object({
+      kind: z.literal('number'),
+      default: z.number().optional(),
+      max: z.number(),
+      min: z.number()
+    }),
+    z.object({
+      kind: z.literal('text'),
+      default: z.string().optional(),
+      max: z.number().optional(),
+      min: z.number().optional(),
+      choices: z.array(z.string()).optional(),
+      regex: z.string().optional()
+    }),
+    z.object({
+      kind: z.literal('bool'),
+      default: z.boolean().optional()
+    }),
+    z.object({
+      kind: z.literal('url')
+    })
+  ])
+})
+
 const FieldSchemaUnion = z.discriminatedUnion('kind', [
   NumberFieldSchema,
   TextFieldSchema,
   ChoiceFieldSchema,
   MultipleChoiceFieldSchema,
   BoolFieldSchema,
-  UrlFieldSchema
+  UrlFieldSchema,
+  ListFieldSchema
 ])
 
 // Field definition
