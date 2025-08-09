@@ -19,6 +19,7 @@
     "check": "npm run check --workspace=web",
     "lint": "npm run lint --workspaces --if-present",
     "format": "npm run format --workspaces --if-present",
+    "validate:workflows": "npm run validate:workflows --workspace=shared",
     "deploy": "npm run build && firebase deploy",
     "deploy:web": "npm run build:web && firebase deploy --only hosting",
     "deploy:functions": "npm run build:functions && firebase deploy --only functions",
