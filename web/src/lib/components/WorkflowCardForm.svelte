@@ -12,7 +12,7 @@
   import { onMount } from 'svelte'
   import { Button, Badge, Indicator, Modal, Dropdown, DropdownItem } from 'flowbite-svelte'
   import { ArrowRightOutline, DotsHorizontalOutline } from 'flowbite-svelte-icons'
-  import { isIdentifierField } from '@cadence/shared/utils'
+  import { isIdentifierField, findIdentifierField } from '@cadence/shared/utils'
 
   interface Props {
     open: boolean
@@ -84,11 +84,24 @@
 
   // Get required fields for current status
   const requiredFields = $derived(() => {
-    if (!config || !config.statuses || effectiveStatus === 'draft') return []
-    const statusConfig = config.statuses.find((s) => s.slug === effectiveStatus)
-    const required = statusConfig?.precondition?.required
-    // Ensure we always return an array
-    return Array.isArray(required) ? required : []
+    let baseRequired: string[] = []
+
+    if (config && config.statuses && effectiveStatus !== 'draft') {
+      const statusConfig = config.statuses.find((s) => s.slug === effectiveStatus)
+      const required = statusConfig?.precondition?.required
+      baseRequired = Array.isArray(required) ? required : []
+    }
+
+    // Identifier fields are always required during creation
+    if (!isEditing && config) {
+      const identifierField = findIdentifierField(config.fields)
+      console.log('identifierField', config)
+      if (identifierField && !baseRequired.includes(identifierField.slug)) {
+        baseRequired.push(identifierField.slug)
+      }
+    }
+
+    return baseRequired
   })
 
   // Helper function to determine if a field should be visible

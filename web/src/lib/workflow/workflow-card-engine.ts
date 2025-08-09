@@ -264,7 +264,15 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     }
 
     // For draft status or undefined status configs, use empty requirements
-    const requiredFields = statusConfig?.precondition?.required || []
+    let requiredFields = statusConfig?.precondition?.required || []
+
+    // Identifier fields are always required during creation (draft status)
+    if (status === STATUS_DRAFT) {
+      const identifierField = findIdentifierField(config.fields)
+      if (identifierField && !requiredFields.includes(identifierField.slug)) {
+        requiredFields = [...requiredFields, identifierField.slug]
+      }
+    }
 
     // Build type validation schema
     const allowedTypes = config.types?.map((type) => type.slug) || []

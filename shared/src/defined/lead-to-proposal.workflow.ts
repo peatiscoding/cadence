@@ -19,7 +19,8 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       description: 'Project Code generated from the googlesheet',
       title: 'Project Code',
       schema: {
-        kind: 'text'
+        kind: 'text',
+        asDocumentId: true
       }
     },
     {
