@@ -14,6 +14,12 @@ import {
   ApiErrorSchema,
   UserSchema
 } from '../validation'
+import {
+  LovDefinitionSchema,
+  LovProviderDefinitionSchema,
+  LovAPIDefinitionSchema,
+  LovGoogleSheetDefinitionSchema
+} from '../validation/configuration/lovs'
 
 export type WorkflowConfiguration = z.infer<typeof ConfigurationSchema>
 export type WorkflowField = z.infer<typeof FieldSchema>
@@ -23,6 +29,10 @@ export type IWorkflowCard = z.infer<typeof CardSchema>
 export type IActionDefiniton = z.infer<typeof ActionUnionSchema>
 export type ApiError = z.infer<typeof ApiErrorSchema>
 export type User = z.infer<typeof UserSchema>
+export type LovAPIDefinition = z.infer<typeof LovAPIDefinitionSchema>
+export type LovGoogleSheetDefinition = z.infer<typeof LovGoogleSheetDefinitionSchema>
+export type LovProviderDefinition = z.infer<typeof LovProviderDefinitionSchema>
+export type LovDefinition = z.infer<typeof LovDefinitionSchema>
 
 export interface IWorkflowCardEntry extends IWorkflowCard {
   /**

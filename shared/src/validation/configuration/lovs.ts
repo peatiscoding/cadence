@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // LoV provider schema definitions
-const LovAPIDefinitionSchema = z.object({
+export const LovAPIDefinitionSchema = z.object({
   kind: z.literal('api'),
   url: z.string(),
   headers: z.record(z.string()),
@@ -10,7 +10,7 @@ const LovAPIDefinitionSchema = z.object({
   keySelector: z.string() // from the array instance select the string | number to represent key.
 })
 
-const LovGoogleSheetDefinitionSchema = z.object({
+export const LovGoogleSheetDefinitionSchema = z.object({
   kind: z.literal('googlesheet'),
   sheetId: z.string(), // google sheet' id
   dir: z.enum(['LR', 'TB']), // LR = Left to Right, TB = Top to Bottom range selection should have only size of 1 on the respected orientation.
@@ -18,7 +18,7 @@ const LovGoogleSheetDefinitionSchema = z.object({
   valueRange: z.string() // A1N range that select the value array
 })
 
-const LovProviderDefinitionSchema = z.discriminatedUnion('kind', [
+export const LovProviderDefinitionSchema = z.discriminatedUnion('kind', [
   LovAPIDefinitionSchema,
   LovGoogleSheetDefinitionSchema
 ])
