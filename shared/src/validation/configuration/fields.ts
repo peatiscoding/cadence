@@ -16,6 +16,7 @@ const TextFieldSchema = z.object({
   min: z.number().optional(),
   choices: z.array(z.string()).optional(),
   lov: LovDefinitionSchema.optional(),
+  asDocumentId: z.boolean().optional(),
   regex: z.string().optional()
 })
 

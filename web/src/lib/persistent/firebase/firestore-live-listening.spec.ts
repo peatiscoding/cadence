@@ -33,7 +33,9 @@ describe('FirestoreWorkflowCardStorage - Live Listening', () => {
     storage = FirestoreWorkflowCardStorage.shared({
       WORKFLOWS: 'test-workflows',
       CARDS: 'cards',
-      ACTIVITIES: 'test-activities'
+      ACTIVITIES: 'test-activities',
+      STATS: 'test-stats',
+      PER_STATUS: 'per-status'
     })
   })
 

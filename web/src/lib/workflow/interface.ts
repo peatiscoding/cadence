@@ -6,7 +6,10 @@ import type {
 } from '@cadence/shared/types'
 import type { z } from 'zod'
 
-export type IWorkflowCardEntryCreation = Pick<IWorkflowCardEntry, 'title' | 'description' | 'value'>
+export type IWorkflowCardEntryCreation = Pick<
+  IWorkflowCardEntry,
+  'title' | 'description' | 'value' | 'fieldData' | 'type' | 'owner'
+>
 export type IWorkflowCardEntryModification = Partial<
   Omit<
     IWorkflowCardEntry,

@@ -1,3 +1,4 @@
+import type { IAuthenticationProvider } from '$lib/authentication/interface'
 import type { IWorkflowCardStorage } from '$lib/persistent/interface'
 import type { WorkflowConfiguration, WorkflowStatus } from '@cadence/shared/types'
 import type {
@@ -7,7 +8,6 @@ import type {
 } from './interface'
 import { STATUS_DRAFT } from '@cadence/shared/models/status'
 import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
-import type { IAuthenticationProvider } from '$lib/authentication/interface'
 import { z } from 'zod'
 
 const _helpers = {
@@ -58,6 +58,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
 
   async makeNewCard(creationPayload: IWorkflowCardEntryCreation): Promise<string> {
     const userSsoId = await this.auth.getCurrentUid()
+    const config = await this.configuration
 
     // Validate payload against workflow configuration
     const schema = await this.getCardSchema(STATUS_DRAFT)
@@ -69,11 +70,37 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
       )
     }
 
-    return this.storage.createCard(this.workflowId, userSsoId, {
+    // Find identifier field (field with asDocumentId: true)
+    const identifierField = config.fields.find(
+      (field) => field.schema.kind === 'text' && field.schema.asDocumentId === true
+    )
+
+    const cardPayload = {
       ...creationPayload,
       status: STATUS_DRAFT,
       statusSince: USE_SERVER_TIMESTAMP
-    })
+    }
+
+    if (identifierField) {
+      // Use the identifier field value as document ID
+      const identifierValue = creationPayload.fieldData?.[identifierField.slug]
+      if (!identifierValue || typeof identifierValue !== 'string') {
+        throw new Error(
+          `Identifier field '${identifierField.title}' is required and must be a non-empty string`
+        )
+      }
+
+      // Remove the identifier field from the payload since it will be the document ID
+      const modifiedFieldData = { ...cardPayload.fieldData }
+      delete modifiedFieldData[identifierField.slug]
+      cardPayload.fieldData = modifiedFieldData
+
+      // Create card with specified ID
+      return this.storage.createCardWithId(this.workflowId, identifierValue, userSsoId, cardPayload)
+    } else {
+      // Use auto-generated ID (existing behavior)
+      return this.storage.createCard(this.workflowId, userSsoId, cardPayload)
+    }
   }
 
   async updateCardDetail(
@@ -84,9 +111,19 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
       throw new Error(`Update status is disallowed`)
     }
 
+    const config = await this.configuration
+
+    // Check if identifier field is being updated (not allowed)
+    const identifierField = config.fields.find(
+      (field) => field.schema.kind === 'text' && field.schema.asDocumentId === true
+    )
+
+    if (identifierField && payload.fieldData?.[identifierField.slug] !== undefined) {
+      throw new Error(`Identifier field '${identifierField.title}' cannot be updated`)
+    }
+
     // If type is being updated, validate it against allowed types
     if (payload.type !== undefined) {
-      const config = await this.configuration
       const allowedTypes = config.types?.map((type) => type.slug) || []
       if (allowedTypes.length > 0 && !allowedTypes.includes(payload.type)) {
         throw new Error(

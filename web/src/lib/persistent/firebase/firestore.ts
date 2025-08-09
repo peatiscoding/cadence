@@ -43,7 +43,7 @@ import {
 } from '@cadence/shared/models/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
-import { workflowCardConverter } from './workflow-card.converter'
+import { workflowCardConverter, createWorkflowCardConverter } from './workflow-card.converter'
 import { workflowConfigurationConverter } from './workflow-configuration.converter'
 
 interface ICollectionKeys {
@@ -129,6 +129,24 @@ export class FirestoreWorkflowCardStorage
     return res.id
   }
 
+  async createCardWithId(
+    workflowId: string,
+    cardId: string,
+    author: string,
+    payload: any
+  ): Promise<string> {
+    const docRef = this.rf.WORKFLOW_CARD(this.fs, workflowId, cardId)
+    await setDoc(docRef.withConverter(null), {
+      ...payload,
+      statusSince: serverTimestamp(),
+      createdBy: author,
+      createdAt: serverTimestamp(),
+      updatedBy: author,
+      updatedAt: serverTimestamp()
+    })
+    return cardId
+  }
+
   async updateCard(
     workflowId: string,
     workflowCardId: string,
@@ -163,7 +181,11 @@ export class FirestoreWorkflowCardStorage
   }
 
   async getCard(workflowId: string, workflowCardId: string): Promise<IWorkflowCardEntry> {
-    const ref = this.rf.WORKFLOW_CARD(this.fs, workflowId, workflowCardId)
+    // Load configuration to create appropriate converter
+    const config = await this.loadConfig(workflowId)
+    const converter = createWorkflowCardConverter(config)
+
+    const ref = this.rf.WORKFLOW_CARD(this.fs, workflowId, workflowCardId).withConverter(converter)
     const docSnap = await getDoc(ref)
     if (docSnap.exists()) {
       const card = docSnap.data()
@@ -175,34 +197,52 @@ export class FirestoreWorkflowCardStorage
   }
 
   listenForCards(workflowId: string): ILiveUpdateListenerBuilder<IWorkflowCardEntry> {
-    const q = query(
-      this.rf.WORKFLOW_CARDS(this.fs, workflowId).withConverter(workflowCardConverter)
-    )
     let observer: (changes: ILiveUpdateChange<IWorkflowCardEntry>[]) => any
-    //
+    let actualUnsubscribe: (() => void) | null = null
+
     const o: ILiveUpdateListenerBuilder<IWorkflowCardEntry> = {
       onDataChanges: (_ob) => {
         observer = _ob
         return o
       },
-      listen() {
+      listen: () => {
         if (!observer) {
           console.error('WARNING: OBSERVER IS NOT DEFINED', o)
         }
-        const unsubscribe = onSnapshot(q, (changes) => {
-          return observer(
-            changes.docChanges().map((c): ILiveUpdateChange<IWorkflowCardEntry> => {
-              const convertedData = c.doc.data()
-              // Set the workflowId which couldn't be set in the converter
-              convertedData.workflowId = workflowId
-              return {
-                type: c.type,
-                data: convertedData
-              }
+
+        // Load configuration and start listening
+        this.loadConfig(workflowId)
+          .then((config) => {
+            const converter = createWorkflowCardConverter(config)
+            const q = query(this.rf.WORKFLOW_CARDS(this.fs, workflowId).withConverter(converter))
+
+            // Capture the actual unsubscribe function
+            actualUnsubscribe = onSnapshot(q, (changes) => {
+              return observer(
+                changes.docChanges().map((c): ILiveUpdateChange<IWorkflowCardEntry> => {
+                  const convertedData = c.doc.data()
+                  // Set the workflowId which couldn't be set in the converter
+                  convertedData.workflowId = workflowId
+                  return {
+                    type: c.type,
+                    data: convertedData
+                  }
+                })
+              )
             })
-          )
-        })
-        return () => unsubscribe()
+          })
+          .catch((error) => {
+            console.error('Failed to load configuration for listening:', error)
+          })
+
+        // Return unsubscribe function that checks if actualUnsubscribe is available
+        return () => {
+          if (actualUnsubscribe) {
+            actualUnsubscribe()
+          } else {
+            console.warn('Unsubscribe called before listener was fully initialized')
+          }
+        }
       }
     }
     return o

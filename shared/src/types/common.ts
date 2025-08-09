@@ -39,6 +39,9 @@ export interface IWorkflowCardEntry extends IWorkflowCard {
    * Epoch since status changed
    */
   statusSince: number
+  /**
+   * author
+   */
   createdBy: string
   /**
    * Epoch since card was created

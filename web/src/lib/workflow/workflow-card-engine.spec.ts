@@ -25,6 +25,7 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
     // Create stubbed storage service
     mockStorage = {
       createCard: vi.fn(),
+      createCardWithId: vi.fn(),
       updateCard: vi.fn(),
       transitCard: vi.fn(),
       getCard: vi.fn(),
@@ -135,7 +136,10 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const creationPayload: IWorkflowCardEntryCreation = {
         title: 'New Task Card',
         description: 'This is a new task to complete',
-        value: 100
+        value: 100,
+        type: 'task',
+        owner: 'test-user',
+        fieldData: {}
       }
       const expectedCardId = 'card-id-123'
 
@@ -158,7 +162,10 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const fullCreationPayload: IWorkflowCardEntryCreation = {
         title: 'Full Featured Card',
         description: 'Card with all creation fields',
-        value: 500
+        value: 500,
+        type: 'feature',
+        owner: 'test-user',
+        fieldData: {}
       }
       const expectedCardId = 'full-card-789'
 
@@ -183,7 +190,10 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const zeroValuePayload: IWorkflowCardEntryCreation = {
         title: 'Zero Value Card',
         description: 'Card with zero value',
-        value: 0
+        value: 0,
+        type: 'task',
+        owner: 'test-user',
+        fieldData: {}
       }
       const expectedCardId = 'zero-card-456'
 
@@ -206,7 +216,10 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const creationPayload: IWorkflowCardEntryCreation = {
         title: 'Error Card',
         description: 'This will cause an error',
-        value: 50
+        value: 50,
+        type: 'task',
+        owner: 'test-user',
+        fieldData: {}
       }
       const storageError = new Error('Storage connection failed')
 
@@ -580,7 +593,10 @@ describe('WorkflowCardEngine with Stubbed Storage', () => {
       const cardCreationPayload: IWorkflowCardEntryCreation = {
         title: 'Lifecycle Test Card',
         description: 'Testing complete lifecycle',
-        value: 300
+        value: 300,
+        type: 'test',
+        owner: 'test-user',
+        fieldData: {}
       }
       const createdCardId = 'lifecycle-card-123'
 

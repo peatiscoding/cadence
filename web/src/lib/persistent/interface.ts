@@ -1,4 +1,9 @@
-import type { WorkflowConfiguration, IWorkflowCardEntry, ActivityLog, StatusStats } from '@cadence/shared/types'
+import type {
+  WorkflowConfiguration,
+  IWorkflowCardEntry,
+  ActivityLog,
+  StatusStats
+} from '@cadence/shared/types'
 import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 
 /**
@@ -11,6 +16,16 @@ export interface IWorkflowCardStorage {
    * Create a new Card
    */
   createCard(workflowId: string, author: string, creationPayload: any): Promise<string>
+
+  /**
+   * Create a new Card with a custom ID
+   */
+  createCardWithId(
+    workflowId: string,
+    cardId: string,
+    author: string,
+    creationPayload: any
+  ): Promise<string>
 
   /**
    * Update the existing Card Detail
@@ -98,9 +113,11 @@ export interface IStatsStorage {
    * Get statistics documents for a specific workflow
    */
   getWorkflowStats(workflowId: string): Promise<Record<string, StatusStats | null>>
-  
+
   /**
    * Get statistics documents for all workflows
    */
-  getAllWorkflowStats(workflowIds: string[]): Promise<Record<string, Record<string, StatusStats | null>>>
+  getAllWorkflowStats(
+    workflowIds: string[]
+  ): Promise<Record<string, Record<string, StatusStats | null>>>
 }

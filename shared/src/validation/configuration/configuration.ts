@@ -17,7 +17,11 @@ export const ConfigurationSchema = z.object({
     }),
   access: z.array(z.string()).optional(), // in absence of this parameter - will allowed all users to access this workflows
   description: z.string().optional(),
-  fields: z.array(FieldSchema),
+  fields: z.array(FieldSchema).refine(
+    (arr) =>
+      arr.filter((a) => a.schema.kind === 'text' && a.schema.asDocumentId === true).length <= 1, // allowed only 1 asDocumentId = true field.
+    'asDocumentId may have only set once.'
+  ),
   types: z.array(TypeSchema),
   statuses: z.array(StatusSchema)
 })

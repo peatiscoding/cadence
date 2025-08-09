@@ -78,6 +78,7 @@ The Workflow Configuration's File:
                         "valueRange": string, // A1N range that select the value array
                     }
                 }?,
+                "asDocumentId": bool, // a boolean marker that mark this field as a key instead of auto-generating id. Setting this field to TRUE will render the field as definedable only once. (That is only at creation time -- this field will basically omitted from payload, and will be only referenced at read time). `asIdentifier` may only attached to `text` and will not be possible in nested fields.
                 "regex": "regex-string" // to validate
             } | {
                 "kind": "bool",
@@ -97,6 +98,23 @@ The Workflow Configuration's File:
                     "max": number?,
                     "min": number?,
                     "choices": string[]?,
+                    "lov": {, // List of value provider
+                        "cacheKey": string,
+                        "provider": {
+                            "kind": "api",
+                            "url": string,
+                            "headers": Record<string, string>,
+                            "listOfValueSelector": string, // dot (.) separated string pointed to an array.
+                            "valueSelector": string, // from the array instance select the string | number to represent value.
+                            "keySelector": string, // from the array instance select the string | number to represent key.
+                        } | {
+                            "kind": "googlesheet",
+                            "sheetId": string, // google sheet' id
+                            "dir": "LR" | "TB", // LR = Left to Right, TB = Top to Bottom range selection shold has only size of 1 on the respected orientation.
+                            "keyRange": string,  // A1N range that select the key
+                            "valueRange": string, // A1N range that select the value array
+                        }
+                    }?,
                     "regex": "regex-string" // to validate
                 } | {
                     "kind": "bool",

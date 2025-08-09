@@ -107,6 +107,16 @@
     return isRequired || hasValue
   })
 
+  // Helper function to determine if a field is an identifier field (readonly in edit mode)
+  const isIdentifierField = $derived((field: WorkflowField) => {
+    return field.schema.kind === 'text' && field.schema.asDocumentId === true
+  })
+
+  // Helper function to determine if a field should be readonly
+  const shouldFieldBeReadonly = $derived((field: WorkflowField) => {
+    return isEditing && isIdentifierField(field)
+  })
+
   let mounted = $state(false)
 
   // Load schema when effective status changes
@@ -536,6 +546,13 @@
                       {#if requiredFields().includes(field.slug)}
                         <span class="text-red-500">*</span>
                       {/if}
+                      {#if shouldFieldBeReadonly(field)}
+                        <span
+                          class="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                        >
+                          ID
+                        </span>
+                      {/if}
                       {#if field.description}
                         <span class="block text-xs text-gray-500 dark:text-gray-400"
                           >{field.description}</span
@@ -610,8 +627,12 @@
                         maxlength={fieldProps.maxlength}
                         bind:value={formData.fieldData[field.slug]}
                         onblur={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
+                        readonly={shouldFieldBeReadonly(field)}
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                         class:border-red-500={fieldError}
+                        class:bg-gray-100={shouldFieldBeReadonly(field)}
+                        class:dark:bg-gray-600={shouldFieldBeReadonly(field)}
+                        class:cursor-not-allowed={shouldFieldBeReadonly(field)}
                       />
                     {/if}
 
