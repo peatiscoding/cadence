@@ -15,6 +15,14 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
   ],
   fields: [
     {
+      slug: 'projectCode',
+      description: 'Project Code generated from the googlesheet',
+      title: 'Project Code',
+      schema: {
+        kind: 'text'
+      }
+    },
+    {
       slug: 'year',
       description: 'Fisical Year of this project',
       title: 'Year',

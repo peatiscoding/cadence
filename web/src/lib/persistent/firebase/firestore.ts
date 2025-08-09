@@ -43,7 +43,7 @@ import {
 } from '@cadence/shared/models/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
-import { workflowCardConverter, createWorkflowCardConverter } from './workflow-card.converter'
+import { workflowCardConverter } from './workflow-card.converter'
 import { workflowConfigurationConverter } from './workflow-configuration.converter'
 
 interface ICollectionKeys {
@@ -181,11 +181,7 @@ export class FirestoreWorkflowCardStorage
   }
 
   async getCard(workflowId: string, workflowCardId: string): Promise<IWorkflowCardEntry> {
-    // Load configuration to create appropriate converter
-    const config = await this.loadConfig(workflowId)
-    const converter = createWorkflowCardConverter(config)
-
-    const ref = this.rf.WORKFLOW_CARD(this.fs, workflowId, workflowCardId).withConverter(converter)
+    const ref = this.rf.WORKFLOW_CARD(this.fs, workflowId, workflowCardId)
     const docSnap = await getDoc(ref)
     if (docSnap.exists()) {
       const card = docSnap.data()
@@ -197,52 +193,50 @@ export class FirestoreWorkflowCardStorage
   }
 
   listenForCards(workflowId: string): ILiveUpdateListenerBuilder<IWorkflowCardEntry> {
+    const q = query(
+      this.rf.WORKFLOW_CARDS(this.fs, workflowId).withConverter(workflowCardConverter)
+    )
     let observer: (changes: ILiveUpdateChange<IWorkflowCardEntry>[]) => any
-    let actualUnsubscribe: (() => void) | null = null
-
+    const transformers: ((
+      change: ILiveUpdateChange<IWorkflowCardEntry>
+    ) => ILiveUpdateChange<IWorkflowCardEntry>)[] = []
+    const applyTransformers = (
+      change: ILiveUpdateChange<IWorkflowCardEntry>
+    ): ILiveUpdateChange<any> => {
+      let c = change
+      for (const trans of transformers) {
+        c = trans(c)
+      }
+      return c
+    }
+    //
     const o: ILiveUpdateListenerBuilder<IWorkflowCardEntry> = {
+      map: (transformer) => {
+        transformers.push(transformer as any)
+        return o as any
+      },
       onDataChanges: (_ob) => {
         observer = _ob
         return o
       },
-      listen: () => {
+      listen() {
         if (!observer) {
           console.error('WARNING: OBSERVER IS NOT DEFINED', o)
         }
-
-        // Load configuration and start listening
-        this.loadConfig(workflowId)
-          .then((config) => {
-            const converter = createWorkflowCardConverter(config)
-            const q = query(this.rf.WORKFLOW_CARDS(this.fs, workflowId).withConverter(converter))
-
-            // Capture the actual unsubscribe function
-            actualUnsubscribe = onSnapshot(q, (changes) => {
-              return observer(
-                changes.docChanges().map((c): ILiveUpdateChange<IWorkflowCardEntry> => {
-                  const convertedData = c.doc.data()
-                  // Set the workflowId which couldn't be set in the converter
-                  convertedData.workflowId = workflowId
-                  return {
-                    type: c.type,
-                    data: convertedData
-                  }
-                })
-              )
+        const unsubscribe = onSnapshot(q, (changes) => {
+          return observer(
+            changes.docChanges().map((c): ILiveUpdateChange<IWorkflowCardEntry> => {
+              const convertedData = c.doc.data()
+              // Set the workflowId which couldn't be set in the converter
+              convertedData.workflowId = workflowId
+              return applyTransformers({
+                type: c.type,
+                data: convertedData
+              })
             })
-          })
-          .catch((error) => {
-            console.error('Failed to load configuration for listening:', error)
-          })
-
-        // Return unsubscribe function that checks if actualUnsubscribe is available
-        return () => {
-          if (actualUnsubscribe) {
-            actualUnsubscribe()
-          } else {
-            console.warn('Unsubscribe called before listener was fully initialized')
-          }
-        }
+          )
+        })
+        return () => unsubscribe()
       }
     }
     return o
@@ -307,8 +301,22 @@ export class FirestoreWorkflowCardStorage
   listenForRecentActivities(limitCount: number = 5): ILiveUpdateListenerBuilder<ActivityLog> {
     const q = query(this.rf.ACTIVITIES(this.fs), orderBy('timestamp', 'desc'), limit(limitCount))
     let observer: (changes: ILiveUpdateChange<ActivityLog>[]) => any
+    const transformers: ((
+      change: ILiveUpdateChange<ActivityLog>
+    ) => ILiveUpdateChange<ActivityLog>)[] = []
+    const applyTransformers = (change: ILiveUpdateChange<ActivityLog>): ILiveUpdateChange<any> => {
+      let c = change
+      for (const trans of transformers) {
+        c = trans(c)
+      }
+      return c
+    }
 
     const o: ILiveUpdateListenerBuilder<ActivityLog> = {
+      map: (transformer) => {
+        transformers.push(transformer as any)
+        return o as any
+      },
       onDataChanges: (_ob) => {
         observer = _ob
         return o
@@ -320,10 +328,10 @@ export class FirestoreWorkflowCardStorage
         const unsubscribe = onSnapshot(q, (changes) => {
           return observer(
             changes.docChanges().map((c): ILiveUpdateChange<ActivityLog> => {
-              return {
+              return applyTransformers({
                 type: c.type,
                 data: c.doc.data() as ActivityLog
-              }
+              })
             })
           )
         })

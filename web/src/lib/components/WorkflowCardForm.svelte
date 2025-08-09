@@ -12,6 +12,7 @@
   import { onMount } from 'svelte'
   import { Button, Badge, Indicator, Modal, Dropdown, DropdownItem } from 'flowbite-svelte'
   import { ArrowRightOutline, DotsHorizontalOutline } from 'flowbite-svelte-icons'
+  import { isIdentifierField } from '@cadence/shared/utils'
 
   interface Props {
     open: boolean
@@ -108,11 +109,6 @@
   })
 
   // Helper function to determine if a field is an identifier field (readonly in edit mode)
-  const isIdentifierField = $derived((field: WorkflowField) => {
-    return field.schema.kind === 'text' && field.schema.asDocumentId === true
-  })
-
-  // Helper function to determine if a field should be readonly
   const shouldFieldBeReadonly = $derived((field: WorkflowField) => {
     return isEditing && isIdentifierField(field)
   })

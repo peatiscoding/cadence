@@ -49,6 +49,11 @@ export interface IWorkflowCardEngine {
   deleteCard(workflowCardId: string): Promise<void>
 
   /**
+   * Get single card with identifier fields populated
+   */
+  getCard(workflowCardId: string): Promise<IWorkflowCardEntry>
+
+  /**
    * Get dynamic Zod schema for card validation based on status requirements
    */
   getCardSchema(status?: string): Promise<z.ZodObject<any>>

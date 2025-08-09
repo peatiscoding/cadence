@@ -1,6 +1,11 @@
 import type { IAuthenticationProvider } from '$lib/authentication/interface'
 import type { IWorkflowCardStorage } from '$lib/persistent/interface'
-import type { WorkflowConfiguration, WorkflowStatus } from '@cadence/shared/types'
+import type {
+  WorkflowConfiguration,
+  WorkflowStatus,
+  IWorkflowCardEntry
+} from '@cadence/shared/types'
+import { findIdentifierField } from '@cadence/shared/utils'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
@@ -9,6 +14,7 @@ import type {
 import { STATUS_DRAFT } from '@cadence/shared/models/status'
 import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 import { z } from 'zod'
+import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 
 const _helpers = {
   validateRequiredFields<T>(requiredFields: (keyof T)[], data: { fieldData: T }) {
@@ -71,9 +77,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     }
 
     // Find identifier field (field with asDocumentId: true)
-    const identifierField = config.fields.find(
-      (field) => field.schema.kind === 'text' && field.schema.asDocumentId === true
-    )
+    const identifierField = findIdentifierField(config.fields)
 
     const cardPayload = {
       ...creationPayload,
@@ -114,9 +118,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     const config = await this.configuration
 
     // Check if identifier field is being updated (not allowed)
-    const identifierField = config.fields.find(
-      (field) => field.schema.kind === 'text' && field.schema.asDocumentId === true
-    )
+    const identifierField = findIdentifierField(config.fields)
 
     if (identifierField && payload.fieldData?.[identifierField.slug] !== undefined) {
       throw new Error(`Identifier field '${identifierField.title}' cannot be updated`)
@@ -150,7 +152,7 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     }
 
     // Get current card to validate preconditions
-    const currentCard = await this.storage.getCard(this.workflowId, workflowCardId)
+    const currentCard = await this.getCard(workflowCardId)
     const newData = {
       ...currentCard,
       ...payload,
@@ -211,7 +213,42 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
   }
 
   listenForCards(workflowId: string) {
-    return this.storage.listenForCards(workflowId)
+    const builder = this.storage.listenForCards(workflowId)
+
+    // Attach transformer once configuration is available
+    this.configuration
+      .then((config) => {
+        const identifierField = findIdentifierField(config.fields)
+
+        if (identifierField) {
+          builder.map((change) => {
+            // Populate identifier field with document ID
+            if (change.data.fieldData) {
+              change.data.fieldData[identifierField.slug] = change.data.workflowCardId
+            }
+            return change
+          })
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to setup identifier field transformer:', error)
+      })
+
+    return builder
+  }
+
+  async getCard(workflowCardId: string): Promise<IWorkflowCardEntry> {
+    const card = await this.storage.getCard(this.workflowId, workflowCardId)
+    const config = await this.configuration
+
+    // Find identifier field and populate it with document ID
+    const identifierField = findIdentifierField(config.fields)
+
+    if (identifierField && card.fieldData) {
+      card.fieldData[identifierField.slug] = card.workflowCardId
+    }
+
+    return card
   }
 
   async getCardSchema(status: string = STATUS_DRAFT): Promise<z.ZodObject<any>> {
