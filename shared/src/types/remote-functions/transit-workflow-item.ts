@@ -1,14 +1,10 @@
-import type { IWorkflowCard } from '../common'
+import z from 'zod'
+import type { TransitWorkflowItemRequestSchema } from '../../validation'
 
 /**
  * Interface for frontend to ask backend to perform hook execution for it.
  */
-export interface ITransitWorkflowItemRequest {
-  /**
-   * contextual data of that card as user has entered.
-   */
-  destinationContext: IWorkflowCard
-}
+export type TransitWorkflowItemRequest = z.infer<typeof TransitWorkflowItemRequestSchema>
 
 export interface ITransitWorkflowItemResponse {
   /**

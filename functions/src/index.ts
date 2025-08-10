@@ -11,8 +11,19 @@ import { createProvisionUser } from './fns/provision-user'
 import { createCard } from './fns/create-card'
 
 import { execute } from './fns/_executor'
-import { executeHttp } from './fns/_http-executor'
+import {
+  HttpExecutorBuilder,
+  cors,
+  allowedMethod,
+  firebaseIdToken,
+  validateBody
+} from './fns/_http-executor'
 import { ActionRunner } from './hooks/runner'
+import {
+  CreateCardRequestSchema,
+  ProvisionUserRequestSchema,
+  TransitWorkflowItemRequestSchema
+} from '@cadence/shared/validation'
 
 // Initialize depedencies
 const app = initializeApp()
@@ -29,17 +40,44 @@ export const loginFn = onCall({ region: FIREBASE_REGION }, execute(login(app)))
 // Convert to HTTP endpoints for public API
 export const transitWorkflowItemAPI = onRequest(
   { region: FIREBASE_REGION, cors: true },
-  executeHttp(transitWorkflowItem(app, getActionRunner))
+  new HttpExecutorBuilder()
+    .use(cors())
+    .use(allowedMethod('POST'))
+    .use(firebaseIdToken(app))
+    .use(validateBody(TransitWorkflowItemRequestSchema))
+    .handle(async (ctx) => {
+      const userEmail = ctx.email ?? ctx.uid ?? ''
+      const userId = ctx.uid ?? ''
+      transitWorkflowItem(app, getActionRunner)({} as any, userId, userEmail)
+    })
 )
 
 export const provisionUserAPI = onRequest(
   { region: FIREBASE_REGION, cors: true },
-  executeHttp(createProvisionUser(app))
+  new HttpExecutorBuilder()
+    .use(cors())
+    .use(allowedMethod('POST'))
+    .use(firebaseIdToken(app))
+    .use(validateBody(ProvisionUserRequestSchema))
+    .handle(async (ctx) => {
+      const userEmail = ctx.email ?? ctx.uid ?? ''
+      const userId = ctx.uid ?? ''
+      return createProvisionUser(app)(ctx.body, userId, userEmail)
+    })
 )
 
 export const createCardAPI = onRequest(
   { region: FIREBASE_REGION, cors: true },
-  executeHttp(createCard(app))
+  new HttpExecutorBuilder()
+    .use(cors())
+    .use(allowedMethod('POST'))
+    .use(firebaseIdToken(app))
+    .use(validateBody(CreateCardRequestSchema))
+    .handle(async (ctx) => {
+      const userEmail = ctx.email ?? ctx.uid ?? ''
+      const userId = ctx.uid ?? ''
+      return createCard(app)(ctx.body, userId, userEmail)
+    })
 )
 
 // Keep legacy onCall versions for backward compatibility during transition

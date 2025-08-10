@@ -1,16 +1,6 @@
-/**
- * Create Card Remote Function Types
- */
+import { z } from 'zod'
 
-export interface CreateCardRequest {
-  workflowId: string
-  cardId?: string // Optional - if not provided, auto-generate
-  payload: Record<string, any>
-}
+import { CreateCardRequestSchema, CreateCardResponseSchema } from '../../validation'
 
-export interface CreateCardResponse {
-  cardId: string
-  workflowId: string
-  success: boolean
-}
-
+export type CreateCardRequest = z.infer<typeof CreateCardRequestSchema>
+export type CreateCardResponse = z.infer<typeof CreateCardResponseSchema>
