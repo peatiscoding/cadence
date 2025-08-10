@@ -6,3 +6,4 @@ node_modules
 shared/dist
 *.tsbuildinfo
 .firebase
+api-client/dist

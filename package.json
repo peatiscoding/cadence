@@ -6,7 +6,8 @@
   "workspaces": [
     "web",
     "functions",
-    "shared"
+    "shared",
+    "api-client"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=web",
@@ -14,6 +15,7 @@
     "build:web": "npm run build --workspace=web",
     "build:functions": "npm run build --workspace=functions",
     "build:shared": "npm run build --workspace=shared",
+    "build:api-client": "npm run build --workspace=api-client",
     "test": "npm run test --workspaces --if-present",
     "test:web": "npm run test --workspace=web",
     "check": "npm run check --workspace=web",
