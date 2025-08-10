@@ -32,7 +32,8 @@ import {
   limit
 } from 'firebase/firestore'
 
-import { getFunctions, httpsCallable, type Functions, type HttpsCallable } from 'firebase/functions'
+import { CadenceAPIClient } from '@cadence/api-client'
+import { getAuth } from 'firebase/auth'
 import {
   WORKFLOWS,
   CARDS,
@@ -74,8 +75,7 @@ export class FirestoreWorkflowCardStorage
     IActivityStorage &
     IStatsStorage {
     const db = getFirestore(app)
-    const fns = getFunctions(app, FIREBASE_REGION)
-    return new FirestoreWorkflowCardStorage(db, fns, collectionKeys)
+    return new FirestoreWorkflowCardStorage(db, collectionKeys)
   }
 
   /**
@@ -109,7 +109,6 @@ export class FirestoreWorkflowCardStorage
   //
   private constructor(
     private readonly fs: Firestore,
-    private readonly fns: Functions,
     public readonly collectionKeys: ICollectionKeys
   ) {}
 
@@ -118,15 +117,16 @@ export class FirestoreWorkflowCardStorage
   }
 
   async createCard(workflowId: string, author: string, payload: any): Promise<string> {
-    const res = await addDoc(this.rf.WORKFLOW_CARDS(this.fs, workflowId), {
-      ...payload,
-      statusSince: serverTimestamp(),
-      createdBy: author,
-      createdAt: serverTimestamp(),
-      updatedBy: author,
-      updatedAt: serverTimestamp()
+    // Use API client to create card instead of direct Firestore access
+    const auth = getAuth()
+    const client = new CadenceAPIClient({}, auth)
+    
+    const result = await client.createCard({
+      workflowId,
+      payload
     })
-    return res.id
+    
+    return result.cardId
   }
 
   async createCardWithId(
@@ -135,16 +135,17 @@ export class FirestoreWorkflowCardStorage
     author: string,
     payload: any
   ): Promise<string> {
-    const docRef = this.rf.WORKFLOW_CARD(this.fs, workflowId, cardId)
-    await setDoc(docRef.withConverter(null), {
-      ...payload,
-      statusSince: serverTimestamp(),
-      createdBy: author,
-      createdAt: serverTimestamp(),
-      updatedBy: author,
-      updatedAt: serverTimestamp()
+    // Use API client to create card with specific ID
+    const auth = getAuth()
+    const client = new CadenceAPIClient({}, auth)
+    
+    const result = await client.createCard({
+      workflowId,
+      cardId,
+      payload
     })
-    return cardId
+    
+    return result.cardId
   }
 
   async updateCard(
@@ -168,9 +169,11 @@ export class FirestoreWorkflowCardStorage
   }
 
   async transitCard(workflowId: string, workflowCardId: string, payload: any): Promise<void> {
-    // transitFn
-    const fn = this.getFirebaseTransitFn()
-    const res = await fn({
+    // Use API client for transit instead of direct onCall
+    const auth = getAuth()
+    const client = new CadenceAPIClient({}, auth)
+    
+    const res = await client.transitWorkflowItem({
       destinationContext: {
         ...payload,
         workflowId,
@@ -384,15 +387,4 @@ export class FirestoreWorkflowCardStorage
   }
 
   // ------------------------------- PRIVATE ------------------------------------ //
-
-  private getFirebaseTransitFn(): HttpsCallable<
-    ITransitWorkflowItemRequest,
-    ITransitWorkflowItemResponse
-  > {
-    const transitFn = httpsCallable<ITransitWorkflowItemRequest, ITransitWorkflowItemResponse>(
-      this.fns,
-      'transitWorkflowItemFn'
-    )
-    return transitFn
-  }
 }

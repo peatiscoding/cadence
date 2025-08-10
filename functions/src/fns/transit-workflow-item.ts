@@ -1,5 +1,4 @@
 import type { App } from 'firebase-admin/app'
-import type { CallableRequest } from 'firebase-functions/https'
 import type {
   IActionRunner,
   ITransitWorkflowItemRequest,
@@ -24,14 +23,16 @@ const _helpers = {
 export const transitWorkflowItem =
   (app: App, getActionRunner: () => IActionRunner) =>
   async (
-    req: CallableRequest<ITransitWorkflowItemRequest>
+    data: ITransitWorkflowItemRequest,
+    uid?: string,
+    email?: string
   ): Promise<ITransitWorkflowItemResponse> => {
     const fs = getFirestore(app)
     const start = new Date().getTime()
     const transitionStats: { executionKind: string; in: number }[] = []
     const finallyStats: { executionKind: string; in: number }[] = []
     const runner = getActionRunner()
-    const destinationContext = req.data.destinationContext
+    const destinationContext = data.destinationContext
     const workflow = supportedWorkflows.find(
       (wf) => wf.workflowId === destinationContext.workflowId
     )
@@ -39,8 +40,8 @@ export const transitWorkflowItem =
       paths.WORKFLOW_CARD(destinationContext.workflowId, destinationContext.workflowCardId)
     )
 
-    const userEmail = req.auth?.token.email || req.auth?.uid
-    const userId = req.auth?.uid || 'unknown-user'
+    const userEmail = email || uid
+    const userId = uid || 'unknown-user'
     logger.log(
       `Attempt to transit with user: ${userEmail} on ${destinationContext.workflowId}/${destinationContext.workflowCardId} to ${destinationContext.status}.`
     )

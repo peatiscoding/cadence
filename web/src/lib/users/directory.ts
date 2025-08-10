@@ -4,9 +4,9 @@
  * Handles user lookups, caching, and provisioning for displayName resolution
  */
 import type { UserInfo, ProvisionUserRequest, ProvisionUserResponse } from '@cadence/shared/types'
-import { getFunctions, httpsCallable } from 'firebase/functions'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
-import { FIREBASE_REGION } from '@cadence/shared/models'
+import { getAuth } from 'firebase/auth'
+import { CadenceAPIClient } from '@cadence/api-client'
 import { app } from '../firebase-app'
 import { impls } from '../impls'
 import { ProvisioningCache } from './provisioning-cache'
@@ -279,12 +279,13 @@ export class UserDirectory {
   private static async callProvisionFunction(
     request: ProvisionUserRequest
   ): Promise<ProvisionUserResponse> {
-    const functions = getFunctions(app, FIREBASE_REGION)
-    const provisionFn = httpsCallable<ProvisionUserRequest, any>(functions, 'provisionUserFn')
-
-    const result = await provisionFn(request)
-    console.log('FN > RESULT', result.data.result as ProvisionUserResponse)
-    return result.data.result
+    // Use API client for provisioning
+    const auth = getAuth()
+    const client = new CadenceAPIClient({}, auth)
+    
+    const result = await client.provisionUser(request)
+    console.log('API > RESULT', result)
+    return result
   }
 
   /**

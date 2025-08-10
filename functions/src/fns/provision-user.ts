@@ -7,7 +7,6 @@
 
 import type { App } from 'firebase-admin/app'
 import type { UserInfo, ProvisionUserRequest, ProvisionUserResponse } from '@cadence/shared/types'
-import type { CallableRequest } from 'firebase-functions/v2/https'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 
@@ -15,13 +14,15 @@ export function createProvisionUser(app: App) {
   const db = getFirestore(app)
   const auth = getAuth(app)
 
-  return async (request: CallableRequest<ProvisionUserRequest>): Promise<ProvisionUserResponse> => {
+  return async (
+    data: ProvisionUserRequest,
+    uid?: string,
+    email?: string
+  ): Promise<ProvisionUserResponse> => {
     // Ensure user is authenticated
-    if (!request.auth || !request.auth.uid) {
+    if (!uid) {
       throw new Error('User must be authenticated')
     }
-
-    const uid = request.auth.uid
 
     try {
       // Check if user document already exists
