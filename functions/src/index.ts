@@ -48,7 +48,7 @@ export const transitWorkflowItemAPI = onRequest(
     .handle(async (ctx) => {
       const userEmail = ctx.email ?? ctx.uid ?? ''
       const userId = ctx.uid ?? ''
-      transitWorkflowItem(app, getActionRunner)({} as any, userId, userEmail)
+      return transitWorkflowItem(app, getActionRunner)(ctx.body, userId, userEmail)
     })
 )
 
