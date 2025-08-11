@@ -80,23 +80,6 @@ export const createCardAPI = onRequest(
     })
 )
 
-// Keep legacy onCall versions for backward compatibility during transition
-export const transitWorkflowItemFn = onCall(
-  { region: FIREBASE_REGION },
-  execute(async (req) => {
-    const userEmail = req.auth?.token.email || req.auth?.uid
-    const userId = req.auth?.uid || 'unknown-user'
-    return transitWorkflowItem(app, getActionRunner)(req.data, userId, userEmail)
-  })
-)
-export const provisionUserFn = onCall(
-  { region: FIREBASE_REGION },
-  execute(async (req) => {
-    const userId = req.auth?.uid
-    const userEmail = req.auth?.token.email
-    return createProvisionUser(app)(req.data, userId, userEmail)
-  })
-)
 
 // Card activity logger - triggers on any card document changes
 export const onCardWrittenHook = onDocumentWritten(
