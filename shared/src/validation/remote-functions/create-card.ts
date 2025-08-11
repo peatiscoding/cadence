@@ -20,3 +20,5 @@ export const CreateCardResponseSchema = z.object({
   success: z.boolean()
 })
 
+export type CreateCardRequest = z.infer<typeof CreateCardRequestSchema>
+export type CreateCardResponse = z.infer<typeof CreateCardResponseSchema>

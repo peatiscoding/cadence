@@ -1,7 +1,6 @@
 /**
  * Provision User Remote Function Validation Schemas
  */
-
 import { z } from 'zod'
 
 /**
@@ -39,15 +38,3 @@ export const ProvisionUserResponseSchema = z.object({
  */
 export type ProvisionUserRequest = z.infer<typeof ProvisionUserRequestSchema>
 export type ProvisionUserResponse = z.infer<typeof ProvisionUserResponseSchema>
-
-/**
- * Validation helper functions
- */
-export function validateProvisionUserRequest(data: unknown): ProvisionUserRequest {
-  return ProvisionUserRequestSchema.parse(data)
-}
-
-export function validateProvisionUserResponse(data: unknown): ProvisionUserResponse {
-  return ProvisionUserResponseSchema.parse(data)
-}
-

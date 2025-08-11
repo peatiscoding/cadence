@@ -1,7 +1,6 @@
 /**
  * Transit Workflow Item Remote Function Validation Schemas
  */
-
 import { z } from 'zod'
 import { CardSchema } from '../card/card'
 
@@ -36,15 +35,3 @@ export const TransitWorkflowItemResponseSchema = z.object({
  */
 export type ITransitWorkflowItemRequest = z.infer<typeof TransitWorkflowItemRequestSchema>
 export type ITransitWorkflowItemResponse = z.infer<typeof TransitWorkflowItemResponseSchema>
-
-/**
- * Validation helper functions
- */
-export function validateTransitWorkflowItemRequest(data: unknown): ITransitWorkflowItemRequest {
-  return TransitWorkflowItemRequestSchema.parse(data)
-}
-
-export function validateTransitWorkflowItemResponse(data: unknown): ITransitWorkflowItemResponse {
-  return TransitWorkflowItemResponseSchema.parse(data)
-}
-
