@@ -2,8 +2,9 @@
  * Authentication utilities for API Client
  */
 
-import { getAuth, type Auth, type User } from 'firebase/auth'
 import type { AuthContext } from './types'
+
+import { getAuth, type Auth, type User } from 'firebase/auth'
 
 export class AuthManager {
   private auth: Auth

@@ -1,15 +1,11 @@
 /**
  * Cadence API Client
- * 
+ *
  * HTTP client for interacting with Cadence Firebase Functions
  */
 
 import type { Auth } from 'firebase/auth'
-import { AuthManager } from './auth'
-import { buildFunctionURL, getEndpoint, ENDPOINTS } from './endpoints'
 import type {
-  APIClientConfig,
-  APIErrorData,
   CreateCardRequest,
   CreateCardResponse,
   ITransitWorkflowItemRequest,
@@ -17,9 +13,12 @@ import type {
   ProvisionUserRequest,
   ProvisionUserResponse,
   IOnCallResponse
-} from './types'
-// Firebase region constant - keep in sync with shared package
-const FIREBASE_REGION = 'asia-southeast2' as const
+} from '@cadence/shared/types'
+import type { APIClientConfig } from './types'
+
+import { AuthManager } from './auth'
+import { buildFunctionURL, getEndpoint, ENDPOINTS, FIREBASE_REGION } from './endpoints'
+import { APIError } from './errors'
 
 export class CadenceAPIClient {
   private projectId: string
@@ -37,7 +36,9 @@ export class CadenceAPIClient {
     this.authManager = new AuthManager(auth)
 
     if (!this.projectId) {
-      throw new Error('Project ID is required. Provide it in config or initialize Firebase Auth first.')
+      throw new Error(
+        'Project ID is required. Provide it in config or initialize Firebase Auth first.'
+      )
     }
   }
 
@@ -57,7 +58,9 @@ export class CadenceAPIClient {
       }
     }
 
-    throw new Error('Cannot determine project ID. Please provide it in config or initialize Firebase first.')
+    throw new Error(
+      'Cannot determine project ID. Please provide it in config or initialize Firebase first.'
+    )
   }
 
   /**
@@ -72,7 +75,7 @@ export class CadenceAPIClient {
 
     // Prepare headers
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     }
 
     // Add authentication if required
@@ -93,7 +96,7 @@ export class CadenceAPIClient {
         method: 'POST',
         headers,
         body: JSON.stringify(data),
-        signal: controller.signal,
+        signal: controller.signal
       })
 
       clearTimeout(timeoutId)
@@ -107,17 +110,13 @@ export class CadenceAPIClient {
 
       if (!result.success) {
         const error = result.reason
-        throw new APIError(
-          error?.message || 'Unknown API error',
-          (error as any)?.code,
-          error
-        )
+        throw new APIError(error?.message || 'Unknown API error', (error as any)?.code, error)
       }
 
       return result.result as TResponse
     } catch (error) {
       clearTimeout(timeoutId)
-      
+
       if (error instanceof APIError) {
         throw error
       }
@@ -143,7 +142,9 @@ export class CadenceAPIClient {
   /**
    * Transit a workflow item to a new status
    */
-  async transitWorkflowItem(request: ITransitWorkflowItemRequest): Promise<ITransitWorkflowItemResponse> {
+  async transitWorkflowItem(
+    request: ITransitWorkflowItemRequest
+  ): Promise<ITransitWorkflowItemResponse> {
     return this.makeRequest('TRANSIT_WORKFLOW_ITEM', request)
   }
 
@@ -170,25 +171,5 @@ export class CadenceAPIClient {
    */
   isAuthenticated(): boolean {
     return this.authManager.isAuthenticated()
-  }
-}
-
-/**
- * Custom API Error class
- */
-export class APIError extends Error {
-  public readonly code?: string
-  public readonly details?: any
-
-  constructor(message: string, code?: string, details?: any) {
-    super(message)
-    this.name = 'APIError'
-    this.code = code
-    this.details = details
-
-    // Maintain proper stack trace for where our error was thrown (only available on V8)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, APIError)
-    }
   }
 }

@@ -1,17 +1,10 @@
 /**
  * Cadence API Client
- * 
+ *
  * HTTP client for Cadence Firebase Functions
  */
-
-export { CadenceAPIClient, APIError } from './client'
-export { AuthManager } from './auth'
-export { buildFunctionURL, getEndpoint, ENDPOINTS } from './endpoints'
-
 // Export all types
 export type {
-  APIClientConfig,
-  AuthContext,
   CreateCardRequest,
   CreateCardResponse,
   ITransitWorkflowItemRequest,
@@ -19,7 +12,13 @@ export type {
   ProvisionUserRequest,
   ProvisionUserResponse,
   IOnCallResponse
-} from './types'
-
-// Convenience exports for quick access
+} from '@cadence/shared/types'
 export { type EndpointConfig } from './endpoints'
+
+export * from './types'
+
+// Export all functions
+export { APIError } from './errors'
+export { CadenceAPIClient } from './client'
+export { AuthManager } from './auth'
+export { buildFunctionURL, getEndpoint, ENDPOINTS } from './endpoints'

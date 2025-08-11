@@ -2,14 +2,10 @@
  * API Endpoint Configurations
  */
 
-// Firebase region constant - keep in sync with shared package
-const FIREBASE_REGION = 'asia-southeast2' as const
+import type { EndpointConfig } from './types'
 
-export interface EndpointConfig {
-  path: string
-  requiresAuth: boolean
-  timeout?: number
-}
+// Firebase region constant - keep in sync with shared package
+export const FIREBASE_REGION = 'asia-southeast2' as const
 
 /**
  * Endpoint definitions for all API functions

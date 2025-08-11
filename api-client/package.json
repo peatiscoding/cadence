@@ -27,7 +27,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@cadence/shared": "1.0.0"
+    "@cadence/shared": "*"
   },
   "exports": {
     ".": {
