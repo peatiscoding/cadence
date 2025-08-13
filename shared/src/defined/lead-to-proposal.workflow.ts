@@ -20,7 +20,16 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       title: 'Project Code',
       schema: {
         kind: 'text',
-        asDocumentId: true
+        asDocumentId: true,
+        lov: {
+          provider: {
+            kind: 'googlesheet',
+            sheetId: '1nhH4Op3Gu5068CelE20o4ZGCbMgF9EU6KfztqhhDlcc',
+            dir: 'TB',
+            keyRange: 'A1:A',
+            valueRange: 'B1:B'
+          }
+        }
       }
     },
     {

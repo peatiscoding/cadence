@@ -1,5 +1,6 @@
 import type { LovDefinition, LovProviderDefinition } from '@cadence/shared/types'
 
+import { createHash } from 'node:crypto'
 import { BaseListOfValueProvider } from './base'
 import { ApiListOfValueProvider } from './api-provider'
 import { GoogleSheetListOfValueProvider } from './googlesheet-provider'
@@ -13,11 +14,18 @@ export class ListOfValueFactory {
     return this.instance
   }
 
+  public static getCacheKey(providerDef: LovProviderDefinition, cacheKey?: string): string {
+    const useHash = (): string =>
+      createHash('md5').update(JSON.stringify(providerDef)).digest('hex') // lazy
+    return cacheKey || useHash()
+  }
+
   public get(
+    firestore: Firestore,
     providerConfig: LovProviderDefinition,
-    cacheKey: string,
-    firestore: Firestore
+    ck?: string
   ): BaseListOfValueProvider {
+    const cacheKey = ListOfValueFactory.getCacheKey(providerConfig, ck)
     const instanceKey = `${providerConfig.kind}:${cacheKey}`
 
     // Return existing instance if available
@@ -48,6 +56,6 @@ export class ListOfValueFactory {
     firestore: Firestore
   ): BaseListOfValueProvider {
     const factory = ListOfValueFactory.shared()
-    return factory.get(lovDef.provider, lovDef.cacheKey, firestore)
+    return factory.get(firestore, lovDef.provider)
   }
 }

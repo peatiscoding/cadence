@@ -24,6 +24,6 @@ export const LovProviderDefinitionSchema = z.discriminatedUnion('kind', [
 ])
 
 export const LovDefinitionSchema = z.object({
-  cacheKey: z.string(),
+  cacheKey: z.string().optional(),
   provider: LovProviderDefinitionSchema
 })
