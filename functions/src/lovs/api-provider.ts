@@ -1,6 +1,6 @@
 import type { LovAPIDefinition } from '@cadence/shared/types'
+import type { Firestore } from 'firebase-admin/firestore'
 import { BaseListOfValueProvider, ListOfValueEntry } from './base'
-import { Firestore } from 'firebase-admin/firestore'
 
 export class ApiListOfValueProvider extends BaseListOfValueProvider {
   constructor(
@@ -34,7 +34,7 @@ export class ApiListOfValueProvider extends BaseListOfValueProvider {
       // Map each item in the array to ListOfValueEntry
       return arrayData.map((item, index) => ({
         key: this.getValueByPath(item, this.config.keySelector)?.toString() || index.toString(),
-        value: this.getValueByPath(item, this.config.valueSelector)?.toString() || '',
+        label: this.getValueByPath(item, this.config.labelSelector)?.toString() || '',
         meta: item
       }))
     } catch (error) {
@@ -53,4 +53,3 @@ export class ApiListOfValueProvider extends BaseListOfValueProvider {
     return 30 // API data expires after 30 minutes
   }
 }
-

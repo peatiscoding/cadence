@@ -2,7 +2,7 @@ import { Firestore, Timestamp, FieldValue } from 'firebase-admin/firestore'
 
 export interface ListOfValueEntry {
   key: string
-  value: string
+  label: string
   meta?: any
 }
 

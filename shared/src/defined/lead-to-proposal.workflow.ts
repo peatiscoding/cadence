@@ -27,7 +27,7 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
             sheetId: '1ykshAFLUB_17Ypq5BEXDtKoeQ0uNiq_NwAjIknvjUjs',
             dir: 'TB',
             keyRange: 'A2:A',
-            valueRange: 'B2:B'
+            labelRange: 'B2:B'
           }
         }
       }
