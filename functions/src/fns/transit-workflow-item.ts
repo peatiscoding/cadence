@@ -1,7 +1,7 @@
 import type { App } from 'firebase-admin/app'
 import type {
   IActionRunner,
-  TransitWorkflowItemRequest,
+  ITransitWorkflowItemRequest,
   ITransitWorkflowItemResponse
 } from '@cadence/shared/types'
 
@@ -23,7 +23,7 @@ const _helpers = {
 export const transitWorkflowItem =
   (app: App, getActionRunner: () => IActionRunner) =>
   async (
-    data: TransitWorkflowItemRequest,
+    data: ITransitWorkflowItemRequest,
     uid?: string,
     email?: string
   ): Promise<ITransitWorkflowItemResponse> => {
