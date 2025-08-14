@@ -24,7 +24,7 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
         lov: {
           provider: {
             kind: 'googlesheet',
-            sheetId: '1nhH4Op3Gu5068CelE20o4ZGCbMgF9EU6KfztqhhDlcc',
+            sheetId: '1ykshAFLUB_17Ypq5BEXDtKoeQ0uNiq_NwAjIknvjUjs',
             dir: 'TB',
             keyRange: 'A1:A',
             valueRange: 'B1:B'

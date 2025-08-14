@@ -20,6 +20,9 @@ export class GoogleSheetListOfValueProvider extends BaseListOfValueProvider {
         scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
       })
 
+      const c = await auth.getCredentials()
+      console.log(`Fetching spreadsheet with client_email=`, c.client_email)
+
       const sheets = google.sheets({ version: 'v4', auth })
 
       // Fetch both key and value ranges
