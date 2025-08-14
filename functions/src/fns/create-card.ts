@@ -5,6 +5,7 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import * as logger from 'firebase-functions/logger'
 import { paths } from '@cadence/shared/models'
 import { supportedWorkflows } from '@cadence/shared/defined'
+import { LovValidator } from '../lovs'
 
 export const createCard =
   (app: App) =>
@@ -25,6 +26,9 @@ export const createCard =
     if (!workflow) {
       throw new Error(`Unknown workflow: ${data.workflowId}`)
     }
+
+    // Validate LOV fields in payload
+    await new LovValidator(app, workflow).validateFieldData(data.payload)
 
     try {
       // Determine card ID

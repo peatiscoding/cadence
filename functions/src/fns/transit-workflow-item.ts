@@ -9,6 +9,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import * as logger from 'firebase-functions/logger'
 import { supportedWorkflows } from '@cadence/shared/defined'
 import { paths } from '@cadence/shared/models'
+import { LovValidator } from '../lovs/validator'
 
 const _helpers = {
   omit<T>(d: T, ...keys: (keyof T)[]): Partial<T> {
@@ -63,7 +64,16 @@ export const transitWorkflowItem =
         throw new Error(`Unknown workflow item`)
       }
 
-      const currentStatus = doc.data()?.status
+      const currentDocData = doc.data()
+      const currentStatus = currentDocData?.status
+
+      // Validate LOV fields if fieldData has changed
+      if (destinationContext.fieldData) {
+        await new LovValidator(app, workflow).validateFieldData(
+          destinationContext.fieldData,
+          currentDocData?.fieldData || {}
+        )
+      }
 
       if (destinationContext.status === currentStatus) {
         throw new Error(
