@@ -26,8 +26,8 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
             kind: 'googlesheet',
             sheetId: '1ykshAFLUB_17Ypq5BEXDtKoeQ0uNiq_NwAjIknvjUjs',
             dir: 'TB',
-            keyRange: 'A1:A',
-            valueRange: 'B1:B'
+            keyRange: 'A2:A',
+            valueRange: 'B2:B'
           }
         }
       }

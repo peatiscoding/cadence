@@ -49,8 +49,8 @@ export class GoogleSheetListOfValueProvider extends BaseListOfValueProvider {
 
       return Array.from({ length }, (_, index) => ({
         key: keys[index]?.toString() || index.toString(),
-        value: values[index]?.toString() || '',
-        meta: { keyRange: this.config.keyRange, valueRange: this.config.valueRange, index }
+        value: values[index]?.toString() || ''
+        // meta: { keyRange: this.config.keyRange, valueRange: this.config.valueRange, index }
       }))
     } catch (error) {
       console.error('Failed to fetch data from Google Sheets:', error)
