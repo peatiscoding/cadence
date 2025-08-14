@@ -1,7 +1,8 @@
 import type { WorkflowConfiguration } from '@cadence/shared/types'
+import type { App } from 'firebase-admin/app'
+
 import { getFirestore, type Firestore } from 'firebase-admin/firestore'
 import { ListOfValueFactory } from './factory'
-import type { App } from 'firebase-admin/app'
 
 export const _helpers = {
   /**
@@ -72,13 +73,10 @@ export class LovValidator {
       const newValue = newFieldData[fieldSlug]
       const existingValue = existingFieldData[fieldSlug]
 
-      // Skip validation if value hasn't changed
-      if (_helpers.valuesEqual(newValue, existingValue)) {
-        continue
-      }
-
-      // Skip validation if new value is empty/undefined
+      // Skip validation if new value is empty/undefined, or if existingValue provide validate that it hasn't changed
       if (newValue === undefined || newValue === null || newValue === '') {
+        continue
+      } else if (existingValue && _helpers.valuesEqual(newValue, existingValue)) {
         continue
       }
 
