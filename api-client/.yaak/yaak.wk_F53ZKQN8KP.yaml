@@ -1,0 +1,14 @@
+type: workspace
+model: workspace
+id: wk_F53ZKQN8KP
+createdAt: 2025-08-25T06:28:56.097691
+updatedAt: 2025-08-25T06:28:56.097692
+authentication: {}
+authenticationType: null
+description: ''
+headers: []
+name: Cadence
+encryptionKeyChallenge: null
+settingValidateCertificates: true
+settingFollowRedirects: true
+settingRequestTimeout: 0

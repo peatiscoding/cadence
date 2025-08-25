@@ -1,0 +1,26 @@
+type: http_request
+model: http_request
+id: rq_Rjghukf7gR
+createdAt: 2025-08-25T06:29:12.341822
+updatedAt: 2025-08-25T06:30:40.942788
+workspaceId: wk_F53ZKQN8KP
+folderId: null
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "workflowId": "ld2ppsl"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: KSmq8xw0fH
+method: POST
+name: ''
+sortPriority: -1756103352338.0
+url: ${[ FIREBASE_ENDPOINT ]}/invalidateLovCacheAPI
+urlParameters: []
