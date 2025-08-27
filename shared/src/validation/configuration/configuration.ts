@@ -5,6 +5,7 @@ import { FieldSchema } from './fields'
 import { TypeSchema } from './types'
 
 export const ConfigurationSchema = z.object({
+  workflowId: z.string(),
   name: z.string(), // title of the workflow
   nouns: z
     .object({

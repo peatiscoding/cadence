@@ -9,6 +9,6 @@ export const CardSchema = z.object({
   status: z.string().min(1),
   type: z.string().min(1),
   value: z.number().default(0),
-  owner: z.string().min(1),
+  owner: z.string().min(0),
   fieldData: z.record(z.any()).default({})
 })

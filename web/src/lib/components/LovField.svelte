@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { WorkflowField } from '@cadence/shared/types'
-  import { Button, Dropdown, DropdownItem, Spinner } from 'flowbite-svelte'
+  import { Button, Spinner } from 'flowbite-svelte'
   import { ChevronDownOutline } from 'flowbite-svelte-icons'
   import { onMount, onDestroy } from 'svelte'
   import { lovService, type LovEntry } from '$lib/services/lov-service'
@@ -34,32 +34,32 @@
   let searchText = $state('')
 
   // Derived values
-  const textSchema = $derived(() => {
+  const lovDef = $derived(() => {
     if (field.schema.kind !== 'text') return null
-    return field.schema as Extract<typeof field.schema, { kind: 'text' }>
+    return (field.schema.lov as Extract<typeof field.schema, { kind: 'text' }>['lov']) || null
   })
-
-  const lovDef = $derived(() => textSchema()?.lov)
 
   const filteredOptions = $derived(() => {
     if (!searchText.trim()) return lovOptions
     const search = searchText.toLowerCase()
     return lovOptions.filter(
       (option) =>
-        option.key.toLowerCase().includes(search) ||
-        option.label.toLowerCase().includes(search)
+        option.key.toLowerCase().includes(search) || option.label.toLowerCase().includes(search)
     )
   })
 
-  const selectedOption = $derived(() => {
+  const selectedOption = $derived((): LovEntry | null => {
     if (!value) return null
-    return lovOptions.find((option) => option.key === value || option.label === value)
+    // Only match by key for data integrity
+    return lovOptions.find((option) => option.key === value) || null
   })
 
-  const displayValue = $derived(() => {
-    if (selectedOption()) {
-      return selectedOption()!.label
+  const displayLabel = $derived(() => {
+    const selected = selectedOption()
+    if (selected) {
+      return selected.label
     }
+    // If value exists but no matching option found, show the value itself
     return value || ''
   })
 
@@ -71,7 +71,7 @@
     try {
       // Fetch all LOV data for the workflow
       const workflowLovData = await lovService.getWorkflowLovData(workflowId)
-      
+
       // Get LOV options for this specific field
       lovOptions = workflowLovData[field.slug] || []
     } catch (error) {
@@ -83,30 +83,35 @@
   }
 
   function handleSelect(option: LovEntry) {
-    onchange(option.key)
+    onchange(option.key) // Always store the key
     isDropdownOpen = false
     searchText = ''
   }
 
-  function handleInputChange(event: Event) {
+  function handleSearchInput(event: Event) {
     const target = event.target as HTMLInputElement
     searchText = target.value
-    
-    // If user types something that matches an existing option key/label exactly, select it
-    const exactMatch = lovOptions.find(
-      (option) => option.key === searchText || option.label === searchText
-    )
-    if (exactMatch) {
-      onchange(exactMatch.key)
-    } else {
-      onchange(searchText)
-    }
   }
 
   function handleClear() {
     onchange('')
     searchText = ''
     isDropdownOpen = false
+  }
+
+  function handleDisplayClick() {
+    if (readonly) return
+    isDropdownOpen = true
+    searchText = ''
+  }
+
+  function handleSearchBlur() {
+    // Delay to allow click events on dropdown items
+    setTimeout(() => {
+      isDropdownOpen = false
+      searchText = ''
+      if (onblur) onblur()
+    }, 150)
   }
 
   onMount(() => {
@@ -129,33 +134,54 @@
 </script>
 
 <div class="relative">
+  <!-- Hidden input that stores the actual key/ID value -->
+  <input type="hidden" {value} {required} />
+
   {#if readonly}
-    <!-- Readonly mode - just show the display value -->
+    <!-- Readonly mode - just show the display label -->
     <input
       type="text"
-      value={displayValue()}
+      value={displayLabel()}
       readonly
-      class="w-full rounded-lg border border-gray-300 px-3 py-2 bg-gray-100 cursor-not-allowed dark:border-gray-600 dark:bg-gray-600 dark:text-gray-100"
+      class="w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-100"
       class:border-red-500={error}
     />
   {:else}
     <!-- Interactive LOV field -->
     <div class="relative">
-      <input
-        type="text"
-        value={searchText || displayValue()}
-        oninput={handleInputChange}
-        onblur={onblur}
-        onfocus={() => {
-          isDropdownOpen = true
-          searchText = value || ''
-        }}
-        placeholder="Start typing to search..."
-        class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-        class:border-red-500={error}
-        {required}
-      />
-      
+      {#if !isDropdownOpen}
+        <!-- Display mode - shows the label but stores the key -->
+        <div
+          role="button"
+          tabindex="0"
+          onclick={handleDisplayClick}
+          onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleDisplayClick()
+            }
+          }}
+          class="w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          class:border-red-500={error}
+        >
+          <span class="text-gray-900 dark:text-gray-100">
+            {displayLabel() || 'Select an option...'}
+          </span>
+        </div>
+      {:else}
+        <!-- Search mode - allows typing to filter options -->
+        <input
+          type="text"
+          value={searchText}
+          oninput={handleSearchInput}
+          onblur={handleSearchBlur}
+          placeholder="Start typing to search..."
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          class:border-red-500={error}
+          autofocus
+        />
+      {/if}
+
       <!-- Loading indicator or dropdown arrow -->
       <div class="absolute inset-y-0 right-0 flex items-center pr-3">
         {#if isLoading}
@@ -164,12 +190,11 @@
           <Button
             color="alternative"
             size="xs"
-            class="p-0 focus:ring-0 bg-transparent border-0 hover:bg-transparent"
+            class="border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0"
             onclick={() => {
+              if (readonly) return
               isDropdownOpen = !isDropdownOpen
-              if (isDropdownOpen) {
-                searchText = value || ''
-              }
+              searchText = ''
             }}
           >
             <ChevronDownOutline class="h-4 w-4 text-gray-400" />
@@ -179,7 +204,9 @@
 
       <!-- Dropdown with options -->
       {#if isDropdownOpen && !readonly}
-        <div class="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+        <div
+          class="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800"
+        >
           <div class="max-h-60 overflow-y-auto py-1">
             {#if filteredOptions().length === 0}
               <div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
@@ -209,7 +236,10 @@
                 <button
                   type="button"
                   onclick={() => handleSelect(option)}
-                  class="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 {selectedOption()?.key === option.key ? 'bg-blue-50 dark:bg-blue-900/20' : ''}"
+                  class="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 {value ===
+                  option.key
+                    ? 'bg-blue-50 dark:bg-blue-900/20'
+                    : ''}"
                 >
                   <div class="flex items-center justify-between">
                     <div>
@@ -222,7 +252,7 @@
                         </div>
                       {/if}
                     </div>
-                    {#if selectedOption()?.key === option.key}
+                    {#if value === option.key}
                       <div class="h-2 w-2 rounded-full bg-blue-500"></div>
                     {/if}
                   </div>
@@ -258,3 +288,4 @@
 {#if error}
   <p class="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
 {/if}
+

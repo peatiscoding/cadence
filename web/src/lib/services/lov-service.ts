@@ -1,4 +1,4 @@
-import type { GetWorkflowLovDataRequest, GetWorkflowLovDataResponse } from '@cadence/shared/types'
+import type { GetWorkflowLovDataRequest } from '@cadence/shared/types'
 import { CadenceAPIClient } from '@cadence/api-client'
 import { getAuth } from 'firebase/auth'
 import { app } from '$lib/firebase-app'

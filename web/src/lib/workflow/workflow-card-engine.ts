@@ -14,7 +14,6 @@ import type {
 import { STATUS_DRAFT } from '@cadence/shared/models/status'
 import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 import { z } from 'zod'
-import type { ILiveUpdateListenerBuilder } from '$lib/models/live-update'
 
 const _helpers = {
   validateRequiredFields<T>(requiredFields: (keyof T)[], data: { fieldData: T }) {
@@ -121,7 +120,9 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
     const identifierField = findIdentifierField(config.fields)
 
     if (identifierField && payload.fieldData?.[identifierField.slug] !== undefined) {
-      throw new Error(`Identifier field '${identifierField.title}' cannot be updated`)
+      // Identifier field must not be updated.
+      delete payload.fieldData[identifierField.slug]
+      // throw new Error(`Identifier field '${identifierField.title}' cannot be updated`)
     }
 
     // If type is being updated, validate it against allowed types
