@@ -1,7 +1,6 @@
 /**
  * Authentication utilities for API Client
  */
-
 import type { AuthContext } from './types'
 
 import { getAuth, type Auth, type User } from 'firebase/auth'

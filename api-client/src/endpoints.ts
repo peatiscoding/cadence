@@ -1,7 +1,6 @@
 /**
  * API Endpoint Configurations
  */
-
 import type { EndpointConfig } from './types'
 
 // Firebase region constant - keep in sync with shared package
@@ -23,6 +22,11 @@ export const ENDPOINTS = {
   },
   PROVISION_USER: {
     path: 'provisionUserAPI',
+    requiresAuth: true,
+    timeout: 10000
+  },
+  GET_WORKFLOW_LOV_DATA: {
+    path: 'getWorkflowLovDataAPI',
     requiresAuth: true,
     timeout: 10000
   }

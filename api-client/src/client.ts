@@ -3,7 +3,6 @@
  *
  * HTTP client for interacting with Cadence Firebase Functions
  */
-
 import type { Auth } from 'firebase/auth'
 import type {
   CreateCardRequest,
@@ -12,6 +11,8 @@ import type {
   ITransitWorkflowItemResponse,
   ProvisionUserRequest,
   ProvisionUserResponse,
+  GetWorkflowLovDataRequest,
+  GetWorkflowLovDataResponse,
   IOnCallResponse
 } from '@cadence/shared/types'
 import type { APIClientConfig } from './types'
@@ -153,6 +154,15 @@ export class CadenceAPIClient {
    */
   async provisionUser(request: ProvisionUserRequest): Promise<ProvisionUserResponse> {
     return this.makeRequest('PROVISION_USER', request)
+  }
+
+  /**
+   * Get List of Values (LOV) data for a workflow
+   */
+  async getWorkflowLovData(
+    request: GetWorkflowLovDataRequest
+  ): Promise<GetWorkflowLovDataResponse> {
+    return this.makeRequest('GET_WORKFLOW_LOV_DATA', request)
   }
 
   /**

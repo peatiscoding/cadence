@@ -1,8 +1,6 @@
 import type {
   WorkflowConfiguration,
   IWorkflowCardEntry,
-  ITransitWorkflowItemRequest,
-  ITransitWorkflowItemResponse,
   ActivityLog,
   StatusStats
 } from '@cadence/shared/types'
@@ -19,7 +17,6 @@ import {
   getFirestore,
   doc,
   collection,
-  addDoc,
   updateDoc,
   getDoc,
   getDocs,
@@ -34,14 +31,7 @@ import {
 
 import { CadenceAPIClient } from '@cadence/api-client'
 import { getAuth } from 'firebase/auth'
-import {
-  WORKFLOWS,
-  CARDS,
-  STATS,
-  PER_STATUS,
-  ACTIVITIES,
-  FIREBASE_REGION
-} from '@cadence/shared/models/firestore'
+import { WORKFLOWS, CARDS, STATS, PER_STATUS, ACTIVITIES } from '@cadence/shared/models/firestore'
 import { app } from '../../firebase-app'
 import { USE_SERVER_TIMESTAMP } from '../constant'
 import { workflowCardConverter } from './workflow-card.converter'
@@ -120,12 +110,12 @@ export class FirestoreWorkflowCardStorage
     // Use API client to create card instead of direct Firestore access
     const auth = getAuth()
     const client = new CadenceAPIClient({}, auth)
-    
+
     const result = await client.createCard({
       workflowId,
       payload
     })
-    
+
     return result.cardId
   }
 
@@ -138,13 +128,13 @@ export class FirestoreWorkflowCardStorage
     // Use API client to create card with specific ID
     const auth = getAuth()
     const client = new CadenceAPIClient({}, auth)
-    
+
     const result = await client.createCard({
       workflowId,
       cardId,
       payload
     })
-    
+
     return result.cardId
   }
 
@@ -172,7 +162,7 @@ export class FirestoreWorkflowCardStorage
     // Use API client for transit instead of direct onCall
     const auth = getAuth()
     const client = new CadenceAPIClient({}, auth)
-    
+
     const res = await client.transitWorkflowItem({
       destinationContext: {
         ...payload,

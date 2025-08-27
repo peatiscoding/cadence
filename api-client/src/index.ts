@@ -11,9 +11,10 @@ export type {
   ITransitWorkflowItemResponse,
   ProvisionUserRequest,
   ProvisionUserResponse,
+  GetWorkflowLovDataRequest,
+  GetWorkflowLovDataResponse,
   IOnCallResponse
 } from '@cadence/shared/types'
-export { type EndpointConfig } from './endpoints'
 
 export * from './types'
 
