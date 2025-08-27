@@ -5,7 +5,8 @@ const config = {
   preprocess: vitePreprocess(),
   kit: {
     alias: {
-      '@cadence/shared/*': '../shared/src/*'
+      '@cadence/shared/*': '../shared/src/*',
+      '@cadence/api-client': '../api-client/src/index.ts'
     },
     adapter: adapter({
       fallback: 'index.html'

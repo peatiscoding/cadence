@@ -1,4 +1,5 @@
 import type { GetWorkflowLovDataRequest, GetWorkflowLovDataResponse } from '@cadence/shared/types'
+import { CadenceAPIClient } from '@cadence/api-client'
 import { getAuth } from 'firebase/auth'
 import { app } from '$lib/firebase-app'
 
@@ -40,40 +41,12 @@ class LovService {
 
   private async fetchWorkflowLovData(workflowId: string): Promise<WorkflowLovData> {
     const auth = getAuth(app)
-    const user = auth.currentUser
-
-    if (!user) {
-      throw new Error('User must be authenticated to fetch LOV data')
-    }
-
-    // Get ID token for authentication
-    const idToken = await user.getIdToken()
+    const client = new CadenceAPIClient({}, auth)
 
     const request: GetWorkflowLovDataRequest = { workflowId }
 
-    // Call Firebase Function
-    const response = await fetch(
-      `https://us-central1-${app.options.projectId}.cloudfunctions.net/getWorkflowLovDataAPI`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`
-        },
-        body: JSON.stringify(request)
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch LOV data: ${response.statusText}`)
-    }
-
-    const result: GetWorkflowLovDataResponse = await response.json()
-
-    if (!result.success) {
-      throw new Error('Failed to fetch LOV data')
-    }
-
+    // Use API client instead of direct fetch
+    const result = await client.getWorkflowLovData(request)
     return result.lovData
   }
 
@@ -110,4 +83,3 @@ class LovService {
 
 // Export singleton instance
 export const lovService = new LovService()
-
