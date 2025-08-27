@@ -10,3 +10,6 @@ export * from './provision-user'
 // Invalidate LOV Cache
 export * from './invalidate-lov-cache'
 
+// Get Workflow LOV Data
+export * from './get-workflow-lov-data'
+

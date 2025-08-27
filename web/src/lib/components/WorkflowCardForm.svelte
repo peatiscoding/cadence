@@ -13,6 +13,7 @@
   import { Button, Badge, Indicator, Modal, Dropdown, DropdownItem } from 'flowbite-svelte'
   import { ArrowRightOutline, DotsHorizontalOutline } from 'flowbite-svelte-icons'
   import { isIdentifierField, findIdentifierField } from '@cadence/shared/utils'
+  import LovField from './LovField.svelte'
 
   interface Props {
     open: boolean
@@ -259,6 +260,10 @@
       case 'number':
         return { type: 'number', min: field.schema.min, max: field.schema.max }
       case 'text':
+        // Check if this text field has LOV configuration
+        if (field.schema.lov) {
+          return { type: 'lov', minlength: field.schema.min, maxlength: field.schema.max }
+        }
         return { type: 'text', minlength: field.schema.min, maxlength: field.schema.max }
       case 'url':
         return { type: 'url' }
@@ -626,6 +631,20 @@
                           </label>
                         {/each}
                       </div>
+                    {:else if fieldProps.type === 'lov'}
+                      <LovField
+                        {field}
+                        workflowId={config.workflowId || ''}
+                        value={formData.fieldData[field.slug]}
+                        onchange={(value: string) => {
+                          formData.fieldData[field.slug] = value
+                          validateFieldData(field.slug, value)
+                        }}
+                        onblur={() => validateFieldData(field.slug, formData.fieldData[field.slug])}
+                        error={fieldError}
+                        readonly={shouldFieldBeReadonly(field)}
+                        required={requiredFields().includes(field.slug)}
+                      />
                     {:else}
                       <input
                         id={field.slug}

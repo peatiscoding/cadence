@@ -10,6 +10,7 @@ import { createOnCardWrittenHandler } from './fns/on-card-written'
 import { createProvisionUser } from './fns/provision-user'
 import { createCard } from './fns/create-card'
 import { invalidateLovCache } from './fns/invalidate-lov-cache'
+import { getWorkflowLovData } from './fns/get-workflow-lov-data'
 
 import { execute } from './fns/_executor'
 import {
@@ -24,7 +25,8 @@ import {
   CreateCardRequestSchema,
   ProvisionUserRequestSchema,
   TransitWorkflowItemRequestSchema,
-  InvalidateLovCacheRequestSchema
+  InvalidateLovCacheRequestSchema,
+  GetWorkflowLovDataRequestSchema
 } from '@cadence/shared/validation'
 
 // Initialize depedencies
@@ -90,6 +92,17 @@ export const invalidateLovCacheAPI = onRequest(
     .use(validateBody(InvalidateLovCacheRequestSchema))
     .handle(async (ctx) => {
       return invalidateLovCache(app)(ctx.body)
+    })
+)
+
+export const getWorkflowLovDataAPI = onRequest(
+  { region: FIREBASE_REGION, cors: true },
+  new HttpExecutorBuilder()
+    .use(cors())
+    .use(allowedMethod('POST'))
+    .use(validateBody(GetWorkflowLovDataRequestSchema))
+    .handle(async (ctx) => {
+      return getWorkflowLovData(app)(ctx.body)
     })
 )
 
