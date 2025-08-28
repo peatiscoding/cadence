@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { StatusSchema } from './statuses'
 import { FieldSchema } from './fields'
 import { TypeSchema } from './types'
+import { ApprovalDefinitionSchema } from './approvals'
 
 export const ConfigurationSchema = z.object({
   workflowId: z.string(),
@@ -18,6 +19,7 @@ export const ConfigurationSchema = z.object({
     }),
   access: z.array(z.string()).optional(), // in absence of this parameter - will allowed all users to access this workflows
   description: z.string().optional(),
+  approvals: z.array(ApprovalDefinitionSchema).optional(),
   fields: z.array(FieldSchema).refine(
     (arr) =>
       arr.filter((a) => a.schema.kind === 'text' && a.schema.asDocumentId === true).length <= 1, // allowed only 1 asDocumentId = true field.

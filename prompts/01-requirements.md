@@ -44,6 +44,18 @@ The Workflow Configuration's File:
     "access": [                     // Access parameter for this workflow, (optional)
         "@muze.co.th",              // allow everyone with email of muze.co.th to access this workflow
     ],
+    "approvals": [ // each approval key keep track of all approvals token made so far. In an array. Note that it only has 1 active approval at a time. (e.g. the rest are voided).
+        {
+            "slug": "approval-key",
+            "allowed": [
+                {
+                    "kind": "basic",
+                    "by?": "$.[field-key] | #.[standard-field] | @.[approval-key]" // set approver via field or hardcoded email is okay, or leave it unset for anyone to perform this action.
+                }
+            ]
+        },
+        ... // other approval objects
+    ],
     "fields": [                     // Field's schema
         {
             "slug": "field-key",    // required, Field's key
@@ -148,6 +160,13 @@ The Workflow Configuration's File:
                 "from": ["status-slug-1", "status-slug-2", "status-slug-N"], // required statuses
                 "required": ["field-key-1", "field-key-2", "field-key-N"],
                 "users": ["user-sso-that-can-move-card-to-this-status", "*"], // '*' to allow every one , 'owner' to allow only owner to update this status.
+                "approvals": [
+                    {
+                        "key": "approval-slug", // e.g. slug of approvals object that this required before transition.
+                        // keeping this as object provide future flexibility function e.g. adding 'rank'
+                    },
+                    ... // other approval in the chain
+                ],
             },
             "transition": [         // action to perform before setting this status has been set.
                 {

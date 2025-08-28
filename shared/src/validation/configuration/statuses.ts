@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { ActionUnionSchema } from '../action/action'
+import { ApprovalRequirementSchema } from './approvals'
 
 // Status definition
 export const StatusSchema = z.object({
@@ -12,7 +13,8 @@ export const StatusSchema = z.object({
   precondition: z.object({
     from: z.array(z.string()),
     required: z.array(z.string()).optional(),
-    users: z.array(z.string()).optional()
+    users: z.array(z.string()).optional(),
+    approvals: z.array(ApprovalRequirementSchema).optional()
   }),
   transition: z.array(ActionUnionSchema).optional(),
   finally: z.array(ActionUnionSchema).optional()

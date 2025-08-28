@@ -6,6 +6,10 @@
 import z from 'zod'
 import {
   CardSchema,
+  ApprovalTokenSchema,
+  ApprovalDefinitionSchema,
+  ApprovalAllowedSchema,
+  ApprovalRequirementSchema,
   ConfigurationSchema,
   FieldSchema,
   StatusSchema,
@@ -26,6 +30,10 @@ export type WorkflowField = z.infer<typeof FieldSchema>
 export type WorkflowStatus = z.infer<typeof StatusSchema>
 export type WorkflowType = z.infer<typeof TypeSchema>
 export type IWorkflowCard = z.infer<typeof CardSchema>
+export type ApprovalToken = z.infer<typeof ApprovalTokenSchema>
+export type ApprovalDefinition = z.infer<typeof ApprovalDefinitionSchema>
+export type ApprovalAllowed = z.infer<typeof ApprovalAllowedSchema>
+export type ApprovalRequirement = z.infer<typeof ApprovalRequirementSchema>
 export type IActionDefiniton = z.infer<typeof ActionUnionSchema>
 export type ApiError = z.infer<typeof ApiErrorSchema>
 export type User = z.infer<typeof UserSchema>
