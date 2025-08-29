@@ -8,7 +8,8 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
     'yanisa@muze.co.th',
     'vichuda.t@muze.co.th',
     'peeranuch.k@muze.co.th',
-    'chitipat@muze.co.th'
+    'chitipat@muze.co.th',
+    'kittiphat@muze.co.th'
   ],
   nouns: {
     singular: 'Task',
