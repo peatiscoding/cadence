@@ -16,8 +16,9 @@ interface ContextReplacer {
  * Pattern formats:
  * - `$.[card's field]` will replace with its corresponding card field such as `value`, `author`, `workflowId`, `title`.
  * - `#.[card's fieldData]` will replace with its corresponding card's Field Data.
- * - `$.[field]?` or `#.[field]?` - Optional marker: returns empty string if value is null/undefined
- * - `$.[field]` or `#.[field]` - Required marker: throws error if value is null/undefined
+ * - `@.[approval-key]` will replace with the author of the latest valid approval token for the given key.
+ * - `$.[field]?`, `#.[field]?`, or `@.[field]?` - Optional marker: returns empty string if value is null/undefined
+ * - `$.[field]`, `#.[field]`, or `@.[field]` - Required marker: throws error if value is null/undefined
  *
  * @param card - The workflow card to extract values from
  * @returns ContextReplacer object with replace and replaceNested methods
@@ -33,13 +34,28 @@ interface ContextReplacer {
  * replacer.replace('Description: $.description?')
  *
  * // Nested object replacement
- * const config = { title: '$.title', priority: '#.priority' }
+ * const config = { title: '$.title', priority: '#.priority', '@.approval-key' }
  * const result = replacer.replaceNested(config)
  * ```
  *
  * @throws Error When a required field (without '?' marker) is null or undefined
  */
 export const withContext = (card: IWorkflowCard): ContextReplacer => {
+  const approvalGetter = (approvalKey: string, isRequired: boolean): string => {
+    const tokens = card.approvalTokens[approvalKey] || []
+    const activeTokens = tokens.filter(token => !token.voided)
+    
+    if (activeTokens.length === 0) {
+      if (isRequired) {
+        throw new Error(`Cannot replace '@.${approvalKey}' the approval token is required`)
+      }
+      return ''
+    }
+    
+    // Get the latest active token
+    const latestToken = activeTokens.sort((a, b) => b.date - a.date)[0]
+    return latestToken.author
+  }
   const valueGetter = (key: keyof IWorkflowCard, isRequired: boolean): string => {
     const val = card[key]
     if (typeof val === 'undefined' || val === null) {
@@ -61,10 +77,11 @@ export const withContext = (card: IWorkflowCard): ContextReplacer => {
     return val
   }
   const _replaceVal = (val: string): string => {
-    return val.replace(/(\$|#)\.([a-zA-Z0-9_]+)(\?)?/g, (wholeStr, type, key, optionalMarker) => {
+    return val.replace(/(\$|#|@)\.([a-zA-Z0-9_-]+)(\?)?/g, (wholeStr, type, key, optionalMarker) => {
       const isOptional = optionalMarker === '?'
       if (type === '#') return fieldGetter(key, !isOptional)
       else if (type === '$') return valueGetter(key, !isOptional)
+      else if (type === '@') return approvalGetter(key, !isOptional)
       else return wholeStr
     })
   }

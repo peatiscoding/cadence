@@ -27,4 +27,38 @@ export const ConfigurationSchema = z.object({
   ),
   types: z.array(TypeSchema),
   statuses: z.array(StatusSchema)
-})
+}).refine(
+  (config) => {
+    // Validate that all approval keys referenced in status preconditions exist in approvals definitions
+    const definedApprovalKeys = new Set(config.approvals?.map(approval => approval.slug) || [])
+    const referencedApprovalKeys = new Set<string>()
+    
+    // Collect all approval keys referenced in status preconditions
+    for (const status of config.statuses) {
+      if (status.precondition.approvals) {
+        for (const approval of status.precondition.approvals) {
+          referencedApprovalKeys.add(approval.key)
+        }
+      }
+    }
+    
+    // Find missing approval keys
+    const missingApprovalKeys: string[] = []
+    for (const referencedKey of referencedApprovalKeys) {
+      if (!definedApprovalKeys.has(referencedKey)) {
+        missingApprovalKeys.push(referencedKey)
+      }
+    }
+    
+    // Store missing keys for error message
+    if (missingApprovalKeys.length > 0) {
+      ;(config as any)._missingApprovalKeys = missingApprovalKeys
+      return false
+    }
+    
+    return true
+  },
+  (config) => ({
+    message: `The following approval keys are referenced in status preconditions but not defined in approvals: ${(config as any)._missingApprovalKeys?.join(', ') || 'unknown'}`
+  })
+)

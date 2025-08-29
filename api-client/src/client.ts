@@ -13,6 +13,8 @@ import type {
   ProvisionUserResponse,
   GetWorkflowLovDataRequest,
   GetWorkflowLovDataResponse,
+  AddApprovalRequest,
+  AddApprovalResponse,
   IOnCallResponse
 } from '@cadence/shared/types'
 import type { APIClientConfig } from './types'
@@ -163,6 +165,13 @@ export class CadenceAPIClient {
     request: GetWorkflowLovDataRequest
   ): Promise<GetWorkflowLovDataResponse> {
     return this.makeRequest('GET_WORKFLOW_LOV_DATA', request)
+  }
+
+  /**
+   * Add an approval to a workflow card
+   */
+  async addApproval(request: AddApprovalRequest): Promise<AddApprovalResponse> {
+    return this.makeRequest('ADD_APPROVAL', request)
   }
 
   /**

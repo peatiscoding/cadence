@@ -1,4 +1,9 @@
-import type { ApprovalToken, ApprovalRequirement, IWorkflowCard, WorkflowConfiguration } from '../types'
+import type {
+  ApprovalToken,
+  ApprovalRequirement,
+  IWorkflowCard,
+  WorkflowConfiguration
+} from '../types'
 import { withContext } from './replaceValue'
 
 /**
@@ -6,16 +11,19 @@ import { withContext } from './replaceValue'
  */
 export function getActiveApprovalTokens(card: IWorkflowCard, approvalKey: string): ApprovalToken[] {
   const tokens = card.approvalTokens[approvalKey] || []
-  return tokens.filter(token => !token.voided)
+  return tokens.filter((token) => !token.voided)
 }
 
 /**
  * Gets the latest non-voided approval token for a given approval key
  */
-export function getLatestApprovalToken(card: IWorkflowCard, approvalKey: string): ApprovalToken | null {
+export function getLatestApprovalToken(
+  card: IWorkflowCard,
+  approvalKey: string
+): ApprovalToken | null {
   const activeTokens = getActiveApprovalTokens(card, approvalKey)
   if (activeTokens.length === 0) return null
-  
+
   // Sort by date descending and return the latest
   return activeTokens.sort((a, b) => b.date - a.date)[0]
 }
@@ -24,17 +32,17 @@ export function getLatestApprovalToken(card: IWorkflowCard, approvalKey: string)
  * Checks if an approval requirement is satisfied by checking for valid approval tokens
  */
 export function isApprovalRequirementSatisfied(
-  card: IWorkflowCard, 
+  card: IWorkflowCard,
   requirement: ApprovalRequirement
 ): boolean {
   const latestToken = getLatestApprovalToken(card, requirement.key)
-  
+
   // No approval token means requirement is not satisfied
   if (!latestToken) return false
-  
+
   // Negative approval means requirement is not satisfied
   if (latestToken.isNegative) return false
-  
+
   return true
 }
 
@@ -46,13 +54,13 @@ export function validateApprovalRequirements(
   requirements: ApprovalRequirement[]
 ): { valid: boolean; missingApprovals: string[] } {
   const missingApprovals: string[] = []
-  
+
   for (const requirement of requirements) {
     if (!isApprovalRequirementSatisfied(card, requirement)) {
       missingApprovals.push(requirement.key)
     }
   }
-  
+
   return {
     valid: missingApprovals.length === 0,
     missingApprovals
@@ -68,17 +76,17 @@ export function canUserApprove(
   card: IWorkflowCard,
   configuration: WorkflowConfiguration
 ): boolean {
-  const approvalDef = configuration.approvals?.find(a => a.slug === approvalKey)
+  const approvalDef = configuration.approvals?.find((a) => a.slug === approvalKey)
   if (!approvalDef) return false
-  
+
   const replacer = withContext(card)
-  
+
   // Check each allowed approval type
   for (const allowed of approvalDef.allowed) {
     if (allowed.kind === 'basic') {
       // If no 'by' restriction is set, anyone can approve
       if (!allowed.by) return true
-      
+
       // Use context replacement to resolve patterns like:
       // $.[field-key] | #.[standard-field] | @.[approval-key]
       try {
@@ -90,6 +98,7 @@ export function canUserApprove(
       }
     }
   }
-  
+
   return false
 }
+

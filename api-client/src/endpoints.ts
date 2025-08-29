@@ -29,6 +29,11 @@ export const ENDPOINTS = {
     path: 'getWorkflowLovDataAPI',
     requiresAuth: true,
     timeout: 10000
+  },
+  ADD_APPROVAL: {
+    path: 'addApprovalAPI',
+    requiresAuth: true,
+    timeout: 10000
   }
 } as const satisfies Record<string, EndpointConfig>
 

@@ -11,6 +11,7 @@ import { createProvisionUser } from './fns/provision-user'
 import { createCard } from './fns/create-card'
 import { invalidateLovCache } from './fns/invalidate-lov-cache'
 import { getWorkflowLovData } from './fns/get-workflow-lov-data'
+import { addApproval } from './fns/add-approval'
 
 import { execute } from './fns/_executor'
 import {
@@ -26,7 +27,8 @@ import {
   ProvisionUserRequestSchema,
   TransitWorkflowItemRequestSchema,
   InvalidateLovCacheRequestSchema,
-  GetWorkflowLovDataRequestSchema
+  GetWorkflowLovDataRequestSchema,
+  AddApprovalRequestSchema
 } from '@cadence/shared/validation'
 
 // Initialize depedencies
@@ -103,6 +105,20 @@ export const getWorkflowLovDataAPI = onRequest(
     .use(validateBody(GetWorkflowLovDataRequestSchema))
     .handle(async (ctx) => {
       return getWorkflowLovData(app)(ctx.body)
+    })
+)
+
+export const addApprovalAPI = onRequest(
+  { region: FIREBASE_REGION, cors: true },
+  new HttpExecutorBuilder()
+    .use(cors())
+    .use(allowedMethod('POST'))
+    .use(firebaseIdToken(app))
+    .use(validateBody(AddApprovalRequestSchema))
+    .handle(async (ctx) => {
+      const userEmail = ctx.email ?? ctx.uid ?? ''
+      const userId = ctx.uid ?? ''
+      return addApproval(app)(ctx.body, userId, userEmail)
     })
 )
 

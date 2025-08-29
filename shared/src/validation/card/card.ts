@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 // Approval Token schema
 export const ApprovalTokenSchema = z.object({
-  kind: z.literal('basic'),
+  kind: z.literal('basic'), // should match the possible list in the configuration's allowed schema
   note: z.string(),
   author: z.string(),
   date: z.number(),

@@ -1,6 +1,6 @@
 import type { WorkflowConfiguration } from '../types'
 
-const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
+const LeadToProposalWorkflow: WorkflowConfiguration = {
   workflowId: 'ld2ppsl',
   name: 'Lead to Proposal',
   access: ['@muze.co.th'],
@@ -8,6 +8,16 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
     singular: 'Lead',
     plural: 'Leads'
   },
+  approvals: [
+    {
+      slug: 'proposal-approved',
+      allowed: [
+        {
+          kind: 'basic'
+        }
+      ]
+    }
+  ],
   types: [
     { slug: 'ma', title: 'MA', ui: { color: '#8866FF' } },
     { slug: 'sprint-based', title: 'Sprint Based', ui: { color: '#33FF88' } },
@@ -86,7 +96,8 @@ const LeadToProposalWorkflow: WorkflowConfiguration & { workflowId: string } = {
       },
       precondition: {
         from: ['brewing'],
-        required: ['$.value', 'budgetLink', 'contactPoint']
+        required: ['$.value', 'budgetLink', 'contactPoint'],
+        approvals: [{ key: 'proposal-approved' }] // must match
       },
       finally: [
         {
