@@ -7,9 +7,10 @@
     approvalKey: string
     card: IWorkflowCard | null
     onClose: () => void
+    approvalTitle?: string
   }
 
-  let { approvalKey = $bindable(), card, onClose }: Props = $props()
+  let { approvalKey = $bindable(), card, onClose, approvalTitle }: Props = $props()
 
   const isOpen = $derived(() => approvalKey !== '')
 
@@ -36,7 +37,7 @@
   }
 </script>
 
-<Modal open={isOpen()} title="Approval History: {approvalKey}" size="xl">
+<Modal open={isOpen()} title="Approval History: {approvalTitle || approvalKey}" size="xl">
   <div class="space-y-4">
     {#if approvalTokens.length === 0}
       <div class="py-8 text-center">

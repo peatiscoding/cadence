@@ -1,6 +1,7 @@
 import type {
   ApprovalToken,
   ApprovalRequirement,
+  ApprovalDefinition,
   IWorkflowCard,
   WorkflowConfiguration
 } from '../types'
@@ -100,4 +101,22 @@ export function canUserApprove(
   }
 
   return false
+}
+
+/**
+ * Gets the display name for an approval (title with fallback to slug)
+ */
+export function getApprovalDisplayName(approval: ApprovalDefinition): string {
+  return approval.title || approval.slug
+}
+
+/**
+ * Gets the display name for an approval by key from configuration
+ */
+export function getApprovalDisplayNameByKey(
+  configuration: WorkflowConfiguration,
+  approvalKey: string
+): string {
+  const approval = configuration.approvals?.find((a) => a.slug === approvalKey)
+  return approval ? getApprovalDisplayName(approval) : approvalKey
 }

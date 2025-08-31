@@ -1,6 +1,10 @@
 <script lang="ts">
   import type { WorkflowConfiguration, IWorkflowCard } from '@cadence/shared/types'
-  import { getLatestApprovalToken } from '@cadence/shared/utils/approval-validation'
+  import { 
+    getLatestApprovalToken, 
+    getApprovalDisplayName, 
+    getApprovalDisplayNameByKey 
+  } from '@cadence/shared/utils/approval-validation'
   import { Badge, Button, Modal } from 'flowbite-svelte'
   import {
     CheckOutline,
@@ -63,6 +67,7 @@
     if (!config.approvals) return []
     return config.approvals
   })
+
 </script>
 
 {#if availableApprovals().length > 0}
@@ -87,7 +92,7 @@
                     : 'Rejected'}
               </Badge>
               <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {approval.slug}
+                {getApprovalDisplayName(approval)}
               </span>
             </div>
 
@@ -109,7 +114,7 @@
               outline
               onclick={() => openApprovalHistory(approval.slug)}
               title="View approval history"
-              aria-label="View approval history for {approval.slug}"
+              aria-label="View approval history for {getApprovalDisplayName(approval)}"
             >
               <EyeOutline class="h-4 w-4" />
             </Button>
@@ -120,7 +125,7 @@
               outline
               onclick={() => onApprovalClick(approval.slug)}
               title="Add approval"
-              aria-label="Add approval for {approval.slug}"
+              aria-label="Add approval for {getApprovalDisplayName(approval)}"
             >
               <PlusOutline class="h-4 w-4" />
             </Button>
@@ -134,5 +139,6 @@
     bind:approvalKey={showHistoryDialog}
     {card}
     onClose={closeApprovalHistory}
+    approvalTitle={getApprovalDisplayNameByKey(config, showHistoryDialog)}
   />
 {/if}
