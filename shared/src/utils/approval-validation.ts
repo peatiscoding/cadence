@@ -10,7 +10,7 @@ import { withContext } from './replaceValue'
  * Gets all non-voided approval tokens for a given approval key
  */
 export function getActiveApprovalTokens(card: IWorkflowCard, approvalKey: string): ApprovalToken[] {
-  const tokens = card.approvalTokens[approvalKey] || []
+  const tokens = (card.approvalTokens || {})[approvalKey] || []
   return tokens.filter((token) => !token.voided)
 }
 
@@ -101,4 +101,3 @@ export function canUserApprove(
 
   return false
 }
-
