@@ -14,6 +14,7 @@
   import { ArrowRightOutline, DotsHorizontalOutline } from 'flowbite-svelte-icons'
   import { isIdentifierField, findIdentifierField } from '@cadence/shared/utils'
   import LovField from './LovField.svelte'
+  import ApprovalSection from './ApprovalSection.svelte'
 
   interface Props {
     open: boolean
@@ -675,6 +676,17 @@
         {/if}
       </div>
     </div>
+    {#if isTransition || isEditing}
+      <div class="border-t border-gray-200 pt-6 md:col-span-12 dark:border-gray-700">
+        <ApprovalSection
+          {config}
+          card={formData as any}
+          onApprovalClick={(approvalSlug: string) => {
+            console.log('TODO: Handle adding token with type', approvalSlug)
+          }}
+        />
+      </div>
+    {/if}
   </form>
   {#snippet footer()}
     <Button color="alternative" onclick={onCancel}>Cancel</Button>
