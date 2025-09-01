@@ -20,6 +20,44 @@ describe('Configuration Schema Validation', () => {
     statuses: []
   }
 
+  describe('initialValues key validation', () => {
+    it('should pass validation with valid initialValues of different types', () => {
+      const config = {
+        ...baseConfig,
+        initialValues: {
+          type: 'general', // string
+          priority: 5, // number
+          isUrgent: true, // boolean
+          tags: ['hr', 'internal'] // array of strings
+        }
+      }
+      expect(() => ConfigurationSchema.parse(config)).not.toThrow()
+    })
+
+    it('should fail validation if initialValues contains an invalid type like an object', () => {
+      const config = {
+        ...baseConfig,
+        initialValues: {
+          contactPoint: { email: 'test@test.com' } // Invalid: object is not allowed
+        }
+      }
+      expect(() => ConfigurationSchema.parse(config)).toThrow()
+    })
+
+    it('should pass validation with an empty initialValues object', () => {
+      const config = {
+        ...baseConfig,
+        initialValues: {}
+      }
+      expect(() => ConfigurationSchema.parse(config)).not.toThrow()
+    })
+
+    it('should pass validation when initialValues key is not present', () => {
+      // baseConfig itself does not have initialValues
+      expect(() => ConfigurationSchema.parse(baseConfig)).not.toThrow()
+    })
+  })
+
   describe('approval key validation', () => {
     it('should pass validation when approval keys are properly defined', () => {
       const config = {
@@ -30,7 +68,7 @@ describe('Configuration Schema Validation', () => {
             allowed: [{ kind: 'basic' as const }]
           },
           {
-            slug: 'finance-approval', 
+            slug: 'finance-approval',
             allowed: [{ kind: 'basic' as const }]
           }
         ],
@@ -82,13 +120,15 @@ describe('Configuration Schema Validation', () => {
       }
 
       expect(() => ConfigurationSchema.parse(config)).toThrow()
-      
+
       try {
         ConfigurationSchema.parse(config)
       } catch (error: any) {
         expect(error.message).toContain('finance-approval')
         expect(error.message).toContain('legal-approval')
-        expect(error.message).toContain('referenced in status preconditions but not defined in approvals')
+        expect(error.message).toContain(
+          'referenced in status preconditions but not defined in approvals'
+        )
       }
     })
 
