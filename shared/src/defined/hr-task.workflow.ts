@@ -59,18 +59,11 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
       }
     }
   ],
+  initialValues: {
+    type: 'general',
+    contactPoint: 'dachopol.w@muze.co.th'
+  },
   statuses: [
-    {
-      slug: 'todo',
-      title: 'To Do',
-      terminal: false,
-      ui: {
-        color: '#CCCCCC'
-      },
-      precondition: {
-        from: []
-      }
-    },
     {
       slug: 'reviewing',
       title: 'Reviewing',
@@ -79,8 +72,7 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
         color: '#FFB800'
       },
       precondition: {
-        from: ['todo', 'revising'],
-        users: ['#.createdBy'], // Only creator can submit/re-submit for review
+        from: ['draft', 'revising'],
         required: ['contactPoint']
       },
       finally: [

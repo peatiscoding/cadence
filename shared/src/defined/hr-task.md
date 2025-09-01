@@ -10,11 +10,13 @@ The primary purpose of this workflow is to serve as a general task tracking boar
 
 ## Workflow Diagram
 
+The process begins in the default "Draft" lane, which is visible only to the creator.
+
 ```mermaid
 stateDiagram-v2
-    [*] --> ToDo
+    [*] --> Draft
 
-    ToDo --> Reviewing: Creator submits task
+    Draft --> Reviewing: Creator submits task
     Reviewing --> Approved: Task is approved
     Reviewing --> Revising: Task needs revision
     Revising --> Reviewing: Creator re-submits task
@@ -34,7 +36,9 @@ stateDiagram-v2
 
 ## Statuses
 
-1.  **To Do:** The initial state for all newly created tasks.
+The workflow utilizes the system's built-in **Draft** lane as the starting point for all new tasks.
+
+1.  **Draft:** The initial state for all newly created tasks, visible only to the creator.
 2.  **Reviewing:** The task has been submitted to the `Contact Point` for review.
 3.  **Revising:** The `Contact Point` has returned the task to the `Creator` for changes, with comments provided in the `Feedback` field.
 4.  **Approved:** The task has been approved and the process is complete.
