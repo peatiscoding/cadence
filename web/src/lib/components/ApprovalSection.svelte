@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { WorkflowConfiguration, IWorkflowCard } from '@cadence/shared/types'
-  import { 
-    getLatestApprovalToken, 
-    getApprovalDisplayName, 
-    getApprovalDisplayNameByKey 
+  import type { WorkflowConfiguration, IWorkflowCard, ApprovalToken } from '@cadence/shared/types'
+  import {
+    getLatestApprovalToken,
+    getApprovalDisplayName,
+    getApprovalDisplayNameByKey
   } from '@cadence/shared/utils/approval-validation'
-  import { Badge, Button, Modal } from 'flowbite-svelte'
+  import { Badge, Button } from 'flowbite-svelte'
   import {
     CheckOutline,
     CloseOutline,
@@ -17,11 +17,11 @@
 
   interface Props {
     config: WorkflowConfiguration
-    card: IWorkflowCard | null
+    approvalTokens: Record<string, ApprovalToken[]>
     onApprovalClick: (approvalKey: string) => void
   }
 
-  let { config, card, onApprovalClick }: Props = $props()
+  let { config, approvalTokens, onApprovalClick }: Props = $props()
   let showHistoryDialog = $state('')
 
   function openApprovalHistory(approvalKey: string) {
@@ -39,9 +39,9 @@
     author: string | null
     note: string | null
   } {
-    if (!card) return { status: 'none', author: null, note: null }
+    if (!approvalTokens) return { status: 'none', author: null, note: null }
 
-    const latestToken = getLatestApprovalToken(card, approvalKey)
+    const latestToken = getLatestApprovalToken({ approvalTokens } as any, approvalKey)
     if (!latestToken) return { status: 'none', author: null, note: null }
 
     return {
@@ -67,7 +67,6 @@
     if (!config.approvals) return []
     return config.approvals
   })
-
 </script>
 
 {#if availableApprovals().length > 0}
@@ -137,7 +136,7 @@
 
   <ApprovalHistoryDialog
     bind:approvalKey={showHistoryDialog}
-    {card}
+    {approvalTokens}
     onClose={closeApprovalHistory}
     approvalTitle={getApprovalDisplayNameByKey(config, showHistoryDialog)}
   />

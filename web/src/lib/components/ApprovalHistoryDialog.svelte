@@ -5,21 +5,21 @@
 
   interface Props {
     approvalKey: string
-    card: IWorkflowCard | null
+    approvalTokens: Record<string, ApprovalToken[]>
     onClose: () => void
     approvalTitle?: string
   }
 
-  let { approvalKey = $bindable(), card, onClose, approvalTitle }: Props = $props()
+  let { approvalKey = $bindable(), approvalTokens, onClose, approvalTitle }: Props = $props()
 
   const isOpen = $derived(() => approvalKey !== '')
 
-  const approvalTokens = $derived((): ApprovalToken[] => {
-    if (!card || !card.approvalTokens || !card.approvalTokens[approvalKey]) {
+  const tokens = $derived((): ApprovalToken[] => {
+    if (!approvalTokens || !approvalTokens[approvalKey]) {
       return []
     }
     // Sort by date descending (newest first)
-    return [...card.approvalTokens[approvalKey]].sort((a, b) => b.date - a.date)
+    return [...approvalTokens[approvalKey]].sort((a, b) => b.date - a.date)
   })
 
   function formatDate(timestamp: number): string {
@@ -39,14 +39,14 @@
 
 <Modal open={isOpen()} title="Approval History: {approvalTitle || approvalKey}" size="xl">
   <div class="space-y-4">
-    {#if approvalTokens.length === 0}
+    {#if tokens().length === 0}
       <div class="py-8 text-center">
         <p class="text-gray-500 dark:text-gray-400">
           No approval history found for this approval key.
         </p>
       </div>
     {:else}
-      {#each approvalTokens() as token (token.date)}
+      {#each tokens() as token (token.date)}
         {@const badgeProps = getTokenBadgeProps(token)}
         <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
           <div class="flex items-start justify-between">

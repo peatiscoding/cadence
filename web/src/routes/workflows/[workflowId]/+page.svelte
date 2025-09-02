@@ -17,7 +17,7 @@
   let showConfigModal = $state(false)
   let showCardFormModal = $state(false)
   let showErrorModal = $state(false)
-  let editableWorkflow = $state<PConf | null>(null)
+  let workflow = $state<PConf | null>(null)
   let configSnapshot = $state<PConf>({} as any)
   let cards = $state<IWorkflowCardEntry[]>([])
   let loading = $state(true)
@@ -49,7 +49,7 @@
   }
 
   // Derived noun values for cleaner usage
-  const nouns = $derived(editableWorkflow?.nouns || { singular: 'Item', plural: 'Items' })
+  const nouns = $derived(workflow?.nouns || { singular: 'Item', plural: 'Items' })
 
   // Group cards by status
   const cardsByStatus = $derived(
@@ -116,7 +116,7 @@
             return
           }
 
-          editableWorkflow = { ...configuration }
+          workflow = { ...configuration }
 
           // Set up live listening for cards
           cardsUnsubscribe = workflowEngine
@@ -173,9 +173,9 @@
   })
 
   function openConfigModal() {
-    if (!editableWorkflow) return
+    if (!workflow) return
     // Take snapshot of current state before opening modal
-    configSnapshot = { ...editableWorkflow }
+    configSnapshot = { ...workflow }
     showConfigModal = true
   }
 
@@ -186,7 +186,7 @@
   }
 
   async function handleUpdateWorkflowConfiguration() {
-    if (!editableWorkflow) return
+    if (!workflow) return
     const dynamicStorage = getDynamicStorage()
     if (!dynamicStorage) {
       console.warn('DynamicStorage is required to update the configurations')
@@ -194,7 +194,7 @@
     }
     try {
       // Create a plain object copy to avoid Svelte proxy issues with Firestore
-      const plainWorkflow = JSON.parse(JSON.stringify(editableWorkflow))
+      const plainWorkflow = JSON.parse(JSON.stringify(workflow))
       await dynamicStorage.setConfig(data.workflowId, plainWorkflow)
       showConfigModal = false
       console.log('Workflow saved successfully')
@@ -211,9 +211,9 @@
   }
 
   function handleCancel() {
-    if (!editableWorkflow) return
+    if (!workflow) return
     // Restore to the state before modal was opened
-    editableWorkflow = { ...configSnapshot }
+    workflow = { ...configSnapshot }
     showConfigModal = false
   }
 
@@ -251,7 +251,7 @@
   }
 
   async function handleCardSubmit(cardData: any) {
-    if (!editableWorkflow) return
+    if (!workflow) return
 
     try {
       cardFormSubmitting = true
@@ -390,11 +390,11 @@
         <li>{error}</li>
       </ul>
     </Alert>
-  {:else if editableWorkflow}
+  {:else if workflow}
     <div class="mb-4 px-6">
       <div class="flex items-center gap-3">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {editableWorkflow.name}
+          {workflow.name}
         </h1>
         {#if isSupportDynamicWorkflows}
           <button
@@ -407,8 +407,7 @@
         {/if}
       </div>
       <p class="mt-2 text-gray-600 dark:text-gray-400">
-        {editableWorkflow.description ||
-          `Track and manage your ${nouns.plural} through different stages`}
+        {workflow.description || `Track and manage your ${nouns.plural} through different stages`}
       </p>
     </div>
 
@@ -478,7 +477,7 @@
         </div>
       </div>
 
-      {#each editableWorkflow.statuses as status}
+      {#each workflow.statuses as status}
         <div
           class="flex w-90 flex-shrink-0 flex-col"
           class:opacity-50={draggedCard && !validDropZones.has(status.slug)}
@@ -541,7 +540,7 @@
 </div>
 
 <!-- Configuration Modal -->
-{#if showConfigModal && editableWorkflow}
+{#if showConfigModal && workflow}
   <div
     class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     onclick={closeModal}
@@ -590,7 +589,7 @@
 
       <!-- Modal Content -->
       <div class="p-6">
-        <WorkflowConfiguration bind:workflow={editableWorkflow} editable={true} />
+        <WorkflowConfiguration bind:workflow editable={true} />
       </div>
 
       <!-- Modal Footer -->
@@ -613,11 +612,12 @@
 {/if}
 
 <!-- Card Creation/Edit Modal -->
-{#if showCardFormModal && editableWorkflow}
+{#if showCardFormModal && workflow}
   <WorkflowCardForm
     {workflowEngine}
     bind:open={showCardFormModal}
-    config={editableWorkflow}
+    readonlyApprovalData={editingCard?.approvalTokens}
+    config={workflow}
     status={editingCard?.status}
     targetStatus={cardFormTargetStatus}
     initialData={editingCard || {}}
