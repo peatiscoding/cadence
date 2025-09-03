@@ -1,12 +1,10 @@
 <script lang="ts">
   import type { WorkflowConfiguration as PConf, IWorkflowCardEntry } from '@cadence/shared/types'
-  import type { IWorkflowConfigurationDynamicStorage } from '$lib/persistent/interface'
   import type { PageData } from './$types'
   import { onMount } from 'svelte'
   import { Button, Kbd, Alert, Spinner } from 'flowbite-svelte'
-  import { CogOutline, BanOutline } from 'flowbite-svelte-icons'
+  import { BanOutline } from 'flowbite-svelte-icons'
 
-  import WorkflowConfiguration from '$lib/components/WorkflowConfiguration.svelte'
   import WorkflowCardForm from '$lib/components/WorkflowCardForm.svelte'
   import WorkflowCard from '$lib/components/WorkflowCard.svelte'
 
@@ -14,11 +12,9 @@
 
   let { data }: { data: PageData } = $props()
 
-  let showConfigModal = $state(false)
   let showCardFormModal = $state(false)
   let showErrorModal = $state(false)
   let workflow = $state<PConf | null>(null)
-  let configSnapshot = $state<PConf>({} as any)
   let cards = $state<IWorkflowCardEntry[]>([])
   let loading = $state(true)
   let error = $state('')
@@ -34,19 +30,11 @@
   let draggedOverStatus = $state<string | null>(null)
   let validDropZones = $state<Set<string>>(new Set())
 
-  const storage = impls.configurationStore
   const authProvider = impls.authProvider
   const factory = impls.workflowEngineFactory
 
   // Create workflow engine for card operations
   const workflowEngine = factory.getWorkflowEngine(data.workflowId)
-
-  function getDynamicStorage(): IWorkflowConfigurationDynamicStorage | undefined {
-    if (storage.isSupportDynamicWorkflows()) {
-      return storage as IWorkflowConfigurationDynamicStorage
-    }
-    return undefined
-  }
 
   // Derived noun values for cleaner usage
   const nouns = $derived(workflow?.nouns || { singular: 'Item', plural: 'Items' })
@@ -65,6 +53,10 @@
     )
   )
 
+  const readonlyApprovalData = $derived(
+    cards.find((c) => editingCard?.workflowCardId === c.workflowCardId)?.approvalTokens || {}
+  )
+
   onMount(() => {
     let isDestroyed = false
     let cardsUnsubscribe: (() => void) | null = null
@@ -74,8 +66,6 @@
       if (event.key === 'Escape') {
         if (showErrorModal) {
           closeErrorModal()
-        } else if (showConfigModal) {
-          handleCancel()
         } else if (showCardFormModal) {
           closeCardFormModal()
         }
@@ -83,16 +73,13 @@
       }
 
       // Only handle global shortcuts when no modal is open and no input is focused
-      if (showConfigModal || showCardFormModal || showErrorModal) return
+      if (showCardFormModal || showErrorModal) return
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
         return
 
       if (event.key === 'n' || event.key === 'N') {
         event.preventDefault()
         openCardFormModal()
-      } else if (event.key === 'c' || event.key === 'C') {
-        event.preventDefault()
-        openConfigModal()
       }
     }
 
@@ -171,51 +158,6 @@
       window.removeEventListener('keydown', handleGlobalKeydown)
     }
   })
-
-  function openConfigModal() {
-    if (!workflow) return
-    // Take snapshot of current state before opening modal
-    configSnapshot = { ...workflow }
-    showConfigModal = true
-  }
-
-  function closeModal(event: Event) {
-    if (event.target === event.currentTarget) {
-      handleCancel()
-    }
-  }
-
-  async function handleUpdateWorkflowConfiguration() {
-    if (!workflow) return
-    const dynamicStorage = getDynamicStorage()
-    if (!dynamicStorage) {
-      console.warn('DynamicStorage is required to update the configurations')
-      return
-    }
-    try {
-      // Create a plain object copy to avoid Svelte proxy issues with Firestore
-      const plainWorkflow = JSON.parse(JSON.stringify(workflow))
-      await dynamicStorage.setConfig(data.workflowId, plainWorkflow)
-      showConfigModal = false
-      console.log('Workflow saved successfully')
-    } catch (err) {
-      console.error('Error saving workflow:', err)
-
-      // Show user-friendly error message
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'An unexpected error occurred while saving the workflow configuration'
-      showError('Failed to Save Workflow', errorMessage)
-    }
-  }
-
-  function handleCancel() {
-    if (!workflow) return
-    // Restore to the state before modal was opened
-    workflow = { ...configSnapshot }
-    showConfigModal = false
-  }
 
   // Card creation and editing handlers
   function openCardFormModal() {
@@ -396,15 +338,6 @@
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
           {workflow.name}
         </h1>
-        {#if isSupportDynamicWorkflows}
-          <button
-            onclick={openConfigModal}
-            class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-            title="Workflow Settings"
-          >
-            <CogOutline class="h-5 w-5" />
-          </button>
-        {/if}
       </div>
       <p class="mt-2 text-gray-600 dark:text-gray-400">
         {workflow.description || `Track and manage your ${nouns.plural} through different stages`}
@@ -539,84 +472,12 @@
   {/if}
 </div>
 
-<!-- Configuration Modal -->
-{#if showConfigModal && workflow}
-  <div
-    class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
-    onclick={closeModal}
-    onkeydown={(e) => {
-      if (e.key === 'Escape') {
-        closeModal(e)
-      }
-    }}
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="config-modal-title"
-    tabindex="-1"
-  >
-    <div
-      class="mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
-      onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => {
-        if (e.key !== 'Escape') {
-          e.stopPropagation()
-        }
-      }}
-      role="none"
-    >
-      <!-- Modal Header -->
-      <div
-        class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700"
-      >
-        <h2 id="config-modal-title" class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          Workflow Configuration
-        </h2>
-        <button
-          onclick={() => (showConfigModal = false)}
-          aria-label="edit workflow's configurations"
-          class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            ></path>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Modal Content -->
-      <div class="p-6">
-        <WorkflowConfiguration bind:workflow editable={true} />
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="flex justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
-        <button
-          onclick={handleCancel}
-          class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-        >
-          Cancel
-        </button>
-        <button
-          onclick={handleUpdateWorkflowConfiguration}
-          class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-        >
-          Save Changes
-        </button>
-      </div>
-    </div>
-  </div>
-{/if}
-
 <!-- Card Creation/Edit Modal -->
 {#if showCardFormModal && workflow}
   <WorkflowCardForm
     {workflowEngine}
+    {readonlyApprovalData}
     bind:open={showCardFormModal}
-    readonlyApprovalData={editingCard?.approvalTokens}
     config={workflow}
     status={editingCard?.status}
     targetStatus={cardFormTargetStatus}
