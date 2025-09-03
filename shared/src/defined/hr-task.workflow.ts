@@ -88,7 +88,7 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
       finally: [
         {
           kind: 'send-email',
-          to: '$.ownerId',
+          to: '$.owner',
           subject: '[Cadence-HR] New Task for Review: $.title',
           message: `
             Hello,
