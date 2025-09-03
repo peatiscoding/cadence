@@ -86,21 +86,21 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
         required: ['contactPoint']
       },
       finally: [
-        {
-          kind: 'send-email',
-          to: '$.owner',
-          subject: '[Cadence-HR] New Task for Review: $.title',
-          message: `
-            Hello,
+        // {
+        //   kind: 'send-email',
+        //   to: '$.owner',
+        //   subject: '[Cadence-HR] New Task for Review: $.title',
+        //   message: `
+        //     Hello,
 
-            A new task "$.title" has been submitted and is waiting for your review.
+        //     A new task "$.title" has been submitted and is waiting for your review.
 
-            Please review it by the due date: #.dueDate?.
-            Link: #.link?.
+        //     Please review it by the due date: #.dueDate?.
+        //     Link: #.link?.
 
-            Thank you.
-          `
-        }
+        //     Thank you.
+        //   `
+        // }
       ]
     },
     {
@@ -115,23 +115,23 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
         required: ['feedback']
       },
       finally: [
-        {
-          kind: 'send-email',
-          to: '#.contactPoint',
-          subject: '[Cadence-HR] Revision Required: $.title',
-          message: `
-            Hi,
+        // {
+        //   kind: 'send-email',
+        //   to: '#.contactPoint',
+        //   subject: '[Cadence-HR] Revision Required: $.title',
+        //   message: `
+        //     Hi,
 
-            The task "$.title" that you submitted requires revision.
+        //     The task "$.title" that you submitted requires revision.
 
-            Feedback from the reviewer:
-            "#.feedback"
+        //     Feedback from the reviewer:
+        //     "#.feedback"
 
-            Please make the necessary changes and resubmit.
+        //     Please make the necessary changes and resubmit.
 
-            Thank you.
-          `
-        }
+        //     Thank you.
+        //   `
+        // }
       ]
     },
     {
@@ -145,18 +145,18 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
         from: ['reviewing']
       },
       finally: [
-        {
-          kind: 'send-email',
-          to: '#.contactPoint',
-          subject: '[Cadence-HR] Approved: $.title',
-          message: `
-            Hi,
+        // {
+        //   kind: 'send-email',
+        //   to: '#.contactPoint',
+        //   subject: '[Cadence-HR] Approved: $.title',
+        //   message: `
+        //     Hi,
 
-            Great news! The task "$.title" that you submitted has been approved.
+        //     Great news! The task "$.title" that you submitted has been approved.
 
-            Thank you for your hard work.
-          `
-        }
+        //     Thank you for your hard work.
+        //   `
+        // }
       ]
     }
   ]
