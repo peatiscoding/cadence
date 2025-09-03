@@ -54,6 +54,7 @@ The Workflow Configuration's File:
     "approvals": [ // each approval key keep track of all approvals token made so far. In an array. Note that it only has 1 active approval at a time. (e.g. the rest are voided).
         {
             "slug": "approval-key",
+            "title": "Approval Title", // used as title if defined, otherwise use "slug"
             "allowed": [
                 {
                     "kind": "basic",

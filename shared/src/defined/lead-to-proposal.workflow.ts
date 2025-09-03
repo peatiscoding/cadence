@@ -11,6 +11,7 @@ const LeadToProposalWorkflow: WorkflowConfiguration = {
   approvals: [
     {
       slug: 'proposal-approved',
+      title: 'Proposal Approved',
       allowed: [
         {
           kind: 'basic'

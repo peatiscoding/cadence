@@ -12,8 +12,15 @@
   import { onMount } from 'svelte'
   import { Button, Badge, Indicator, Modal, Dropdown, DropdownItem } from 'flowbite-svelte'
   import { ArrowRightOutline, DotsHorizontalOutline } from 'flowbite-svelte-icons'
-  import { isIdentifierField, findIdentifierField } from '@cadence/shared/utils'
+  import {
+    isIdentifierField,
+    findIdentifierField,
+    getApprovalDisplayNameByKey
+  } from '@cadence/shared/utils'
   import LovField from './LovField.svelte'
+  import ApprovalSection from './ApprovalSection.svelte'
+  import BasicApprovalDialog from './BasicApprovalDialog.svelte'
+  import { approvalService } from '$lib/services/approval-service'
 
   interface Props {
     open: boolean
@@ -22,6 +29,7 @@
     status?: string
     targetStatus?: string // The status we're transitioning to (if different from current)
     initialData?: Record<string, any>
+    readonlyApprovalData?: Record<string, any>
     onSubmit: (data: any) => Promise<void>
     onCancel: () => void
     isSubmitting?: boolean
@@ -34,6 +42,7 @@
     status = STATUS_DRAFT,
     targetStatus,
     initialData = {},
+    readonlyApprovalData = {},
     onSubmit,
     onCancel,
     isSubmitting = false
@@ -96,6 +105,9 @@
   let nextStatuses = $state<WorkflowStatus[]>([])
   let selectedTransitionStatus = $state<string | null>(null)
   let isTypeDropdownOpen = $state(false)
+  let showApprovalDialog = $state(false)
+  let selectedApprovalKey = $state<string>('')
+  let isSubmittingApproval = $state(false)
 
   // Determine form mode and effective status for schema
   const isEditing = $derived(!!initialData.workflowCardId)
@@ -335,6 +347,41 @@
     selectedTransitionStatus = targetStatusSlug
     // Reload schema for the target status to validate required fields
     setSchemaByStatus(targetStatusSlug)
+  }
+
+  function openApprovalDialog(approvalKey: string) {
+    selectedApprovalKey = approvalKey
+    showApprovalDialog = true
+  }
+
+  function closeApprovalDialog() {
+    showApprovalDialog = false
+    selectedApprovalKey = ''
+  }
+
+  async function handleApprovalSubmit(data: { note: string; isNegative: boolean }) {
+    if (!formData.workflowCardId) {
+      throw new Error('Cannot add approval to unsaved card')
+    }
+
+    isSubmittingApproval = true
+    try {
+      await approvalService.addApproval(
+        config.workflowId,
+        formData.workflowCardId,
+        selectedApprovalKey,
+        data.note,
+        data.isNegative
+      )
+
+      closeApprovalDialog()
+
+      // Refresh the card data to show the new approval
+      // The parent component should handle this through onSubmit or similar mechanism
+      // For now, we'll just close the dialog
+    } finally {
+      isSubmittingApproval = false
+    }
   }
 
   onMount(() => {
@@ -717,6 +764,15 @@
         {/if}
       </div>
     </div>
+    {#if isTransition || isEditing}
+      <div class="border-t border-gray-200 pt-6 md:col-span-12 dark:border-gray-700">
+        <ApprovalSection
+          {config}
+          approvalTokens={readonlyApprovalData}
+          onApprovalClick={openApprovalDialog}
+        />
+      </div>
+    {/if}
   </form>
   {#snippet footer()}
     <Button color="alternative" onclick={onCancel}>Cancel</Button>
@@ -733,3 +789,11 @@
     </Button>
   {/snippet}
 </Modal>
+
+<BasicApprovalDialog
+  bind:open={showApprovalDialog}
+  approvalKey={selectedApprovalKey}
+  approvalTitle={getApprovalDisplayNameByKey(config, selectedApprovalKey)}
+  onSubmit={handleApprovalSubmit}
+  isSubmitting={isSubmittingApproval}
+/>

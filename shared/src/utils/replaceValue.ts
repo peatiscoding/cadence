@@ -42,16 +42,16 @@ interface ContextReplacer {
  */
 export const withContext = (card: IWorkflowCard): ContextReplacer => {
   const approvalGetter = (approvalKey: string, isRequired: boolean): string => {
-    const tokens = card.approvalTokens[approvalKey] || []
-    const activeTokens = tokens.filter(token => !token.voided)
-    
+    const tokens = (card.approvalTokens || {})[approvalKey] || []
+    const activeTokens = tokens.filter((token) => !token.voided)
+
     if (activeTokens.length === 0) {
       if (isRequired) {
         throw new Error(`Cannot replace '@.${approvalKey}' the approval token is required`)
       }
       return ''
     }
-    
+
     // Get the latest active token
     const latestToken = activeTokens.sort((a, b) => b.date - a.date)[0]
     return latestToken.author
@@ -77,13 +77,16 @@ export const withContext = (card: IWorkflowCard): ContextReplacer => {
     return val
   }
   const _replaceVal = (val: string): string => {
-    return val.replace(/(\$|#|@)\.([a-zA-Z0-9_-]+)(\?)?/g, (wholeStr, type, key, optionalMarker) => {
-      const isOptional = optionalMarker === '?'
-      if (type === '#') return fieldGetter(key, !isOptional)
-      else if (type === '$') return valueGetter(key, !isOptional)
-      else if (type === '@') return approvalGetter(key, !isOptional)
-      else return wholeStr
-    })
+    return val.replace(
+      /(\$|#|@)\.([a-zA-Z0-9_-]+)(\?)?/g,
+      (wholeStr, type, key, optionalMarker) => {
+        const isOptional = optionalMarker === '?'
+        if (type === '#') return fieldGetter(key, !isOptional)
+        else if (type === '$') return valueGetter(key, !isOptional)
+        else if (type === '@') return approvalGetter(key, !isOptional)
+        else return wholeStr
+      }
+    )
   }
   const replaceNested = <T extends any>(val: T): T => {
     // Replacable types

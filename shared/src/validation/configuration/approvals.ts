@@ -9,6 +9,7 @@ export const ApprovalAllowedSchema = z.object({
 // Approval definition in configuration
 export const ApprovalDefinitionSchema = z.object({
   slug: z.string(),
+  title: z.string().optional(),
   allowed: z.array(ApprovalAllowedSchema)
 })
 
