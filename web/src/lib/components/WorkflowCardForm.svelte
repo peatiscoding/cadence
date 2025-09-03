@@ -28,7 +28,7 @@
     config: WorkflowConfiguration
     status?: string
     targetStatus?: string // The status we're transitioning to (if different from current)
-    initialData?: Record<string, any>
+    initialData?: Record<string, any> & { workflowCardId?: string }
     readonlyApprovalData?: Record<string, any>
     onSubmit: (data: any) => Promise<void>
     onCancel: () => void
@@ -723,7 +723,7 @@
       </div>
     </div>
     {#if isTransition || isEditing}
-      <div class="border-t border-gray-200 pt-6 md:col-span-12 dark:border-gray-700">
+      <div class="pt-6 md:col-span-12 dark:border-gray-700">
         <ApprovalSection
           {config}
           approvalTokens={readonlyApprovalData}
