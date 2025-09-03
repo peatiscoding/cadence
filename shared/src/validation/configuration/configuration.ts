@@ -4,6 +4,7 @@ import { StatusSchema } from './statuses'
 import { FieldSchema } from './fields'
 import { TypeSchema } from './types'
 import { ApprovalDefinitionSchema } from './approvals'
+import { InitialValueSchema } from './initial-values'
 
 export const ConfigurationSchema = z
   .object({
@@ -27,7 +28,8 @@ export const ConfigurationSchema = z
       'asDocumentId may have only set once.'
     ),
     types: z.array(TypeSchema),
-    statuses: z.array(StatusSchema)
+    statuses: z.array(StatusSchema),
+    initialValues: z.record(InitialValueSchema).optional()
   })
   .refine(
     (config) => {

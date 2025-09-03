@@ -48,14 +48,56 @@
     isSubmitting = false
   }: Props = $props()
 
-  let formData = $state({
-    title: initialData.title || '',
-    description: initialData.description || '',
-    value: initialData.value || 0,
-    type: initialData.type || '',
-    owner: initialData.owner || '',
-    fieldData: initialData.fieldData || {},
-    ...initialData
+  function getInitialFormData() {
+    let baseData: Record<string, any> = {}
+
+    // Determine if we're editing an existing card or creating a new one
+    if (initialData.workflowCardId) {
+      // Editing: Use the data passed in as the base
+      baseData = { ...initialData }
+    } else {
+      // Creating: Use the workflow's initialValues as the base
+      const newCardData: Record<string, any> = { fieldData: {} }
+      if (config.initialValues) {
+        for (const key in config.initialValues) {
+          // Check for root-level properties vs. custom fields
+          if (['title', 'description', 'value', 'type', 'owner'].includes(key)) {
+            newCardData[key] = config.initialValues[key]
+          } else {
+            // Assume other keys are custom fields and place them in fieldData
+            newCardData.fieldData[key] = config.initialValues[key]
+          }
+        }
+      }
+      baseData = newCardData
+    }
+
+    // Ensure a default, safe structure and merge the base data over it.
+    // This guarantees that formData and formData.fieldData are never undefined.
+    const finalData = {
+      title: '',
+      description: '',
+      value: 0,
+      type: '',
+      owner: '',
+      ...baseData,
+      fieldData: baseData.fieldData || {}
+    }
+
+    // Fallback: If no default type is set, use the first one available
+    if (!finalData.type && config.types?.length > 0) {
+      finalData.type = config.types[0].slug
+    }
+
+    return finalData
+  }
+
+  let formData = $state(getInitialFormData())
+
+  $effect(() => {
+    if (open) {
+      formData = getInitialFormData()
+    }
   })
 
   let errors = $state<Record<string, string>>({})

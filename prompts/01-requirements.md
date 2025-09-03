@@ -1,17 +1,18 @@
-Cadence
+# Cadence
+
 ==
 
 **Cadence** is a project management tool that backed with Firebase's Firestore Database with Configuration File.
 
 # Technologies
 
-Feature|Backed Resources
---|--
-Configurable Workflow|File based configuration
-Login|Any OAuth2.0 Provider
-Persistent Storage|Firestore Database
-Frontend|Svelte, TypeScript
-Backend|TypeScript, Firebase Function for Workflow's
+| Feature               | Backed Resources                             |
+| --------------------- | -------------------------------------------- |
+| Configurable Workflow | File based configuration                     |
+| Login                 | Any OAuth2.0 Provider                        |
+| Persistent Storage    | Firestore Database                           |
+| Frontend              | Svelte, TypeScript                           |
+| Backend               | TypeScript, Firebase Function for Workflow's |
 
 # Feature List
 
@@ -36,6 +37,8 @@ The Configuration can be defined with File.
 
 Cadence can run multiple workflows. Each workflow is defined with 1 single file.
 
+To streamline the creation of new cards, a workflow can define a set of default initial values. This is managed through an optional `initialValues` property at the top level of the configuration. This object contains key-value pairs where the key corresponds to a field `slug`. A special key, `type`, can be used to define the default card type by its `slug`.
+
 The Workflow Configuration's File:
 
 ```json
@@ -44,6 +47,10 @@ The Workflow Configuration's File:
     "access": [                     // Access parameter for this workflow, (optional)
         "@muze.co.th",              // allow everyone with email of muze.co.th to access this workflow
     ],
+    "initialValues": {              // (Optional) Default values for new cards
+        "type": "general-task",     // Sets the default type for new cards
+        "contact_person": "manager@example.com" // Sets the default value for the 'contact_person' field
+    },
     "approvals": [ // each approval key keep track of all approvals token made so far. In an array. Note that it only has 1 active approval at a time. (e.g. the rest are voided).
         {
             "slug": "approval-key",
@@ -210,97 +217,96 @@ The Workflow Configuration's File:
 
 ```ts
 class Card {
+  /**
+   * Parent workflow id.
+   */
+  workflowId: string;
 
-    /**
-     * Parent workflow id.
-     */
-    workflowId: string
+  /**
+   * Primary key of the CardId.
+   */
+  workflowCardId: string;
 
-    /**
-     * Primary key of the CardId.
-     */
-    workflowCardId: string
+  /**
+   * Title of this card
+   */
+  title: string;
 
-    /**
-     * Title of this card
-     */
-    title: string
+  /**
+   * Description of this card
+   */
+  description: string;
 
-    /**
-     * Description of this card
-     */
-    description: string
+  /**
+   * Estimate Card's value for ease of viewing
+   */
+  value: string;
 
-    /**
-     * Estimate Card's value for ease of viewing
-     */
-    value: string
+  /**
+   * Sub-type of Card for ease of configuration
+   */
+  type: string;
 
-    /**
-     * Sub-type of Card for ease of configuration
-     */
-    type: string
+  /**
+   * Fields' data according to the Schema defined in Configuration
+   */
+  fieldData: Record<string, any>;
 
-    /**
-     * Fields' data according to the Schema defined in Configuration
-     */
-    fieldData: Record<string, any>
+  /**
+   * Current Status
+   */
+  status: string;
 
-    /**
-     * Current Status
-     */
-    status: string
+  /**
+   * Card has been moved to this status since?
+   */
+  statusSince: Date;
 
-    /**
-     * Card has been moved to this status since?
-     */
-    statusSince: Date
+  /**
+   * User that own this card. (Can be change during the status' transition)
+   */
+  owner: string;
 
-    /**
-     * User that own this card. (Can be change during the status' transition)
-     */
-    owner: string
+  /**
+   * User that create this card
+   */
+  createdBy: string;
 
-    /**
-     * User that create this card
-     */
-    createdBy: string
+  /**
+   * When the card was created
+   */
+  createdAt: string;
 
-    /**
-     * When the card was created
-     */
-    createdAt: string
+  /**
+   * User that update this card
+   */
+  updatedBy: string;
 
-    /**
-     * User that update this card
-     */
-    updatedBy: string
+  /**
+   * Last update of this card
+   */
+  updatedAt: string;
 
-    /**
-     * Last update of this card
-     */
-    updatedAt: string
-
-    /**
-     * The terminal status that has been resolved.
-     */
-    terminalStatus: string | null
+  /**
+   * The terminal status that has been resolved.
+   */
+  terminalStatus: string | null;
 }
 ```
+
 #### Card Usecases
 
 1. Lead to Purchase Order
-    - the card may represent the lead. 
-    - the card can then transit from 'draft' -> 'quotation' which represent customer is considering, here we ask user to enter `quotation_ref` is now required before card may transit to this status.
-    - during this status, user can repeatedly update this card with more and more details.
-    - the card can then transit from 'quotation' -> 'confirmed' which represent customer has confirmed, and confirmed with its' `customer_purchase_order_ref` is then required. (Purchase Order issued by customer). The status is considered **Terminal**
-    - the card may transit from 'quotation' -> 'cancelled' which represent customer has called-off the order. `cancel_reason` is then required. The status is considering **Terminal**
+   - the card may represent the lead.
+   - the card can then transit from 'draft' -> 'quotation' which represent customer is considering, here we ask user to enter `quotation_ref` is now required before card may transit to this status.
+   - during this status, user can repeatedly update this card with more and more details.
+   - the card can then transit from 'quotation' -> 'confirmed' which represent customer has confirmed, and confirmed with its' `customer_purchase_order_ref` is then required. (Purchase Order issued by customer). The status is considered **Terminal**
+   - the card may transit from 'quotation' -> 'cancelled' which represent customer has called-off the order. `cancel_reason` is then required. The status is considering **Terminal**
 1. Muze Proposal Process
-    - the card may represent the lead.
-    - the card then start from 'draft' -> 'prepare-proposal'
-    - the card then transit from 'prepare-proposal' -> 'confirmed', to confirmed we will required the email consent from customer. This is terminal status. 
-    - the card can transit from any status to 'cancelled', to cancel the lead, 'cancellation reason is required'
-
+   - the card may represent the lead.
+   - the card then start from 'draft' -> 'prepare-proposal'
+   - the card then transit from 'prepare-proposal' -> 'confirmed', to confirmed we will required the email consent from customer. This is terminal status.
+   - the card can transit from any status to 'cancelled', to cancel the lead, 'cancellation reason is required'
 
 ### Card Psudo Logic
 
@@ -347,4 +353,3 @@ Firestore
           |
           +- /<log-id> = Card's Document snapshot + log messages
 ```
-

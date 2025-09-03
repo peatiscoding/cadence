@@ -20,9 +20,16 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
     {
       slug: 'contactPoint',
       title: 'Contact Point',
-      description: 'Email of the task reviewer.',
+      description: "Email of the task's creator for notifications.",
       schema: {
-        kind: 'text'
+        kind: 'choice',
+        choices: [
+          'chitipat@muze.co.th',
+          'yanisa@muze.co.th',
+          'vichuda.t@muze.co.th',
+          'peeranuch.k@muze.co.th',
+          'dachopol.w@muze.co.th'
+        ]
       }
     },
     {
@@ -59,18 +66,14 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
       }
     }
   ],
+
+  initialValues: {
+    type: 'general',
+    // owner: 'chitipat+1@muze.co.th'
+    owner: 'dachopol.w@muze.co.th'
+  },
+
   statuses: [
-    {
-      slug: 'todo',
-      title: 'To Do',
-      terminal: false,
-      ui: {
-        color: '#CCCCCC'
-      },
-      precondition: {
-        from: []
-      }
-    },
     {
       slug: 'reviewing',
       title: 'Reviewing',
@@ -79,26 +82,21 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
         color: '#FFB800'
       },
       precondition: {
-        from: ['todo', 'revising'],
-        users: ['#.createdBy'], // Only creator can submit/re-submit for review
+        from: ['draft', 'revising'],
         required: ['contactPoint']
       },
       finally: [
         {
-          kind: 'set-owner',
-          to: '#.createdBy'
-        },
-        {
           kind: 'send-email',
-          to: '#.value.contactPoint',
-          subject: '[Cadence-HR] New Task for Review: {{card.title}}',
+          to: '$.ownerId',
+          subject: '[Cadence-HR] New Task for Review: $.title',
           message: `
             Hello,
 
-            A new task "{{card.title}}" has been submitted by {{actor.displayName}} and is waiting for your review.
+            A new task "$.title" has been submitted and is waiting for your review.
 
-            Please review it by the due date: {{card.value.dueDate}}.
-            Link: {{card.value.link}}
+            Please review it by the due date: #.dueDate?.
+            Link: #.link?.
 
             Thank you.
           `
@@ -114,21 +112,20 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
       },
       precondition: {
         from: ['reviewing'],
-        // Note: No user restriction on who can send for revision
         required: ['feedback']
       },
       finally: [
         {
           kind: 'send-email',
-          to: '#.createdBy',
-          subject: '[Cadence-HR] Revision Required: {{card.title}}',
+          to: '#.contactPoint',
+          subject: '[Cadence-HR] Revision Required: $.title',
           message: `
-            Hi {{card.createdBy.displayName}},
+            Hi,
 
-            The task "{{card.title}}" requires revision.
+            The task "$.title" that you submitted requires revision.
 
-            Feedback from {{actor.displayName}}:
-            "{{card.value.feedback}}"
+            Feedback from the reviewer:
+            "#.feedback"
 
             Please make the necessary changes and resubmit.
 
@@ -146,17 +143,16 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
       },
       precondition: {
         from: ['reviewing']
-        // Note: No user restriction on who can approve
       },
       finally: [
         {
           kind: 'send-email',
-          to: '#.createdBy',
-          subject: '[Cadence-HR] Approved: {{card.title}}',
+          to: '#.contactPoint',
+          subject: '[Cadence-HR] Approved: $.title',
           message: `
-            Hi {{card.createdBy.displayName}},
+            Hi,
 
-            Great news! The task "{{card.title}}" has been approved by {{actor.displayName}}.
+            Great news! The task "$.title" that you submitted has been approved.
 
             Thank you for your hard work.
           `
