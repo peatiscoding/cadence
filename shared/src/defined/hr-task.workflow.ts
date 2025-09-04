@@ -88,6 +88,7 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
       finally: [
         {
           kind: 'send-email',
+          from: 'no-reply@muze.co.th',
           to: '$.owner',
           subject: '[Cadence-HR] New Task for Review: $.title',
           message: `
@@ -117,6 +118,7 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
       finally: [
         {
           kind: 'send-email',
+          from: 'no-reply@muze.co.th',
           to: '#.contactPoint',
           subject: '[Cadence-HR] Revision Required: $.title',
           message: `
@@ -147,6 +149,7 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
       finally: [
         {
           kind: 'send-email',
+          from: 'no-reply@muze.co.th',
           to: '#.contactPoint',
           subject: '[Cadence-HR] Approved: $.title',
           message: `

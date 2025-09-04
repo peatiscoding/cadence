@@ -1,3 +1,4 @@
+import { supportedEmailSenderSuffixes } from '../../defined/supported-constants'
 import { z } from 'zod'
 
 /**
@@ -24,6 +25,10 @@ const SetOwnerActionSchema = z.object({
  */
 const SendEmailActionSchema = z.object({
   kind: z.literal('send-email'),
+  from: z.string().refine((email) => {
+    const suffix = email.replace(/^[^@]@/, '').toLowerCase()
+    return supportedEmailSenderSuffixes.indexOf(suffix)
+  }, `Unsupported email sender`),
   to: z.string(),
   cc: z.string().optional(),
   bcc: z.string().optional(),
