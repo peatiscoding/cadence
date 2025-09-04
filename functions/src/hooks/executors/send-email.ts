@@ -71,5 +71,4 @@ export class SendEmailActionExecutor extends AActionExecutor<'send-email'> {
       throw error
     }
   }
-
 }

@@ -104,6 +104,13 @@ const LeadToProposalWorkflow: WorkflowConfiguration = {
         {
           kind: 'set-owner',
           to: '#.contactPoint'
+        },
+        {
+          kind: 'send-email',
+          from: 'no-reply@muze.co.th',
+          to: 'kittiphat@muze.co.th',
+          subject: 'Proposal "$.title" has been Approved',
+          message: 'Proposal has been approved<br>"$.title"'
         }
       ]
     },
