@@ -1,4 +1,4 @@
-import { supportedEmailSenderSuffixes } from 'src/defined/supported-constants'
+import { supportedEmailSenderSuffixes } from '../../defined/supported-constants'
 import { z } from 'zod'
 
 /**
