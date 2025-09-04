@@ -5,7 +5,7 @@ import type {
   WorkflowStatus,
   IWorkflowCardEntry
 } from '@cadence/shared/types'
-import { findIdentifierField } from '@cadence/shared/utils'
+import { findIdentifierField, validateAllPreconditions } from '@cadence/shared/utils'
 import type {
   IWorkflowCardEngine,
   IWorkflowCardEntryCreation,
@@ -15,41 +15,6 @@ import { STATUS_DRAFT } from '@cadence/shared/models/status'
 import { USE_SERVER_TIMESTAMP } from '$lib/persistent/constant'
 import { z } from 'zod'
 
-const _helpers = {
-  validateRequiredFields<T>(requiredFields: (keyof T)[], data: { fieldData: T }) {
-    const missingFields: (keyof T)[] = []
-    console.log('Validating Required Fields', requiredFields, data)
-    for (const requiredField of requiredFields) {
-      if (requiredField.toString().startsWith('$')) {
-        // Validate fields that lead with '$'
-      } else {
-        if (data.fieldData[requiredField] === null || data.fieldData[requiredField] === undefined) {
-          missingFields.push(requiredField)
-        }
-      }
-    }
-
-    if (missingFields.length > 0) {
-      const fieldList = missingFields.join(`', '`)
-      const errorMessage =
-        missingFields.length === 1
-          ? `Required field '${fieldList}' is missing or empty`
-          : `Required fields '${fieldList}' are missing or empty`
-      throw new Error(errorMessage)
-    }
-  },
-  validateUser(userList: string[], user: string): void {
-    if (userList.length > 0 && !userList.includes(user)) {
-      throw new Error(`User '${user}' is not authorized to perform this transition`)
-    }
-  },
-
-  validateFromStatus(requiredStatuses: string[], currentStatus: string): void {
-    if (requiredStatuses.length > 0 && !requiredStatuses.includes(currentStatus)) {
-      throw new Error(`Cannot transition from status '${currentStatus}' to this status`)
-    }
-  }
-}
 
 export class WorkflowCardEngine implements IWorkflowCardEngine {
   public constructor(
@@ -163,11 +128,15 @@ export class WorkflowCardEngine implements IWorkflowCardEngine {
       }
     }
 
-    // Validate its precondition
-    const precondition = newStatusConfig.precondition
-    _helpers.validateFromStatus(precondition.from, currentCard.status)
-    _helpers.validateUser(precondition.users || [], userSsoId)
-    _helpers.validateRequiredFields(precondition.required || [], newData)
+    // Validate preconditions using shared validation utilities
+    validateAllPreconditions(
+      newStatusConfig,
+      currentCard.status,
+      userSsoId, // userEmail
+      userSsoId, // userId
+      currentCard,
+      { fieldData: payload.fieldData || {} }
+    )
 
     await this.storage.transitCard(this.workflowId, workflowCardId, {
       ...payload,
