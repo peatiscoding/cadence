@@ -84,7 +84,7 @@ export const transitWorkflowItem =
       // Validate documents per status' requirement.
       // FIXME: implement the status transitioning validation (required.*)
 
-      // Pre Transit
+      // Pre Transit Hooks
       const beforeTransitActions = targetStatus.transition || []
       if (beforeTransitActions.length > 0) {
         await runner.run(destinationContext, beforeTransitActions, { runInParallel: false })
@@ -99,7 +99,7 @@ export const transitWorkflowItem =
         updatedAt: FieldValue.serverTimestamp()
       })
 
-      // Post Transit (Finally)
+      // Post Transit Hooks (Finally)
       const afterTransitActions = targetStatus.finally || []
       if (afterTransitActions.length > 0) {
         await runner.run(destinationContext, afterTransitActions, { runInParallel: true })
