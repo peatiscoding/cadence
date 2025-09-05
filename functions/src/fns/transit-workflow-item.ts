@@ -2,9 +2,7 @@ import type { App } from 'firebase-admin/app'
 import type {
   IActionRunner,
   ITransitWorkflowItemRequest,
-  ITransitWorkflowItemResponse,
-  WorkflowStatus,
-  IWorkflowCard
+  ITransitWorkflowItemResponse
 } from '@cadence/shared/types'
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
@@ -68,7 +66,10 @@ export const transitWorkflowItem =
       }
 
       const currentDocData = doc.data()
-      const currentStatus = currentDocData?.status
+      if (!currentDocData) {
+        throw new Error('Cannot transit empty document')
+      }
+      const currentStatus = currentDocData.status
 
       // Validate LOV fields if fieldData has changed
       if (destinationContext.fieldData) {
@@ -90,7 +91,7 @@ export const transitWorkflowItem =
         currentStatus,
         userEmail,
         userId,
-        currentDocData,
+        currentDocData as any,
         destinationContext
       )
 
@@ -104,6 +105,7 @@ export const transitWorkflowItem =
       const f = _helpers.omit(destinationContext, 'workflowId', 'workflowCardId')
       await docRef.update({
         ...f,
+        approvalTokens: currentDocData.approvalTokens, // Approval tokens cannot be updated from TransitWorkflowItem.
         statusSince: FieldValue.serverTimestamp(),
         updatedBy: userId,
         updatedAt: FieldValue.serverTimestamp()

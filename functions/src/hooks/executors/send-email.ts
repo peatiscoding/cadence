@@ -1,14 +1,16 @@
 import type { IActionDefiniton, IWorkflowCard } from '@cadence/shared/types'
 import { withContext } from '@cadence/shared/utils'
 import { AActionExecutor } from './base'
-import { type EmailMessage, emailSenders } from '../../email'
+import type { EmailMessage } from '../../email'
+import type { EmailSenderFactory } from '../../email/factory'
+import type { EmailSender } from '../../email/senders/base'
 
 /**
  * Action runner for sending emails
  * Uses the EmailSender system to send emails through various providers
  */
 export class SendEmailActionExecutor extends AActionExecutor<'send-email'> {
-  constructor() {
+  constructor(protected readonly senders: EmailSenderFactory) {
     super('send-email')
   }
 
@@ -16,6 +18,7 @@ export class SendEmailActionExecutor extends AActionExecutor<'send-email'> {
     cardContext: IWorkflowCard,
     action: Extract<IActionDefiniton, { kind: 'send-email' }>
   ): Promise<void> {
+    let sender: EmailSender<any> | undefined
     try {
       // Use the existing template processing utility
       const replacer = withContext(cardContext)
@@ -47,10 +50,10 @@ export class SendEmailActionExecutor extends AActionExecutor<'send-email'> {
       })
 
       // Get the appropriate email sender for the from address
-      const emailSender = emailSenders.getSender(emailMessage.from)
+      sender = this.senders.getSender(emailMessage.from)
 
       // Send the email
-      const result = await emailSender.send(emailMessage)
+      const result = await sender.send(emailMessage)
 
       if (!result.success) {
         throw result.error || new Error('Email sending failed with unknown error')
@@ -69,6 +72,8 @@ export class SendEmailActionExecutor extends AActionExecutor<'send-email'> {
         action
       })
       throw error
+    } finally {
+      // close sender?
     }
   }
 }
