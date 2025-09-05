@@ -2,7 +2,9 @@ import type { App } from 'firebase-admin/app'
 import type {
   IActionRunner,
   ITransitWorkflowItemRequest,
-  ITransitWorkflowItemResponse
+  ITransitWorkflowItemResponse,
+  WorkflowStatus,
+  IWorkflowCard
 } from '@cadence/shared/types'
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
@@ -10,6 +12,7 @@ import * as logger from 'firebase-functions/logger'
 import { supportedWorkflows } from '@cadence/shared/defined'
 import { paths } from '@cadence/shared/models'
 import { LovValidator } from '../lovs/validator'
+import { validateAllPreconditions } from '@cadence/shared/utils'
 
 const _helpers = {
   omit<T>(d: T, ...keys: (keyof T)[]): Partial<T> {
@@ -81,10 +84,17 @@ export const transitWorkflowItem =
         )
       }
 
-      // Validate documents per status' requirement.
-      // FIXME: implement the status transitioning validation (required.*)
+      // Validate status transition preconditions
+      validateAllPreconditions(
+        targetStatus,
+        currentStatus,
+        userEmail,
+        userId,
+        currentDocData,
+        destinationContext
+      )
 
-      // Pre Transit
+      // Pre Transit Hooks
       const beforeTransitActions = targetStatus.transition || []
       if (beforeTransitActions.length > 0) {
         await runner.run(destinationContext, beforeTransitActions, { runInParallel: false })
@@ -99,7 +109,7 @@ export const transitWorkflowItem =
         updatedAt: FieldValue.serverTimestamp()
       })
 
-      // Post Transit (Finally)
+      // Post Transit Hooks (Finally)
       const afterTransitActions = targetStatus.finally || []
       if (afterTransitActions.length > 0) {
         await runner.run(destinationContext, afterTransitActions, { runInParallel: true })

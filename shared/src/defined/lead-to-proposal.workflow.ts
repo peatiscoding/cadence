@@ -86,7 +86,7 @@ const LeadToProposalWorkflow: WorkflowConfiguration = {
       ui: {
         color: '#44FF55'
       },
-      precondition: { from: ['draft'], required: ['year'] }
+      precondition: { from: ['draft', 'proposal-approved'], required: ['year'] }
     },
     {
       slug: 'proposal-approved',
