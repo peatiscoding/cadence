@@ -105,6 +105,7 @@ export const transitWorkflowItem =
       const f = _helpers.omit(destinationContext, 'workflowId', 'workflowCardId')
       await docRef.update({
         ...f,
+        approvalTokens: currentDocData.approvalTokens, // Approval tokens cannot be updated from TransitWorkflowItem.
         statusSince: FieldValue.serverTimestamp(),
         updatedBy: userId,
         updatedAt: FieldValue.serverTimestamp()
