@@ -9,15 +9,11 @@ import { canUserApprove } from '@cadence/shared/utils/approval-validation'
 
 export const addApproval =
   (app: App) =>
-  async (
-    data: AddApprovalRequest,
-    uid?: string,
-    email?: string
-  ): Promise<AddApprovalResponse> => {
+  async (data: AddApprovalRequest, uid?: string, email?: string): Promise<AddApprovalResponse> => {
     const fs = getFirestore(app)
     const userEmail = email || uid
     const userId = uid || 'unknown-user'
-    
+
     logger.log(
       `User ${userEmail} adding approval ${data.approvalKey} to ${data.workflowId}/${data.cardId}`
     )
@@ -27,23 +23,25 @@ export const addApproval =
     }
 
     try {
-      const workflow = supportedWorkflows.find(wf => wf.workflowId === data.workflowId)
+      const workflow = supportedWorkflows.find((wf) => wf.workflowId === data.workflowId)
       if (!workflow) {
         throw new Error(`Unknown workflow: ${data.workflowId}`)
       }
 
       const docRef = fs.doc(paths.WORKFLOW_CARD(data.workflowId, data.cardId))
       const doc = await docRef.get()
-      
+
       if (!doc.exists) {
         throw new Error(`Card not found`)
       }
 
       const cardData = doc.data()
-      
+
       // Check if user can provide this approval
       if (!canUserApprove(userId, data.approvalKey, cardData, workflow)) {
-        throw new Error(`User ${userEmail} is not authorized to provide approval for ${data.approvalKey}`)
+        throw new Error(
+          `User ${userEmail} is not authorized to provide approval for ${data.approvalKey}`
+        )
       }
 
       const approvalToken = {
@@ -70,3 +68,4 @@ export const addApproval =
       throw new Error(`Cannot add approval: ${e}`)
     }
   }
+

@@ -1,6 +1,6 @@
 // Jest setup file for functions package
 global.console = {
-  ...console,
+  ...console
   // Uncomment to ignore a specific log level
   // log: jest.fn(),
   // debug: jest.fn(),
@@ -8,3 +8,4 @@ global.console = {
   // warn: jest.fn(),
   // error: jest.fn(),
 }
+

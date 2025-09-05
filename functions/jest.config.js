@@ -9,6 +9,6 @@ module.exports = {
   moduleNameMapper: {
     '^@cadence/shared/(.*)$': '<rootDir>/../shared/src/$1'
   },
+  setupFiles: ['dotenv/config'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
 }
-

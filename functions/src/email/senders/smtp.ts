@@ -1,6 +1,6 @@
 import type { EmailMessage, EmailSendResult, SMTPSenderConfig } from '../types'
 
-import nodemailer from 'nodemailer'
+import * as nodemailer from 'nodemailer'
 import { EmailSender } from './base'
 
 /**
@@ -13,18 +13,18 @@ export class SmtpSender extends EmailSender<SMTPSenderConfig> {
   constructor(config: SMTPSenderConfig) {
     super(config)
     this.initializeTransporter()
-    console.log(`SMTP Transport is now ready with ${this.config.username}`)
   }
 
   /**
    * Initialize the nodemailer transporter with SMTP settings
    */
   private initializeTransporter(): void {
+    console.log(`SMTP Transport is now ready with ${this.config.username}`)
     try {
       this.transporter = nodemailer.createTransport({
         host: this.config.smtpEndpoint,
         port: this.config.smtpPort,
-        secure: false, // true for 465, false for other ports
+        secure: this.config.smtpPort === 465, // true for 465, false for other ports
         auth: {
           user: this.config.username,
           pass: this.config.password
@@ -71,6 +71,8 @@ export class SmtpSender extends EmailSender<SMTPSenderConfig> {
       if (message.bcc) {
         mailOptions.bcc = message.bcc
       }
+
+      console.log('Sending content', mailOptions)
 
       // Send the email
       const info = await this.transporter.sendMail(mailOptions)
