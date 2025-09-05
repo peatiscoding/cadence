@@ -5,11 +5,9 @@ import type { EmailSender } from './senders/base'
  * Handles the instantiation of appropriate email sender based on domain configuration
  */
 export class EmailSenderFactory {
-  public static shared = new EmailSenderFactory()
-
   private supportedSenders = new Map<string, EmailSender<any>>()
 
-  private constructor() {}
+  constructor() {}
 
   public registerSender(sender: EmailSender<any>) {
     this.supportedSenders.set(sender.getDomain(), sender)
@@ -47,4 +45,3 @@ export class EmailSenderFactory {
     return email.substring(atIndex + 1).toLowerCase()
   }
 }
-

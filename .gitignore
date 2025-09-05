@@ -7,3 +7,4 @@ shared/dist
 *.tsbuildinfo
 .firebase
 api-client/dist
+firebase-debug.log

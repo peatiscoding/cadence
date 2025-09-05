@@ -11,7 +11,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { SetOwnerActionExecutor } from './executors/set-owner'
 import { SendWebhookActionExecutor } from './executors/send-webhook'
 import { SendEmailActionExecutor } from './executors/send-email'
-import { emailSenders } from '../email/supported'
+import { initEmailSenders } from '../email/supported'
 
 interface RunTopology {
   (executions: (() => Promise<void>)[]): Promise<void>
@@ -69,7 +69,7 @@ export class ActionRunner implements IActionRunner {
     // Implementation configurator
     return new ActionRunner([
       new SetOwnerActionExecutor(getFirestore(app)),
-      new SendEmailActionExecutor(emailSenders),
+      new SendEmailActionExecutor(initEmailSenders()),
       new SendWebhookActionExecutor()
     ])
   }

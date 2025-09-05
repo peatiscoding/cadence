@@ -13,6 +13,7 @@ export class SmtpSender extends EmailSender<SMTPSenderConfig> {
   constructor(config: SMTPSenderConfig) {
     super(config)
     this.initializeTransporter()
+    console.log(`SMTP Transport is now ready with ${this.config.username}`)
   }
 
   /**
