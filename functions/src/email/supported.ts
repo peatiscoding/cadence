@@ -12,7 +12,7 @@ export const initEmailSenders = (): EmailSenderFactory => {
         type: 'smtp',
         domain: 'muze.co.th',
         smtpEndpoint: 'email-smtp.ap-southeast-1.amazonaws.com',
-        smtpPort: 25,
+        smtpPort: 587,
         username: defineString('MUZE_SMTP_USERNAME').value(),
         password: defineString('MUZE_SMTP_PASSWORD').value()
       })

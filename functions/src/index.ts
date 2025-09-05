@@ -1,4 +1,8 @@
-import type { IActionRunner, IWorkflowCardEntry } from '@cadence/shared/types'
+import type {
+  IActionRunner,
+  ITransitWorkflowItemRequest,
+  IWorkflowCardEntry
+} from '@cadence/shared/types'
 import { FIREBASE_REGION, CARDS, WORKFLOWS } from '@cadence/shared/models'
 import { onRequest, onCall } from 'firebase-functions/v2/https'
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
@@ -45,7 +49,7 @@ export const loginFn = onCall({ region: FIREBASE_REGION }, execute(login(app)))
 
 // Convert to HTTP endpoints for public API
 export const transitWorkflowItemAPI = onRequest(
-  { region: FIREBASE_REGION, cors: true },
+  { region: FIREBASE_REGION, cors: true, timeoutSeconds: 60 },
   new HttpExecutorBuilder()
     .use(cors())
     .use(allowedMethod('POST'))
@@ -54,7 +58,8 @@ export const transitWorkflowItemAPI = onRequest(
     .handle(async (ctx) => {
       const userEmail = ctx.email ?? ctx.uid ?? ''
       const userId = ctx.uid ?? ''
-      return transitWorkflowItem(app, getActionRunner)(ctx.body, userId, userEmail)
+      const body = ctx.body as ITransitWorkflowItemRequest
+      return transitWorkflowItem(app, getActionRunner)(body, userId, userEmail)
     })
 )
 
@@ -118,10 +123,9 @@ export const addApprovalAPI = onRequest(
     .handle(async (ctx) => {
       const userEmail = ctx.email ?? ctx.uid ?? ''
       const userId = ctx.uid ?? ''
-      return addApproval(app)(ctx.body, userId, userEmail)
+      return addApproval(app)(ctx.body as any, userId, userEmail)
     })
 )
-
 
 // Card activity logger - triggers on any card document changes
 export const onCardWrittenHook = onDocumentWritten(

@@ -57,7 +57,7 @@ describe('Email Configuration', () => {
       // Access config through the public readonly property
       const config = sender.config
       expect(config.smtpEndpoint).toBe('email-smtp.ap-southeast-1.amazonaws.com')
-      expect(config.smtpPort).toBe(25)
+      expect(config.smtpPort).toBe(587)
       expect(config.username).toBeDefined()
       expect(config.password).toBeDefined()
       expect(config.domain).toBe('muze.co.th')
