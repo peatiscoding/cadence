@@ -486,6 +486,8 @@
 <Modal bind:open={showErrorModal} title={errorModalTitle}>
   <p>{errorModalMessage}</p>
   {#snippet footer()}
-    <Button type="submit" value="ok" color="alternative">OK</Button>
+    <Button type="submit" value="ok" color="alternative" onclick={() => (showErrorModal = false)}
+      >OK</Button
+    >
   {/snippet}
 </Modal>

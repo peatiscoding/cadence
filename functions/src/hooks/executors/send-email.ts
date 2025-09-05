@@ -1,14 +1,15 @@
 import type { IActionDefiniton, IWorkflowCard } from '@cadence/shared/types'
 import { withContext } from '@cadence/shared/utils'
 import { AActionExecutor } from './base'
-import { type EmailMessage, emailSenders } from '../../email'
+import { type EmailMessage } from '../../email'
+import { type EmailSenderFactory } from '../../email/factory'
 
 /**
  * Action runner for sending emails
  * Uses the EmailSender system to send emails through various providers
  */
 export class SendEmailActionExecutor extends AActionExecutor<'send-email'> {
-  constructor() {
+  constructor(protected readonly senders: EmailSenderFactory) {
     super('send-email')
   }
 
@@ -47,7 +48,7 @@ export class SendEmailActionExecutor extends AActionExecutor<'send-email'> {
       })
 
       // Get the appropriate email sender for the from address
-      const emailSender = emailSenders.getSender(emailMessage.from)
+      const emailSender = this.senders.getSender(emailMessage.from)
 
       // Send the email
       const result = await emailSender.send(emailMessage)
