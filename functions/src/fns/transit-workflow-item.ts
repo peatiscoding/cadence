@@ -101,15 +101,21 @@ export const transitWorkflowItem =
         await runner.run(destinationContext, beforeTransitActions, { runInParallel: false })
       }
 
-      // Update database (transit)
-      const f = _helpers.omit(destinationContext, 'workflowId', 'workflowCardId')
-      await docRef.update({
-        ...f,
-        approvalTokens: currentDocData.approvalTokens, // Approval tokens cannot be updated from TransitWorkflowItem.
+      // Build the update payload
+      const updatePayload: any = {
+        ..._helpers.omit(destinationContext, 'workflowId', 'workflowCardId'),
         statusSince: FieldValue.serverTimestamp(),
         updatedBy: userId,
         updatedAt: FieldValue.serverTimestamp()
-      })
+      }
+
+      // Only carry over approvalTokens if they exist on the current document
+      if (currentDocData.approvalTokens) {
+        updatePayload.approvalTokens = currentDocData.approvalTokens
+      }
+
+      // Update database (transit)
+      await docRef.update(updatePayload)
 
       // Post Transit Hooks (Finally)
       const afterTransitActions = targetStatus.finally || []
