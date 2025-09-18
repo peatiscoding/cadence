@@ -97,7 +97,7 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
             A new task "$.title" has been submitted and is waiting for your review.
 
             Please review it by the due date: #.dueDate?.
-            Link: #.link?.
+            Link: https://cadence.maketh.dev/workflows/hr-task
 
             Thank you.
           `
@@ -130,6 +130,7 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
             "#.feedback"
 
             Please make the necessary changes and resubmit.
+            Link: https://cadence.maketh.dev/workflows/hr-task
 
             Thank you.
           `
@@ -156,6 +157,7 @@ const HrTaskWorkflow: WorkflowConfiguration & { workflowId: string } = {
             Hi,
 
             Great news! The task "$.title" that you submitted has been approved.
+            Link: https://cadence.maketh.dev/workflows/hr-task
 
             Thank you for your hard work.
           `
